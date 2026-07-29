@@ -169,6 +169,11 @@ const handleDialogClose = () => {
 }
 
 const handleBeforeInput = (event: KeyboardEvent) => {
+  // Arrow keys while an IME composition is open navigate the IME's candidate
+  // list, not the command list (the keyup handler below already guards).
+  if (event.isComposing) {
+    return
+  }
   const items = commandItems
   switch (event.key) {
     case 'ArrowUp': {

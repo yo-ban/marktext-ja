@@ -15,7 +15,7 @@
               v-model="tempName"
               type="text"
               class="search"
-              @keyup.enter="confirm"
+              @keydown.enter="confirm"
             >
             <el-icon
               :size="16"
@@ -55,7 +55,13 @@ const handleRename = () => {
   })
 }
 
-const confirm = () => {
+// keydown (not keyup): the Enter that commits an IME composition reaches
+// keyup only after compositionend, when isComposing is already false again —
+// keydown is the only phase where the guard can see the composition.
+const confirm = (event?: Event) => {
+  if (event instanceof KeyboardEvent && event.isComposing) {
+    return
+  }
   editorStore.RENAME(tempName.value)
   showRename.value = false
 }

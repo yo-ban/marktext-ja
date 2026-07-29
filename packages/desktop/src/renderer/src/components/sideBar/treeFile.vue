@@ -17,7 +17,7 @@
       type="text"
       class="rename"
       @click.stop="noop"
-      @keypress.enter="rename"
+      @keydown.enter="rename"
     >
     <span v-else>{{ file.name }}</span>
   </div>
@@ -76,7 +76,11 @@ const focusRenameInput = (): void => {
   })
 }
 
-const rename = (): void => {
+const rename = (event: KeyboardEvent): void => {
+  // Enter that commits an IME composition must not confirm the rename.
+  if (event.isComposing) {
+    return
+  }
   if (newName.value) {
     projectStore.RENAME_IN_SIDEBAR(newName.value)
   }

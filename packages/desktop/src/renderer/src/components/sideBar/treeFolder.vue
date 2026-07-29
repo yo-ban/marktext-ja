@@ -22,7 +22,7 @@
         type="text"
         class="rename"
         @click.stop="noop"
-        @keypress.enter="rename"
+        @keydown.enter="rename"
       >
       <span
         v-else
@@ -46,7 +46,7 @@
         type="text"
         class="new-input"
         :style="{ 'margin-left': `${depth * 5 + 15}px` }"
-        @keypress.enter="handleInputEnter"
+        @keydown.enter="handleInputEnter"
       >
       <File
         v-for="file of folder.files"
@@ -106,7 +106,11 @@ const handleInputFocus = (): void => {
   })
 }
 
-const handleInputEnter = (): void => {
+const handleInputEnter = (event: KeyboardEvent): void => {
+  // Enter that commits an IME composition must not create the file.
+  if (event.isComposing) {
+    return
+  }
   projectStore.CREATE_FILE_DIRECTORY(createName.value)
 }
 
@@ -125,7 +129,11 @@ const focusRenameInput = (): void => {
   })
 }
 
-const rename = (): void => {
+const rename = (event: KeyboardEvent): void => {
+  // Enter that commits an IME composition must not confirm the rename.
+  if (event.isComposing) {
+    return
+  }
   if (newName.value) {
     projectStore.RENAME_IN_SIDEBAR(newName.value)
   }

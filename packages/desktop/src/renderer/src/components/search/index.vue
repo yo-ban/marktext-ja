@@ -307,6 +307,11 @@ const find = (action: 'prev' | 'next') => {
 }
 
 const handleEnterKey = (event: KeyboardEvent) => {
+  // Enter while an IME composition is open commits the composition; it must
+  // not also jump to the next match.
+  if (event.isComposing) {
+    return
+  }
   if (event.key === 'Enter') {
     find('next')
   }

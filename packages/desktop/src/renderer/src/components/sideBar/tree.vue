@@ -102,7 +102,7 @@
           type="text"
           class="new-input"
           :style="{ 'margin-left': `${depth * 5 + 15}px` }"
-          @keypress.enter="handleInputEnter"
+          @keydown.enter="handleInputEnter"
         >
         <file
           v-for="file of projectTree.files"
@@ -244,7 +244,11 @@ const handleInputFocus = (): void => {
   })
 }
 
-const handleInputEnter = (): void => {
+const handleInputEnter = (event: KeyboardEvent): void => {
+  // Enter that commits an IME composition must not create the file.
+  if (event.isComposing) {
+    return
+  }
   projectStore.CREATE_FILE_DIRECTORY(createName.value)
 }
 
