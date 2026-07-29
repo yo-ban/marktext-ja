@@ -7,13 +7,17 @@ const CED_ICONV_ENCODINGS: Record<string, string> = {
   'ISO-2022-KR': 'euckr',
   GB: 'gb2312',
   ISO_2022_CN: 'gb2312',
+  SJS: 'shiftjis',
+  'EUC-JP': 'eucjp',
+  // ced's JIS (ISO-2022-JP) is intentionally unmapped: iconv-lite cannot
+  // decode it, and pretending it is UTF-8 mojibakes the file and destroys it
+  // on the next save. Letting it fall through makes loadMarkdownFile report
+  // "not supported" instead. In practice ISO-2022-JP is pure 7-bit, so real
+  // files short-circuit through the isLikelyUtf8 path before ced runs.
 
   Unicode: 'utf8',
 
   // Map ASCII / subsets of UTF-8 to UTF-8.
-  JIS: 'utf8',
-  SJS: 'utf8',
-  shiftjis: 'utf8',
   'ASCII-7-bit': 'utf8',
   ASCII: 'utf8',
   MACINTOSH: 'utf8'
@@ -74,7 +78,7 @@ export const guessEncoding = (buffer: Buffer, autoGuessEncoding: boolean): Encod
     if (CED_ICONV_ENCODINGS[encoding]) {
       encoding = CED_ICONV_ENCODINGS[encoding]
     } else {
-      encoding = encoding.toLowerCase().replace(/-_/g, '')
+      encoding = encoding.toLowerCase().replace(/[-_]/g, '')
     }
   }
   return { encoding, isBom }

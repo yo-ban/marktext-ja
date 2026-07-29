@@ -193,7 +193,10 @@ Windows 専用なら WebView2 = Chromium なので IME 懸念はほぼ消える�
    - #4957: PR は方針のみ参照し同等ガードを実装。ユニットテストで develop 再現→修正を確認(`imeBackspaceComposition.spec.ts`)
    - #4876: upstream diff を取得し `git apply`(clean)。レビュー済み(state 更新は同期のまま、DOM 再構築のみ 300ms 遅延/構造編集は同期維持/タイマーは isConnected+isComposed ガード付き)
    - #3822(Linux/fcitx5)は未検証 — #4851 と同根なら修正済みのはず。実機確認時に要検証
-2. Shift_JIS 自動判定修正(`encoding.ts:13-19` + EUC-JP マッピング + `[-_]` 修正 + テスト新規作成)
+2. ~~Shift_JIS 自動判定修正~~ **完了**(2026-07-29)
+   - `SJS→shiftjis` / `EUC-JP→eucjp` に修正(実 ced の返却名と一致することを実バイナリで確認)、`[-_]` 正規表現修正
+   - `JIS`(ISO-2022-JP)は iconv-lite 非対応のため意図的に未マッピング化 — utf8 誤読で破壊保存するより「Cannot open tab」エラーに倒す(実ファイルは 7-bit なので isLikelyUtf8 で先に UTF-8 扱いになり実質到達不能)
+   - テスト: `encoding-japanese.spec.ts` 5 ケース(実 Shift_JIS/EUC-JP バイト列のラウンドトリップ含む)
 3. ~~`langInputContent` の isComposed ガード追加、フロートメニューの composition ガード~~ **完了**(2026-07-29)
    - langInputContent: isComposed ガード + IME 確定時は DOM 再構築なしで state のみ更新(#4876 と同機構)
    - フロート: `ui.ts` `handleContentKeydown` / `baseScrollFloat` ナビキー / `baseFloat` Escape の 3 箇所に isComposing ガード
