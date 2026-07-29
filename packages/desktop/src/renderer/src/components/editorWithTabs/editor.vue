@@ -142,7 +142,7 @@ import '@/assets/themes/codemirror/one-dark.css'
 import { Close as CloseIcon } from '@element-plus/icons-vue'
 import { type InputNumberInstance } from 'element-plus'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const STANDAR_Y = 320
 
 // Map the desktop language preference to the engine's bundled locale objects.
@@ -1292,7 +1292,8 @@ const handleExport = async (options: unknown) => {
           printOptimization: false,
           extraCss,
           toc: htmlToc,
-          dir: props.textDirection
+          dir: props.textDirection,
+          lang: locale.value
         })
         editorStore.EXPORT({ type, content })
       } catch (err) {
@@ -1325,7 +1326,8 @@ const handleExport = async (options: unknown) => {
           header,
           footer,
           headerFooterStyled: headerFooterStyled as boolean | undefined,
-          dir: props.textDirection
+          dir: props.textDirection,
+          lang: locale.value
         })
         printer!.renderMarkdown(html, true, props.textDirection)
         editorStore.EXPORT({ type, pageOptions })
@@ -1351,7 +1353,8 @@ const handleExport = async (options: unknown) => {
           header,
           footer,
           headerFooterStyled: headerFooterStyled as boolean | undefined,
-          dir: props.textDirection
+          dir: props.textDirection,
+          lang: locale.value
         })
         printer!.renderMarkdown(html, true, props.textDirection)
         editorStore.PRINT_RESPONSE()

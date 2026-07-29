@@ -544,7 +544,11 @@ blockquote .mu-hide.mu-math > .mu-math-render {
     color: var(--editor-color-50);
     font-size: 1em;
     text-decoration: none;
-    word-break: break-all;
+
+    /* Long unbreakable tokens (URLs, paths) may break anywhere, but unlike the
+       old `word-break: break-all` CJK alt text keeps normal line-break rules
+       (kinsoku: no line starting with 。、 etc.). */
+    overflow-wrap: anywhere;
 }
 
 .mu-image-marked-text::before {

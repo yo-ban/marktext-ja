@@ -19,8 +19,20 @@ export function matchString(text: string, value: string, options: ISearchOption)
         });
     }
 
-    if (isWholeWord)
-        regStr = `\\b${regStr}\\b`;
+    if (isWholeWord) {
+        if (isRegexp) {
+            regStr = `\\b${regStr}\\b`;
+        }
+        else {
+            // `\b` only exists next to ASCII word characters, so wrapping a
+            // CJK term in `\b...\b` can never match ("whole word" has no
+            // meaning without word delimiters). Anchor each side only when
+            // that side of the term is an ASCII word character.
+            const head = /^\w/.test(value) ? '\\b' : '';
+            const tail = /\w$/.test(value) ? '\\b' : '';
+            regStr = `${head}${regStr}${tail}`;
+        }
+    }
 
     try {
     // Add try catch expression because not all string can generate a valid RegExp. for example `\`.

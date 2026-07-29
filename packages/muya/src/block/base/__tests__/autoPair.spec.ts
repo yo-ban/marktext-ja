@@ -265,6 +265,27 @@ describe('autoPair — bbea7eca skip when preInputChar is alphanumeric', () => {
         expect(text).toBe('foo1_');
         expect(needRender).toBe(false);
     });
+
+    // The letter test above must hold for non-ASCII letters too: the guard
+    // used ASCII [a-z0-9], so `日本語*` auto-paired into `日本語**` even
+    // though the user is closing emphasis, exactly like `foo*`.
+    it('does not auto-pair `*` immediately after a CJK character', () => {
+        const fakeThis = makeFakeThis('日本語', 3);
+        const event = makeInputEvent('insertText', '*');
+        const { text, needRender } = invokeAutoPair(fakeThis, event, '日本語*', 4);
+
+        expect(text).toBe('日本語*');
+        expect(needRender).toBe(false);
+    });
+
+    it('still auto-pairs `*` after CJK punctuation (not a letter)', () => {
+        const fakeThis = makeFakeThis('日本語。', 4);
+        const event = makeInputEvent('insertText', '*');
+        const { text, needRender } = invokeAutoPair(fakeThis, event, '日本語。*', 5);
+
+        expect(text).toBe('日本語。**');
+        expect(needRender).toBe(true);
+    });
 });
 
 // ── option toggles disable the individual auto-pair behaviours ────────────

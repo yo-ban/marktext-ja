@@ -78,6 +78,7 @@ declare module '@muyajs/core' {
       extraCSS?: string
       inlineStyles?: boolean
       dir?: string
+      lang?: string
     }): Promise<string>
   }
 

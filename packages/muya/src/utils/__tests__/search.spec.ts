@@ -100,6 +100,27 @@ describe('matchString — search option matrix', () => {
             expect(matches[0].index).toBe(4);
             expect(matches[0].match).toBe('cat');
         });
+
+        // `\b` only exists next to ASCII word characters, so a CJK term wrapped
+        // in `\b...\b` could never match — whole-word search in a Japanese
+        // document always returned 0 hits. A term whose edges are not word
+        // characters degrades to a plain substring match instead.
+        it('finds a CJK term when isWholeWord is true', () => {
+            const matches = matchString('これは日本語のテストです。', '日本語', {
+                isWholeWord: true,
+            });
+            expect(matches).toHaveLength(1);
+            expect(matches[0].index).toBe(3);
+        });
+
+        it('anchors only the ASCII edge of a mixed term', () => {
+            // 'api' side gets a boundary ('napi編' must not match), the CJK
+            // side matches adjacent CJK text.
+            const text = 'api編 napi編';
+            const matches = matchString(text, 'api編', { isWholeWord: true });
+            expect(matches).toHaveLength(1);
+            expect(matches[0].index).toBe(0);
+        });
     });
 
     describe('isRegexp', () => {

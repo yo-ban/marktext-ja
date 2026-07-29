@@ -90,6 +90,10 @@ export const setLanguage = async(locale: string): Promise<void> => {
     }
   }
   globalI18n.locale.value = locale
+  // Mirror the UI language onto the document root so Chromium picks
+  // language-correct CJK glyphs (Han unification: an unset/`en` root can
+  // render Japanese text with Chinese-style glyphs).
+  document.documentElement.lang = locale
 }
 
 // Export the current language getter function

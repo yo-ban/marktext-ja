@@ -133,18 +133,22 @@ function shouldInsertClosingPair(
         type,
     } = ctx;
 
+    // The preceding-character checks are Unicode-aware: after any letter or
+    // number — Latin or CJK — the user is far more likely closing emphasis /
+    // typing an apostrophe than opening a new pair. The old ASCII-only test
+    // made `日本語*` auto-pair into `日本語**`.
     return (
         (autoPairQuote
             && /'/.test(inputChar)
             && postIsNotTouching
-            && !/[a-z\d]/i.test(preInputChar))
+            && !/[\p{L}\p{N}]/u.test(preInputChar))
         || (autoPairQuote && /"/.test(inputChar) && postIsNotTouching)
         || (autoPairBracket && /[{[(]/.test(inputChar) && postIsNotTouching)
         || (type === 'format'
             && !isInInlineMath
             && !isInInlineCode
             && autoPairMarkdownSyntax
-            && !/[a-z0-9]/i.test(preInputChar)
+            && !/[\p{L}\p{N}]/u.test(preInputChar)
             && /[*$`~_]/.test(inputChar))
     );
 }

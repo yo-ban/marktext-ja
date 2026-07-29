@@ -196,8 +196,11 @@ export const getHtmlToc = (toc: TocEntry[], options: HtmlTocOptions = {}): strin
 }
 
 // Don't use "Noto Color Emoji" because it will result in PDF files with multiple MB and weird looking emojis.
+// "Yu Gothic" (not the UI variant — its kana are tuned for print, not chrome)
+// before the generic family so Japanese glyphs embed as Japanese-style, not a
+// locale-dependent Chinese-glyph fallback.
 const FALLBACK_FONT_FAMILIES =
-  '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"'
+  '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial,"Yu Gothic","Meiryo","Hiragino Kaku Gothic ProN","Noto Sans CJK JP","Noto Sans JP",sans-serif,"Apple Color Emoji","Segoe UI Emoji"'
 
 const autoNumberingHeadingsCss = `body {counter-reset: h2}
 h2 {counter-reset: h3}

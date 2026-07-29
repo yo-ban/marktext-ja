@@ -134,15 +134,14 @@ describe('muya.getTOC()', () => {
         expect(toc[0].content).toBe('Tabbed heading');
     });
 
-    it('githubSlug strips non-ASCII letters and emoji and collapses whitespace', () => {
-        // marktext url.js literal behavior: `[^\w\s-]/g` removes CJK and
-        // emoji because JS `\w` is ASCII-only without the `/u` flag.
-        // Future Unicode-aware slugging would be a separate change; this
-        // test locks the marktext-faithful output in place.
+    it('githubSlug keeps Unicode letters, strips emoji/punctuation, collapses whitespace', () => {
+        // Unicode-aware slugging (matching GitHub's own slugger): CJK
+        // letters survive so TOC links into Japanese/Chinese documents
+        // resolve; emoji and punctuation are stripped as before.
         const md = `# 你好 World 🎉\n\n# API & Usage Examples!`;
         const muya = bootMuya(md);
         const toc = muya.getTOC();
-        expect(toc[0].githubSlug).toBe('-world-');
+        expect(toc[0].githubSlug).toBe('你好-world-');
         expect(toc[1].githubSlug).toBe('api-usage-examples');
     });
 

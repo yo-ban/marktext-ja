@@ -1,6 +1,23 @@
 .mu-editor {
     font-size: var(--mu-font-size, 16px);
-    font-family: var(--mu-font-family, 'Open Sans', 'Clear Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif);
+
+    /* Japanese fonts before the generic family: Latin glyphs still resolve to
+       the Latin fonts; CJK glyphs get an explicit Japanese font instead of a
+       locale-dependent (possibly Chinese-glyph) default. */
+    font-family: var(
+        --mu-font-family,
+        'Open Sans',
+        'Clear Sans',
+        'Helvetica Neue',
+        Helvetica,
+        Arial,
+        'Yu Gothic UI',
+        Meiryo,
+        'Hiragino Kaku Gothic ProN',
+        'Noto Sans CJK JP',
+        'Noto Sans JP',
+        sans-serif
+    );
     line-height: var(--mu-line-height, 1.6);
 
     outline: none;

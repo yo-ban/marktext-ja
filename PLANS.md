@@ -206,9 +206,16 @@ Windows 専用なら WebView2 = Chromium なので IME 懸念はほぼ消える�
    - 未対応: `prefComponents/keybindings/key-input-dialog.vue:120` の FIXME(キーバインド登録ダイアログ)は Phase 4 で
 
 ### Phase 2 — 日本語の表示と出力
-5. フォントスタックに日本語フォント追加(同梱せず OS フォント指定を推奨: Yu Gothic UI / Meiryo / Noto Sans CJK JP)
-6. `electronLanguages` に ja 追加、エクスポート HTML の lang を文書言語に、`word-break: break-all` 見直し
-7. slug / 単語数 / 単語単位検索 / auto-pair の CJK 対応
+5. ~~フォントスタックに日本語フォント追加~~ **完了**(2026-07-29)— OS フォント指定(Win: Yu Gothic UI/Meiryo、mac: Hiragino、Linux: Noto Sans CJK JP)。総称ファミリの前に挿入し Latin グリフは従来どおり。エディタ(config.ts)/muya 既定(blockSyntax.css)/PDF(pdf.ts、印刷向けに非 UI 変種 Yu Gothic)の 3 箇所
+6. ~~electronLanguages ja / lang 属性 / word-break~~ **完了**(2026-07-29)
+   - `generate({ lang })` を muya に追加(既定 en で既存出力と同一、属性値は検証付き)→ desktop 3 経路(styledHtml/PDF/print)が UI 言語を渡す。`muya-core.d.ts` シムも更新
+   - アプリ本体: index.html に lang="en" + `setLanguage()` で `document.documentElement.lang` を実行時更新
+   - `word-break: break-all`(画像マーカーテキスト限定だった)→ `overflow-wrap: anywhere`(URL 折返し維持+禁則回復)
+7. ~~slug / 単語数 / 単語単位検索 / auto-pair の CJK 対応~~ **完了**(2026-07-29)
+   - slug: `\p{L}\p{M}\p{N}` ベースに(TOC とエクスポート HTML の id は単一実装なので一括修正)。旧仕様を固定していた getTOC.spec は新仕様に更新
+   - 単語数: `[一-龥]` → Han/ひらがな/カタカナ/ハングルの Script プロパティ
+   - 検索: 語端が ASCII 語構成文字の側にのみ `\b` を付与(CJK 語は部分一致に degrade、regexp モードは従来どおり)
+   - auto-pair: 直前文字判定を `\p{L}\p{N}` に(`日本語*` の過剰発火解消。CJK 句読点後は発火維持)
 
 ### Phase 3 — データ損失バグの修正
 8. A1(到達不能 catch)、A4(isSaved 誤代入 3 箇所)、A2、A5

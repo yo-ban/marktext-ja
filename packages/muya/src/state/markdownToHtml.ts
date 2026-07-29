@@ -246,6 +246,11 @@ export class MarkdownToHtml {
      * back to CDN `<link>` tags.
      * @param options.dir Text direction set on the root `<html>` (`rtl` / `auto`);
      * `ltr` is the HTML default and stays implicit.
+     * @param options.lang Content language set on the root `<html>` (a BCP 47
+     * tag, e.g. `ja`). Defaults to `en`, keeping existing exports
+     * byte-identical. Fonts and browser rendering pick language-correct CJK
+     * glyphs from this — a Japanese document exported as `lang="en"` can render
+     * with Chinese-style glyphs.
      */
     async generate(
         options: {
@@ -253,12 +258,17 @@ export class MarkdownToHtml {
             extraCSS?: string;
             inlineStyles?: boolean;
             dir?: string;
+            lang?: string;
         } = {},
     ) {
         const html = await this.renderHtml();
 
         // `extraCSS` may changed in the mean time.
-        const { title = '', extraCSS = '', inlineStyles = true, dir } = options;
+        const { title = '', extraCSS = '', inlineStyles = true, dir, lang } = options;
+
+        // The value lands inside an HTML attribute — accept only a plain
+        // language tag shape and fall back to the historical default otherwise.
+        const langAttr = lang && /^[a-z0-9-]+$/i.test(lang) ? lang : 'en';
 
         // Mirror the editor's text direction onto the exported document so RTL
         // documents export right-to-left (#4553). LTR is the HTML default, so it
@@ -280,7 +290,7 @@ export class MarkdownToHtml {
         }
 
         return `<!DOCTYPE html>
-<html lang="en"${dirAttr}>
+<html lang="${langAttr}"${dirAttr}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

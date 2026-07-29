@@ -50,6 +50,9 @@ extraResources:
 npmRebuild: false
 electronLanguages: # Avoid packaging all chromium locales since our app has in-built locales
   - en-US
+  # Chromium's own locale pack — native dialogs, context-menu items and
+  # accessibility strings. Without it those stay English on a Japanese OS.
+  - ja
 
 asarUnpack:
   - resources/**
