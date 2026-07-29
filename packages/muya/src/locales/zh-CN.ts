@@ -96,5 +96,13 @@ export const zhCN = {
         'Input Front Matter...': '输入页眉...',
         'Invalid Mathematical Formula': '数学公式错误',
         'Empty Mathematical Formula': '空数学公式',
+        // footnote tool
+        'Can\'t find footnote with syntax': 'Can\'t find footnote with syntax',
+        'Input the footnote definition...': 'Input the footnote definition...',
+        'Go to': 'Go to',
+        'Create': 'Create',
+        // preview tool bar
+        'edit': 'edit',
+        'delete block': 'delete block',
     },
 };

@@ -175,6 +175,14 @@
       "tokyoNightLight": "Tokyo Night 浅色",
       "tokyoNightStorm": "Tokyo Night Storm",
       "ulyssesLight": "Ulysses 浅色"
+    },
+    "dock": {
+      "open": "Open...",
+      "clearRecent": "Clear Recent"
+    },
+    "jumpList": {
+      "newWindowTitle": "New Window",
+      "newWindowDescription": "Opens a new window"
     }
   },
   "contextMenu": {
@@ -335,7 +343,8 @@
         "default": "GitHub (默认)",
         "liber": "Liber"
       }
-    }
+    },
+    "tocTitleDefault": "Table of Contents"
   },
   "recent": {
     "noTabsOpen": "您没有打开的标签页。",
@@ -759,7 +768,13 @@
       "exportFilePdf": "导出为 PDF",
       "zoom": "缩放",
       "checkUpdate": "检查更新",
-      "changeLineEnding": "更改行结束符"
+      "changeLineEnding": "更改行结束符",
+      "exportFileHtml": "Export as HTML",
+      "lineEndingCrlf": "Carriage return and line feed (CRLF)",
+      "lineEndingLf": "Line feed (LF)",
+      "trailingNewlineTrim": "Trim all trailing newlines",
+      "trailingNewlineSingle": "Ensure single newline",
+      "trailingNewlineDisabled": "Disabled"
     },
     "edit": {
       "undo": "撤销",
@@ -868,8 +883,11 @@
       "markdownSyntax": "Markdown 语法"
     },
     "spellchecker": {
-      "switchLanguage": "切换拼写检查语言"
-    }
+      "switchLanguage": "切换拼写检查语言",
+      "spellingTitle": "Spelling",
+      "disabledMessage": "Cannot change language because spellchecker is disabled."
+    },
+    "currentOptionSuffix": "{description} - current"
   },
   "common": {
     "cancel": "取消",
@@ -897,7 +915,20 @@
     "updateDownloadedDetail": "Install it now? MarkText will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
     "updateDownloadedMessage": "Update downloaded",
     "updateInstallNow": "Quit and Install",
-    "updateLater": "Later"
+    "updateLater": "Later",
+    "filterPdf": "Portable Document Format",
+    "filterHtml": "Hypertext Markup Language",
+    "filterAllFiles": "All Files",
+    "filterMarkdown": "Markdown document",
+    "untitled": "Untitled",
+    "exportFailureTitle": "Export failure",
+    "linkSpacesTitle": "Links cannot contain spaces",
+    "linkSpacesMessage": "Either URI encode: <code>My%20Link.md</code> <br> or wrap it in brackets: <br> <code>&lt;./My Link.md&gt;</code>. <br> See CommonMark #488 for details.",
+    "crashMessage": "MarkText has crashed",
+    "crashReload": "Reload",
+    "crashKeepOpen": "Keep It Open",
+    "updateAvailableMessage": "Found an update, do you want download and install now?",
+    "updateNotAvailableMessage": "Current version is up-to-date."
   },
   "error": {
     "configSchemaViolation": "配置架构违规",
@@ -934,6 +965,20 @@
       "exportSuccessMessage": "已成功导出“{name}”！",
       "fileRemovedOnDisk": "“{name}” 已在磁盘上被删除。",
       "fileChangedOnDisk": "“{name}” 已在磁盘上发生变更。是否重新加载？"
+    },
+    "project": {
+      "deleteErrorTitle": "Error while deleting",
+      "pasteForbiddenTitle": "Paste Forbidden",
+      "pasteForbiddenMessage": "Source and destination must not be the same.",
+      "pasteErrorTitle": "Error while pasting",
+      "sideBarErrorTitle": "Error in Side Bar",
+      "alreadyExists": "A {type} named \"{name}\" already exists in this folder."
+    },
+    "autoUpdates": {
+      "updateTitle": "Update",
+      "notAvailableTitle": "Update not Available",
+      "downloadedTitle": "Update Downloaded",
+      "availableTitle": "Update Available"
     }
   },
   "spellchecker": {

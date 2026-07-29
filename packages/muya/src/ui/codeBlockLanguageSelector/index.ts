@@ -150,7 +150,7 @@ export class CodeBlockLanguageSelector extends BaseScrollFloat {
         });
 
         if (children.length === 0)
-            children = [h('div.no-result', 'No result')];
+            children = [h('div.no-result', this.muya.i18n.t('No result'))];
 
         const vnode = h('ul', children);
 

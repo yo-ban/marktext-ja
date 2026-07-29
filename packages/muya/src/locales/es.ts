@@ -96,5 +96,13 @@ export const es = {
         'Input Front Matter...': 'Introducir Front Matter...',
         'Invalid Mathematical Formula': 'Fórmula matemática no válida',
         'Empty Mathematical Formula': 'Fórmula matemática vacía',
+        // footnote tool
+        'Can\'t find footnote with syntax': 'Can\'t find footnote with syntax',
+        'Input the footnote definition...': 'Input the footnote definition...',
+        'Go to': 'Go to',
+        'Create': 'Create',
+        // preview tool bar
+        'edit': 'edit',
+        'delete block': 'delete block',
     },
 };

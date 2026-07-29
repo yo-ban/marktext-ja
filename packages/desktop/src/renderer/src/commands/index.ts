@@ -148,7 +148,10 @@ const commands: CommandDescriptor[] = [
     subcommands: [
       {
         id: 'file.export-file-html',
-        description: 'Export as HTML',
+        // Getter so the palette always reads the current UI language.
+        get description() {
+          return t('commands.file.exportFileHtml')
+        },
         execute: async() => {
           await delay(50)
           bus.emit('showExportDialog', 'styledHtml')
@@ -156,7 +159,9 @@ const commands: CommandDescriptor[] = [
       },
       {
         id: 'file.export-file-pdf',
-        description: 'Export as PDF',
+        get description() {
+          return t('commands.file.exportFilePdf')
+        },
         execute: async() => {
           await delay(50)
           bus.emit('showExportDialog', 'pdf')

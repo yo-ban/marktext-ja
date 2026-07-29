@@ -16,11 +16,17 @@
       <template #title>
         <div class="key-input-wrapper">
           <div class="input-wrapper">
+            <!-- readonly: this textbox captures raw key chords, never typed
+                 text. It also keeps the IME from opening a composition over
+                 it — composed text used to leak into the box and the
+                 composition swallowed the keys being recorded. The bound
+                 value is still updated programmatically. -->
             <input
               ref="inputTextbox"
               v-model="keybindingInputValue"
               tabindex="0"
               type="text"
+              readonly
               class="input-textbox"
               :placeholder="placeholderText"
               @keydown="handleKeyDown"
@@ -117,7 +123,8 @@ const handleKeyDown = (event: KeyboardEvent): void => {
   event.preventDefault()
   event.stopPropagation()
   if (isCompositionEvent(event)) {
-    // FIXME: You can still write in the textbox while composition.
+    // Defensive: the readonly input prevents compositions from starting, but
+    // if one is somehow active its keys belong to the IME.
     return
   } else if (isRawKeyCode(event, 'Escape')) {
     cancelKeybinding()

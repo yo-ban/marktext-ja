@@ -96,5 +96,13 @@ export const tr = {
         'Input Front Matter...': 'Ön Bilgiyi girin...',
         'Invalid Mathematical Formula': 'Geçersiz Matematiksel Formül',
         'Empty Mathematical Formula': 'Boş Matematiksel Formül',
+        // footnote tool
+        'Can\'t find footnote with syntax': 'Can\'t find footnote with syntax',
+        'Input the footnote definition...': 'Input the footnote definition...',
+        'Go to': 'Go to',
+        'Create': 'Create',
+        // preview tool bar
+        'edit': 'edit',
+        'delete block': 'delete block',
     },
 };

@@ -96,5 +96,13 @@ export const fr = {
         'Input Front Matter...': 'Saisir le Front Matter...',
         'Invalid Mathematical Formula': 'Formule mathématique invalide',
         'Empty Mathematical Formula': 'Formule mathématique vide',
+        // footnote tool
+        'Can\'t find footnote with syntax': 'Can\'t find footnote with syntax',
+        'Input the footnote definition...': 'Input the footnote definition...',
+        'Go to': 'Go to',
+        'Create': 'Create',
+        // preview tool bar
+        'edit': 'edit',
+        'delete block': 'delete block',
     },
 };

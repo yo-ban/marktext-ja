@@ -96,5 +96,13 @@ export const ja = {
         'Input Front Matter...': 'ヘッダーを入力する...',
         'Invalid Mathematical Formula': '数式が間違っている',
         'Empty Mathematical Formula': '数式がありません',
+        // footnote tool
+        'Can\'t find footnote with syntax': '次の構文に対応する脚注が見つかりません:',
+        'Input the footnote definition...': '脚注の定義を入力...',
+        'Go to': '移動',
+        'Create': '作成',
+        // preview tool bar
+        'edit': '編集',
+        'delete block': 'ブロックを削除',
     },
 };

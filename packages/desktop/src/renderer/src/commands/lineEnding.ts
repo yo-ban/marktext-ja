@@ -4,8 +4,12 @@ import bus from '../bus'
 import getCommandDescriptionById from './descriptions'
 import { t } from '../i18n'
 
-const crlfDescription = 'Carriage return and line feed (CRLF)'
-const lfDescription = 'Line feed (LF)'
+// Functions, not constants: resolved when the palette opens so they follow
+// the current UI language.
+const crlfDescription = () => t('commands.file.lineEndingCrlf')
+const lfDescription = () => t('commands.file.lineEndingLf')
+const markCurrent = (description: string) =>
+  t('commands.currentOptionSuffix', { description })
 
 interface LineEndingSubcommand {
   id: string
@@ -29,12 +33,12 @@ class LineEndingCommand {
     this.subcommands = [
       {
         id: 'file.line-ending-crlf',
-        description: crlfDescription,
+        description: crlfDescription(),
         value: 'crlf'
       },
       {
         id: 'file.line-ending-lf',
-        description: lfDescription,
+        description: lfDescription(),
         value: 'lf'
       }
     ]
@@ -50,12 +54,12 @@ class LineEndingCommand {
     const { lineEnding } = currentFile
     if (lineEnding === 'crlf') {
       this.subcommandSelectedIndex = 0
-      this.subcommands[0].description = `${crlfDescription} - current`
-      this.subcommands[1].description = lfDescription
+      this.subcommands[0].description = markCurrent(crlfDescription())
+      this.subcommands[1].description = lfDescription()
     } else {
       this.subcommandSelectedIndex = 1
-      this.subcommands[0].description = crlfDescription
-      this.subcommands[1].description = `${lfDescription} - current`
+      this.subcommands[0].description = crlfDescription()
+      this.subcommands[1].description = markCurrent(lfDescription())
     }
   }
 

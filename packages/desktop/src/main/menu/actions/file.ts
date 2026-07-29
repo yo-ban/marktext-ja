@@ -41,14 +41,14 @@ const getExportExtensionFilter = (type: string): Electron.FileFilter[] | undefin
   if (type === 'pdf') {
     return [
       {
-        name: 'Portable Document Format',
+        name: t('dialog.filterPdf'),
         extensions: ['pdf']
       }
     ]
   } else if (type === 'styledHtml') {
     return [
       {
-        name: 'Hypertext Markup Language',
+        name: t('dialog.filterHtml'),
         extensions: ['html']
       }
     ]
@@ -94,7 +94,7 @@ const handleResponseForExport = async(e: IpcMainEvent, payload: ExportPayload): 
   const dirname = pathname ? path.dirname(pathname) : getPath('documents')
   let nakedFilename = pathname ? path.basename(pathname, '.md') : title
   if (!nakedFilename) {
-    nakedFilename = 'Untitled'
+    nakedFilename = t('dialog.untitled')
   }
 
   const defaultPath = path.join(dirname, `${nakedFilename}${extension}`)
@@ -131,7 +131,7 @@ const handleResponseForExport = async(e: IpcMainEvent, payload: ExportPayload): 
       const ERROR_MSG =
         (err instanceof Error && err.message) || `Error happened when export ${filePath}`
       win.webContents.send('mt::show-notification', {
-        title: 'Export failure',
+        title: t('dialog.exportFailureTitle'),
         type: 'error',
         message: ERROR_MSG
       })
@@ -178,7 +178,7 @@ const handleResponseForSave = async(
   }
   let recommendFilename = getRecommendTitleFromMarkdownString(markdown)
   if (!recommendFilename) {
-    recommendFilename = filename || 'Untitled'
+    recommendFilename = filename || t('dialog.untitled')
   }
 
   // If the file doesn't exist on disk add it to the recently used documents later
@@ -373,7 +373,7 @@ ipcMain.on(
     }
     let recommendFilename = getRecommendTitleFromMarkdownString(markdown)
     if (!recommendFilename) {
-      recommendFilename = filename || 'Untitled'
+      recommendFilename = filename || t('dialog.untitled')
     }
 
     // If the file doesn't exist on disk add it to the recently used documents later
@@ -626,10 +626,9 @@ ipcMain.on('mt::format-link-click', async(e, { data, dirname }: FormatLinkPayloa
     // No <> found, no spaces should be allowed
     if (/\s/.test(rawUrl)) {
       win.webContents.send('mt::show-notification', {
-        title: 'Links cannot contain spaces',
+        title: t('dialog.linkSpacesTitle'),
         type: 'error',
-        message:
-          'Either URI encode: <code>My%20Link.md</code> <br> or wrap it in brackets: <br> <code><./My Link.md></code>. <br> See CommonMark #488 for details.'
+        message: t('dialog.linkSpacesMessage')
       })
       return
     }
@@ -732,7 +731,7 @@ export const importFile = async(win: BrowserWindow | null): Promise<void> => {
     properties: ['openFile'],
     filters: [
       {
-        name: 'All Files',
+        name: t('dialog.filterAllFiles'),
         extensions: [...PANDOC_EXTENSIONS]
       }
     ]
@@ -757,7 +756,7 @@ export const openFile = async(win: BrowserWindow | null): Promise<void> => {
     properties: ['openFile', 'multiSelections'],
     filters: [
       {
-        name: 'Markdown document',
+        name: t('dialog.filterMarkdown'),
         extensions: [...MARKDOWN_EXTENSIONS]
       }
     ]

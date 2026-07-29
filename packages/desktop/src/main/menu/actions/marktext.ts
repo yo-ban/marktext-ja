@@ -24,17 +24,14 @@ autoUpdater.on('error', (error: Error) => {
 
 autoUpdater.on('update-available', (_info) => {
   if (win) {
-    win.webContents.send(
-      'mt::UPDATE_AVAILABLE',
-      'Found an update, do you want download and install now?'
-    )
+    win.webContents.send('mt::UPDATE_AVAILABLE', t('dialog.updateAvailableMessage'))
   }
   runningUpdate = false
 })
 
 autoUpdater.on('update-not-available', (_info) => {
   if (win) {
-    win.webContents.send('mt::UPDATE_NOT_AVAILABLE', 'Current version is up-to-date.')
+    win.webContents.send('mt::UPDATE_NOT_AVAILABLE', t('dialog.updateNotAvailableMessage'))
   }
   runningUpdate = false
 })

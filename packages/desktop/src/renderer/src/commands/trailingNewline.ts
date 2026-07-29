@@ -4,7 +4,13 @@ import bus from '../bus'
 import getCommandDescriptionById from './descriptions'
 import { t } from '../i18n'
 
-const descriptions = ['Trim all trailing newlines', 'Ensure single newline', 'Disabled']
+// Function, not a constant: resolved when the palette opens so the entries
+// follow the current UI language.
+const descriptions = () => [
+  t('commands.file.trailingNewlineTrim'),
+  t('commands.file.trailingNewlineSingle'),
+  t('commands.file.trailingNewlineDisabled')
+]
 
 interface TrailingNewlineSubcommand {
   id: string
@@ -40,24 +46,27 @@ class TrailingNewlineCommand {
       index = 2
     }
 
+    const texts = descriptions()
     this.subcommands = [
       {
         id: 'file.trailing-newline-trim',
-        description: descriptions[0],
+        description: texts[0],
         value: 0
       },
       {
         id: 'file.trailing-newline-single',
-        description: descriptions[1],
+        description: texts[1],
         value: 1
       },
       {
         id: 'file.trailing-newline-disabled',
-        description: descriptions[2],
+        description: texts[2],
         value: 3
       }
     ]
-    this.subcommands[index].description = `${descriptions[index]} - current`
+    this.subcommands[index].description = t('commands.currentOptionSuffix', {
+      description: texts[index]
+    })
     this.subcommandSelectedIndex = index
   }
 

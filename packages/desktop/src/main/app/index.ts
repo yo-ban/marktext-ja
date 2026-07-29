@@ -13,14 +13,14 @@ import { normalizeAndResolvePath } from '../filesystem'
 import { normalizeMarkdownPath } from '../filesystem/markdown'
 import { registerKeyboardListeners } from '../keyboard'
 import { selectTheme } from '../menu/actions/theme'
-import { dockMenu } from '../menu/templates'
+import { buildDockMenu } from '../menu/templates'
 import registerSpellcheckerListeners from '../spellchecker'
 import { watchers } from '../utils/imagePathAutoComplement'
 import { onInternalChannel } from '../utils/internalIpc'
 import { WindowType } from '../windows/base'
 import EditorWindow from '../windows/editor'
 import SettingWindow from '../windows/setting'
-import { setLanguage } from '../i18n'
+import { setLanguage, t } from '../i18n'
 import { getNativeThemeSource, isDarkApplicationTheme } from './nativeTheme'
 import type Accessor from './accessor'
 import type WindowManager from './windowManager'
@@ -360,7 +360,7 @@ class App {
     }
 
     if (isOsx) {
-      app.dock?.setMenu(dockMenu)
+      app.dock?.setMenu(buildDockMenu())
     } else if (isWindows) {
       app.setJumpList([
         {
@@ -371,8 +371,8 @@ class App {
           items: [
             {
               type: 'task',
-              title: 'New Window',
-              description: 'Opens a new window',
+              title: t('menu.jumpList.newWindowTitle'),
+              description: t('menu.jumpList.newWindowDescription'),
               program: process.execPath,
               args: '--new-window',
               iconPath: process.execPath,

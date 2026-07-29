@@ -94,7 +94,7 @@ export class PreviewToolBar extends BaseFloat {
                 itemSelector,
                 {
                     attrs: {
-                        title: `${i.tooltip}`,
+                        title: `${this.muya.i18n.t(i.tooltip)}`,
                     },
                     on: {
                         click: (event) => {

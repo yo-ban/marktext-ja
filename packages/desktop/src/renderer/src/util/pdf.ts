@@ -9,6 +9,7 @@ import { escapeHTML, unescapeHTML, generateGithubSlug } from '@muyajs/core'
 import academicTheme from '@/assets/themes/export/academic.theme.css?inline'
 import liberTheme from '@/assets/themes/export/liber.theme.css?inline'
 import { deepClone } from '../util'
+import { t } from '../i18n'
 import { sanitize, EXPORT_DOMPURIFY_CONFIG } from '../util/dompurify'
 
 export interface PdfCssOptions {
@@ -190,7 +191,7 @@ export const getHtmlToc = (toc: TocEntry[], options: HtmlTocOptions = {}): strin
     return ''
   }
 
-  const title = options.tocTitle ? options.tocTitle : 'Table of Contents'
+  const title = options.tocTitle ? options.tocTitle : t('exportSettings.tocTitleDefault')
   const html = `<div class="toc-container"><p class="toc-title">${title}</p><ul class="toc-list">${tocList}</ul></div>`
   return sanitize(html, EXPORT_DOMPURIFY_CONFIG)
 }

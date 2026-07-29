@@ -96,5 +96,13 @@ export const ko = {
         'Input Front Matter...': '머리말 입력...',
         'Invalid Mathematical Formula': '잘못된 수식',
         'Empty Mathematical Formula': '빈 수식',
+        // footnote tool
+        'Can\'t find footnote with syntax': 'Can\'t find footnote with syntax',
+        'Input the footnote definition...': 'Input the footnote definition...',
+        'Go to': 'Go to',
+        'Create': 'Create',
+        // preview tool bar
+        'edit': 'edit',
+        'delete block': 'delete block',
     },
 };

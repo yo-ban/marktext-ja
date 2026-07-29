@@ -96,5 +96,13 @@ export const zhTW = {
         'Input Front Matter...': '輸入頁首資訊...',
         'Invalid Mathematical Formula': '數學公式錯誤',
         'Empty Mathematical Formula': '空數學公式',
+        // footnote tool
+        'Can\'t find footnote with syntax': 'Can\'t find footnote with syntax',
+        'Input the footnote definition...': 'Input the footnote definition...',
+        'Go to': 'Go to',
+        'Create': 'Create',
+        // preview tool bar
+        'edit': 'edit',
+        'delete block': 'delete block',
     },
 };

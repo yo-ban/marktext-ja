@@ -175,6 +175,14 @@
       "tokyoNightLight": "Tokyo Night ライト",
       "tokyoNightStorm": "Tokyo Night Storm",
       "ulyssesLight": "ユリシーズ ライト"
+    },
+    "dock": {
+      "open": "開く...",
+      "clearRecent": "最近使った項目をクリア"
+    },
+    "jumpList": {
+      "newWindowTitle": "新しいウィンドウ",
+      "newWindowDescription": "新しいウィンドウを開きます"
     }
   },
   "contextMenu": {
@@ -335,7 +343,8 @@
         "default": "GitHub (デフォルト)",
         "liber": "リベル"
       }
-    }
+    },
+    "tocTitleDefault": "目次"
   },
   "recent": {
     "noTabsOpen": "開いているタブがありません。",
@@ -759,7 +768,13 @@
       "exportFile": "ファイルをエクスポート",
       "exportFilePdf": "PDFとしてエクスポート",
       "zoom": "ズーム",
-      "checkUpdate": "アップデートを確認"
+      "checkUpdate": "アップデートを確認",
+      "exportFileHtml": "HTMLとしてエクスポート",
+      "lineEndingCrlf": "キャリッジリターンとラインフィード (CRLF)",
+      "lineEndingLf": "ラインフィード (LF)",
+      "trailingNewlineTrim": "末尾の改行をすべて削除",
+      "trailingNewlineSingle": "改行を 1 つに揃える",
+      "trailingNewlineDisabled": "無効"
     },
     "edit": {
       "undo": "元に戻す",
@@ -868,8 +883,11 @@
       "markdownSyntax": "Markdown構文"
     },
     "spellchecker": {
-      "switchLanguage": "言語を切り替え"
-    }
+      "switchLanguage": "言語を切り替え",
+      "spellingTitle": "スペルチェック",
+      "disabledMessage": "スペルチェッカーが無効のため言語を変更できません。"
+    },
+    "currentOptionSuffix": "{description} - 現在"
   },
   "common": {
     "cancel": "キャンセル",
@@ -897,7 +915,20 @@
     "updateDownloadedDetail": "今すぐインストールしますか?MarkText は通常の手順で終了し、未保存のドキュメントがあれば先に保存を確認します。「後で」を選ぶと、次回終了時にインストールされます。",
     "updateDownloadedMessage": "アップデートをダウンロードしました",
     "updateInstallNow": "終了してインストール",
-    "updateLater": "後で"
+    "updateLater": "後で",
+    "filterPdf": "PDF ドキュメント",
+    "filterHtml": "HTML ドキュメント",
+    "filterAllFiles": "すべてのファイル",
+    "filterMarkdown": "Markdown ドキュメント",
+    "untitled": "無題",
+    "exportFailureTitle": "エクスポートに失敗しました",
+    "linkSpacesTitle": "リンクに空白は使えません",
+    "linkSpacesMessage": "URI エンコードするか: <code>My%20Link.md</code> <br> 山括弧で囲んでください: <br> <code>&lt;./My Link.md&gt;</code>。<br> 詳細は CommonMark #488 を参照。",
+    "crashMessage": "MarkText がクラッシュしました",
+    "crashReload": "再読み込み",
+    "crashKeepOpen": "このままにする",
+    "updateAvailableMessage": "アップデートが見つかりました。今すぐダウンロードしてインストールしますか?",
+    "updateNotAvailableMessage": "現在のバージョンは最新です。"
   },
   "error": {
     "configSchemaViolation": "設定スキーマ違反",
@@ -934,6 +965,20 @@
       "exportSuccessMessage": "「{name}」を正常にエクスポートしました！",
       "fileRemovedOnDisk": "「{name}」はディスク上で削除されました。",
       "fileChangedOnDisk": "「{name}」はディスク上で変更されました。再読み込みしますか？"
+    },
+    "project": {
+      "deleteErrorTitle": "削除中にエラーが発生しました",
+      "pasteForbiddenTitle": "貼り付けできません",
+      "pasteForbiddenMessage": "移動元と移動先が同じです。",
+      "pasteErrorTitle": "貼り付け中にエラーが発生しました",
+      "sideBarErrorTitle": "サイドバーのエラー",
+      "alreadyExists": "「{name}」という名前の{type}は既にこのフォルダに存在します。"
+    },
+    "autoUpdates": {
+      "updateTitle": "アップデート",
+      "notAvailableTitle": "アップデートはありません",
+      "downloadedTitle": "アップデートをダウンロードしました",
+      "availableTitle": "アップデートがあります"
     }
   },
   "spellchecker": {

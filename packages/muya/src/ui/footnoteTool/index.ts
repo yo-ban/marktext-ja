@@ -76,12 +76,13 @@ export class FootnoteTool extends BaseFloat {
     }
 
     private _render() {
+        const { i18n } = this.muya;
         const hasFootnote = this._footnotes.has(this._identifier);
-        let previewText = `Can't find footnote with syntax [^${this._identifier}]:`;
+        let previewText = `${i18n.t('Can\'t find footnote with syntax')} [^${this._identifier}]:`;
         if (hasFootnote) {
             const block = this._footnotes.get(this._identifier)!;
             const collected = collectFootnoteText(block);
-            previewText = collected || 'Input the footnote definition...';
+            previewText = collected || i18n.t('Input the footnote definition...');
         }
 
         const textNode = h('span.text', previewText);
@@ -92,7 +93,7 @@ export class FootnoteTool extends BaseFloat {
                     click: (event: Event) => this._handleButtonClick(event, hasFootnote),
                 },
             },
-            hasFootnote ? 'Go to' : 'Create',
+            hasFootnote ? i18n.t('Go to') : i18n.t('Create'),
         );
         const children = hasFootnote
             ? [textNode, button]
