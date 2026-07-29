@@ -17,6 +17,8 @@ export default [
       '.claude/**',
       '**/out/**',
       '**/dist/**',
+      // Local snapshot of upstream issues/PRs (reference data, not code).
+      'issues/**',
       // muya v2 (TS) self-lints with its own antfu-based config
       // (packages/muya/eslint.config.mjs). Different style rules from the
       // marktext-desktop config (4-space indent, semis required, strict

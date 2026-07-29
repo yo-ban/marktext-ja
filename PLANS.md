@@ -189,10 +189,18 @@ Windows 専用なら WebView2 = Chromium なので IME 懸念はほぼ消える�
 ## 今後の予定
 
 ### Phase 1 — 日本語入力の修正(フォークの核)
-1. PR #4876 / #4957 の cherry-pick + develop での再現確認(#3822 も検証)
+1. ~~PR #4876 / #4957 の cherry-pick + develop での再現確認~~ **完了**(2026-07-29)
+   - #4957: PR は方針のみ参照し同等ガードを実装。ユニットテストで develop 再現→修正を確認(`imeBackspaceComposition.spec.ts`)
+   - #4876: upstream diff を取得し `git apply`(clean)。レビュー済み(state 更新は同期のまま、DOM 再構築のみ 300ms 遅延/構造編集は同期維持/タイマーは isConnected+isComposed ガード付き)
+   - #3822(Linux/fcitx5)は未検証 — #4851 と同根なら修正済みのはず。実機確認時に要検証
 2. Shift_JIS 自動判定修正(`encoding.ts:13-19` + EUC-JP マッピング + `[-_]` 修正 + テスト新規作成)
-3. `langInputContent` の isComposed ガード追加、フロートメニューの composition ガード(`ui/ui.ts`)
-4. デスクトップ側 IME ガード 4 箇所(検索/コマンドパレット/ファイル名入力/リネーム)
+3. ~~`langInputContent` の isComposed ガード追加、フロートメニューの composition ガード~~ **完了**(2026-07-29)
+   - langInputContent: isComposed ガード + IME 確定時は DOM 再構築なしで state のみ更新(#4876 と同機構)
+   - フロート: `ui.ts` `handleContentKeydown` / `baseScrollFloat` ナビキー / `baseFloat` Escape の 3 箇所に isComposing ガード
+4. ~~デスクトップ側 IME ガード~~ **完了**(2026-07-29)— 計画の 4 箇所に加え treeFile/treeFolder も発見し計 7 箇所:
+   - search(Enter)、commandPalette(keydown ↑/↓)、tree.vue / treeFolder.vue(新規ファイル名 Enter ×2)、treeFile.vue / treeFolder.vue(リネーム Enter ×2)、rename/index.vue
+   - rename は `@keyup.enter` だったため isComposing ガード不能(確定 Enter の keyup は compositionend 後で isComposing=false)→ keydown 化。keypress 系 4 箇所も deprecated のため keydown+ガードに統一
+   - 未対応: `prefComponents/keybindings/key-input-dialog.vue:120` の FIXME(キーバインド登録ダイアログ)は Phase 4 で
 
 ### Phase 2 — 日本語の表示と出力
 5. フォントスタックに日本語フォント追加(同梱せず OS フォント指定を推奨: Yu Gothic UI / Meiryo / Noto Sans CJK JP)
