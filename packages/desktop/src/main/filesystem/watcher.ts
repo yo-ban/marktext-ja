@@ -405,6 +405,14 @@ class Watcher {
     pathname: string,
     duration: number = WATCHER_STABILITY_THRESHOLD + WATCHER_STABILITY_POLL_INTERVAL * 2
   ): void {
+    // Entries are normally consumed by their matching watcher event, but a
+    // file outside every watched directory never produces one — without this
+    // sweep the list grew for the whole session. The generous retention keeps
+    // the late cloud-drive re-sync window (GH#3044) intact.
+    const now = Date.now()
+    this._ignoreChangeEvents = this._ignoreChangeEvents.filter(
+      (entry) => now - entry.start.getTime() < entry.duration + 60_000
+    )
     this._ignoreChangeEvents.push({ windowId, pathname, duration, start: new Date() })
   }
 

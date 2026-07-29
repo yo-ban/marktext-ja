@@ -60,12 +60,17 @@ const getPositionFromColumn = (lines: string[], column: number): [number, number
   let currentLength = 0
   let currentLine = 0
   let previousLength = 0
-  while (column >= currentLength) {
+  // Bound the walk: a byte-based column from rg can exceed the summed UTF-16
+  // line lengths for multibyte text; running off the array threw a TypeError
+  // that the caller's catch swallowed into a silent "no results".
+  while (currentLine < lines.length && column >= currentLength) {
     previousLength = currentLength
     currentLength += lines[currentLine].length + 1
     currentLine++
   }
-  return [currentLine - 1, column - previousLength]
+  const line = Math.max(0, currentLine - 1)
+  const col = Math.min(column - previousLength, lines[line]?.length ?? 0)
+  return [line, col]
 }
 
 interface RgSubmatch {
@@ -281,6 +286,11 @@ const startTextSearch = (
       finishIfDone()
     })
     child.on('error', (err) => finishIfDone(err))
+    // Decode through the stream so a multibyte character split across two
+    // 64KiB chunks survives; `buffer += chunk` on raw Buffers ran a per-chunk
+    // toString() that mojibaked Japanese results at chunk boundaries.
+    child.stdout?.setEncoding('utf8')
+    child.stderr?.setEncoding('utf8')
     child.stderr?.on('data', (chunk: Buffer | string) => {
       bufferError += chunk
     })
@@ -404,6 +414,10 @@ const startFileSearch = (
       finishIfDone()
     })
     child.on('error', (err) => finishIfDone(err))
+    // Same chunk-boundary decoding fix as the text-search path above — here a
+    // split path byte made the emitted path unopenable on click.
+    child.stdout?.setEncoding('utf8')
+    child.stderr?.setEncoding('utf8')
     child.stderr?.on('data', (chunk: Buffer | string) => {
       bufferError += chunk
     })

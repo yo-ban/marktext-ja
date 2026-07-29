@@ -97,7 +97,10 @@ export const getBlankFileState = (
   let untitleId = Math.max(
     ...tabs.map((f) => {
       if (f.pathname === '') {
-        return +f.filename.split('-')[1]
+        // An unsaved tab may carry a name with no "-N" suffix (or a renamed
+        // one); +undefined is NaN and poisoned Math.max into "Untitled-NaN".
+        const n = Number(f.filename.split('-')[1])
+        return Number.isFinite(n) ? n : 0
       } else {
         return 0
       }

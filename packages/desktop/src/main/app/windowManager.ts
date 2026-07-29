@@ -451,6 +451,12 @@ class WindowManager extends TypedEmitter<WindowManagerEvents> {
           return
         }
         editor.changeOpenedFilePath(pathname, oldPathname)
+
+        // A Save As / rename just wrote the new path; suppress the watcher's
+        // echo of our own write exactly like 'window-file-saved' does —
+        // otherwise the editor reports its own save as an external change.
+        const duration = WATCHER_STABILITY_THRESHOLD + WATCHER_STABILITY_POLL_INTERVAL * 2
+        this._watcher.ignoreChangedEvent(windowId, pathname, duration)
       }
     )
 
