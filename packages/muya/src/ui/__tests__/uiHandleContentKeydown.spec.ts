@@ -82,4 +82,19 @@ describe('ui.handleContentKeydown', () => {
         expect(ui.handleContentKeydown(event)).toBe(true);
         expect(event.preventDefault).toHaveBeenCalled();
     });
+
+    // While an IME composition is open, Enter/Escape/Tab/arrows confirm,
+    // cancel or navigate the IME's candidate list. A capturing float must
+    // not swallow them or Japanese/Chinese/Korean conversion breaks.
+    it('never captures navigation keys while an IME composition is open', () => {
+        const ui = makeUi();
+        ui.shownFloat.add(fakeFloat(true));
+
+        for (const key of ['Enter', 'Escape', 'Tab', 'ArrowUp', 'ArrowDown']) {
+            const event = { key, isComposing: true, preventDefault: vi.fn() } as unknown as KeyboardEvent;
+
+            expect(ui.handleContentKeydown(event)).toBe(false);
+            expect(event.preventDefault).not.toHaveBeenCalled();
+        }
+    });
 });

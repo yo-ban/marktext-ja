@@ -38,6 +38,11 @@ abstract class BaseScrollFloat extends BaseFloat {
         const handler = (event: Event) => {
             if (!this.status || !isKeyboardEvent(event))
                 return;
+            // Arrows/Tab/Enter pressed while an IME composition is open
+            // navigate the IME's candidate list — they must not also drive
+            // the float's own selection.
+            if (event.isComposing)
+                return;
             switch (event.key) {
                 case EVENT_KEYS.ArrowUp:
                     this.step('previous');

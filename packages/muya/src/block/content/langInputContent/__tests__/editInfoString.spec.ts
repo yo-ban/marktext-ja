@@ -12,7 +12,7 @@ function boot(markdown: string): Muya {
 
 interface ILangInput {
     domNode: HTMLElement;
-    inputHandler: () => void;
+    inputHandler: (event: Event) => void;
 }
 
 function firstLangInput(muya: Muya): ILangInput {
@@ -36,7 +36,7 @@ describe('language input edits the whole info string (#4770 follow-up)', () => {
         selection.removeAllRanges();
         selection.addRange(range);
 
-        li.inputHandler();
+        li.inputHandler(new InputEvent('input', { inputType: 'insertText', data: '"' }));
         muya.editor.jsonState.flush();
         expect(muya.getMarkdown().split('\n')[0]).toBe('```js title="app.js"');
     });

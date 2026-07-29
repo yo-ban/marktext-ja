@@ -38,6 +38,12 @@ export class Ui {
     }
 
     handleContentKeydown(event: KeyboardEvent): boolean {
+        // While an IME composition is open, Enter/Escape/Tab/arrows operate the
+        // IME's candidate list (confirm / cancel / navigate) — they must reach
+        // the IME, never a float.
+        if (event.isComposing)
+            return false;
+
         if (this.shownFloat.size === 0 || !CONTENT_NAV_KEYS.has(event.key))
             return false;
 

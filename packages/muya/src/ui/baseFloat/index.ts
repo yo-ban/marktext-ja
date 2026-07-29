@@ -80,7 +80,9 @@ abstract class BaseFloat {
         const { floatBox } = this;
 
         const keydownHandler = (event: Event) => {
-            if (isKeyboardEvent(event) && event.key === EVENT_KEYS.Escape)
+            // Escape pressed while an IME composition is open cancels the
+            // composition, not the float.
+            if (isKeyboardEvent(event) && !event.isComposing && event.key === EVENT_KEYS.Escape)
                 this.hide();
         };
 

@@ -35,14 +35,19 @@ class LangInputContent extends Content {
     /**
      * Update this block lang and parent's lang, and show/hide language selector.
      * @param lang
+     * @param needRender Pass false to keep the current DOM and caret — required
+     * on an IME commit, where rebuilding `innerHTML` destroys the text node the
+     * IME is still anchored to (#4851).
      */
-    private _updateLanguage(lang: string) {
-        const { start, end } = this.getCursor()!;
+    private _updateLanguage(lang: string, needRender = true) {
+        const cursor = needRender ? this.getCursor() : null;
         this.text = lang;
         this.parent!.lang = lang;
-        const startOffset = Math.min(lang.length, start.offset);
-        const endOffset = Math.min(lang.length, end.offset);
-        this.setCursor(startOffset, endOffset, true);
+        if (cursor) {
+            const startOffset = Math.min(lang.length, cursor.start.offset);
+            const endOffset = Math.min(lang.length, cursor.end.offset);
+            this.setCursor(startOffset, endOffset, true);
+        }
         this.muya.eventCenter.emit('content-change', { block: this });
     }
 
@@ -53,12 +58,31 @@ class LangInputContent extends Content {
         this._updateLanguage(lang);
     }
 
-    override inputHandler() {
+    override inputHandler(event: Event) {
+        // Composition updates arrive as one `input` per candidate keystroke
+        // while the composition is still open; committing them would rebuild
+        // `innerHTML` and break the IME. Commit once on compositionend instead
+        // (composeHandler calls inputHandler after clearing isComposed).
+        if (this.isComposed)
+            return;
+
         const textContent = this.domNode!.textContent ?? '';
         // Store the whole info string; the language is derived as its first word
         // elsewhere (`firstWordOfInfo`). Previously this truncated at the first
         // whitespace, which dropped `title="x"` / Pandoc attributes on edit.
-        this._updateLanguage(textContent);
+        // An IME commit must keep the live text node for the next character's
+        // composition, so it updates state without re-rendering.
+        this._updateLanguage(textContent, !this._isImeCommit(event));
+    }
+
+    // Mirrors CodeBlockContent._isImeCommit — a compositionend, or the trailing
+    // `insertCompositionText` input Chromium fires right after it.
+    private _isImeCommit(event: Event): boolean {
+        if (event.type === 'compositionend')
+            return true;
+
+        return 'inputType' in event
+            && (event as InputEvent).inputType === 'insertCompositionText';
     }
 
     override enterHandler(event: Event) {
