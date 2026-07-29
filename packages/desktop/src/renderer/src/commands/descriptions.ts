@@ -23,6 +23,11 @@ const COMMAND_KEY_MAP: Record<string, string> = {
   'file.save-as': 'commands.file.saveAs',
   'file.export-file': 'commands.file.exportFile',
   'file.export-file.pdf': 'commands.file.exportFilePdf',
+  // Palette subcommands of file.export-file — without these entries the
+  // description refresh in getCommandsWithDescriptions falls back to the
+  // raw id string.
+  'file.export-file-html': 'commands.file.exportFileHtml',
+  'file.export-file-pdf': 'commands.file.exportFilePdf',
 
   // File management
   'file.move-file': 'commands.file.moveFile',

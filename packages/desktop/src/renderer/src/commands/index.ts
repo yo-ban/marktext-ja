@@ -147,11 +147,11 @@ const commands: CommandDescriptor[] = [
     id: 'file.export-file',
     subcommands: [
       {
+        // Localized via COMMAND_KEY_MAP — getCommandsWithDescriptions()
+        // overwrites `description` on every palette open, so it must stay a
+        // plain writable property (a getter here crashed the renderer boot).
         id: 'file.export-file-html',
-        // Getter so the palette always reads the current UI language.
-        get description() {
-          return t('commands.file.exportFileHtml')
-        },
+        description: '',
         execute: async() => {
           await delay(50)
           bus.emit('showExportDialog', 'styledHtml')
@@ -159,9 +159,7 @@ const commands: CommandDescriptor[] = [
       },
       {
         id: 'file.export-file-pdf',
-        get description() {
-          return t('commands.file.exportFilePdf')
-        },
+        description: '',
         execute: async() => {
           await delay(50)
           bus.emit('showExportDialog', 'pdf')
