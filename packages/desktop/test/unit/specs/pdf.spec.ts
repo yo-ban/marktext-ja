@@ -3,8 +3,12 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 // `@/util/pdf` reads `window.path.join` and (for disk themes)
 // `window.marktext.paths` / `window.fileUtils` at call time, all normally
 // injected by the preload bridge. Stub the surface before the hoisted imports
-// run so the module graph can load. Per-test overrides below swap the
-// `window.fileUtils` behavior via `vi.resetModules()` + dynamic import.
+// run so the module graph can load. Because every `window.*` read happens at
+// call time and pdf.ts keeps no mutable module state, the module is imported
+// ONCE and per-test overrides just swap the `window.fileUtils` object. (The
+// previous `vi.resetModules()` + re-import per test re-transformed the whole
+// @muyajs/core graph every test, which blew the 5s test timeout under a
+// loaded full-suite run — the long-standing "pdf.spec full-suite flake".)
 vi.hoisted(() => {
   const w = globalThis as unknown as {
     window?: {
@@ -27,13 +31,13 @@ vi.hoisted(() => {
 // rather than asserting a theme-specific selector token, which is unavailable
 // here.
 
-const loadPdf = async() => {
-  return import('@/util/pdf')
-}
+// Top-level await: the (expensive, one-off) module-graph import happens during
+// collection, outside any single test's 5s budget.
+const pdfModule = await import('@/util/pdf')
+const loadPdf = async() => pdfModule
 
 describe('getCssForOptions', () => {
   beforeEach(() => {
-    vi.resetModules()
     const w = globalThis as unknown as {
       window: {
         marktext: { paths: { userDataPath: string } }

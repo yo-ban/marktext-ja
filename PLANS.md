@@ -52,13 +52,13 @@
 | #3822 | — | Linux/fcitx5 でコードブロック内入力破壊。#4851 と同根の可能性大 |
 | #4926/#4892 | **#4931** | 絵文字削除でサロゲートペア分割 → "Invalid offset - splits unicode bytes" クラッシュ |
 
-**新規発見(upstream に issue なし)— muya エンジン:**
+**新規発見(upstream に issue なし)— muya エンジン:**(5 件すべて修正済み 2026-07-29)
 
-- `packages/muya/src/block/content/langInputContent/index.ts:56-62` — コードフェンス言語入力欄だけ `isComposed` ガード完全欠落。変換 1 文字目で必ず破綻
-- `packages/muya/src/ui/ui.ts:40-64` + `ui/baseScrollFloat/index.ts:35-63` — フロートメニュー(絵文字ピッカー/クイック挿入/言語セレクタ)が Enter/Escape/Tab/↑/↓ を composition 中でも横取り(= 日本語 IME の変換操作キー)
-- `packages/muya/src/clipboard/index.ts:16-24,65-100` — 複数ブロック選択中に IME keydown(keyCode 229)が `cutHandler()` を発火
-- `packages/muya/src/editor/index.ts:299-320` — compositionstart/end も選択範囲ゲートで drop される。compositionend が落ちると `isComposed=true` が固着しブロックが入力不能に(復帰手段なし)
-- `packages/muya/src/block/content/tableCell/index.ts:254-272` — Safari 用 ZWSP ハックが全エンジンで無条件実行。compositionstart 中に DOM 書き換え
+- ~~`langInputContent` の isComposed ガード欠落~~ → Phase 1 で修正
+- ~~フロートメニューの composition キー横取り~~ → Phase 1 で修正(+BaseFloat Escape も)
+- ~~`clipboard` — 複数ブロック選択中の IME keydown(keyCode 229)で `cutHandler()` 発火~~ → 修正: `shouldCrossBlockCut` に isComposing/keyCode 229 ガード追加
+- ~~`editor` — compositionend が選択ゲートで drop → `isComposed` 固着で入力不能~~ → 修正: compositionstart したブロックを記録し、compositionend はゲートを迂回して必ずそのブロックへ配送。あわせて Format/codeBlockContent の `inputHandler` に null カーソルガード追加(選択消失時のクラッシュを回避、次の入力で自己回復)
+- ~~`tableCell` の ZWSP ハック全エンジン無条件実行~~ → 修正: `isSafari` でゲート(Chromium では compositionstart 中の DOM 書き換えが IME アンカーを破壊し、compositionend の補償 strip が確定文字を 1 文字食っていた)
 
 **新規発見 — デスクトップ側 UI:**
 
@@ -126,7 +126,7 @@
 - 別パスへの Save As でウォッチャー抑止漏れ → 自分の書き込みを外部変更と誤認(`file.ts:383-386`)
 - `_ignoreChangeEvents` 無期限成長(`filesystem/watcher.ts:403-457`)
 - `Untitled-NaN` 採番バグ(`renderer/src/store/help.ts:96-106`)
-- ユニットテストのテスト間状態リーク: `pdf.spec.ts` の 2 件がフルスイート実行時のみ失敗(単独実行では 16 件全通過)。既存問題
+- ~~ユニットテストの `pdf.spec.ts` フルスイート限定 flake~~ → **根治**(2026-07-29): 原因は状態リークではなく、`vi.resetModules()` + テスト毎の動的 import が @muyajs/core の全グラフを毎回再変換し、負荷下で 5 秒の test timeout を超過していたこと。pdf.ts は `window.*` を呼び出し時に読み、module 状態も持たないため、トップレベル await の単一 import に変更(全 16 件が高負荷下でも通過、フルスイート 754/754)
 
 ### 8. upstream 未マージ PR(cherry-pick 候補、バグ修正 23 件の主要分)
 
