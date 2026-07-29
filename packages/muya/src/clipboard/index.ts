@@ -13,7 +13,19 @@ import { CopyType, PasteType } from './types';
 // keys and any modifier combo must NOT cut — in particular Ctrl+<key> (e.g.
 // Ctrl+C copy on Windows/Linux), which was previously not excluded and
 // silently deleted the selection (#3491). Mirrors the macOS metaKey guard.
-export function shouldCrossBlockCut(key: string, metaKey: boolean, ctrlKey: boolean): boolean {
+export function shouldCrossBlockCut(
+    key: string,
+    metaKey: boolean,
+    ctrlKey: boolean,
+    isComposing = false,
+    keyCode = 0,
+): boolean {
+    // Keydowns consumed by an IME (`isComposing`, or the synthetic
+    // keyCode-229 keydown that opens a composition) must not cut — the
+    // composition would then continue against the mutated DOM and corrupt.
+    if (isComposing || keyCode === 229)
+        return false;
+
     if (/Alt|Option|Meta|Shift|CapsLock|ArrowUp|ArrowDown|ArrowLeft|ArrowRight/.test(key))
         return false;
 
@@ -79,7 +91,7 @@ class Clipboard {
             if (isSelectionInSameBlock)
                 return;
 
-            if (!shouldCrossBlockCut(key, metaKey, event.ctrlKey))
+            if (!shouldCrossBlockCut(key, metaKey, event.ctrlKey, event.isComposing, event.keyCode))
                 return;
 
             // Enter over a cross-block selection: suppress the corrupting native

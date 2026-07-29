@@ -392,6 +392,10 @@ export const punctuation = [
 export const IMAGE_EXT_REG = /\.(jpeg|jpg|png|gif|svg|webp)(?=\?|$)/i;
 export const isFirefox
     = typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox');
+export const isSafari
+    = typeof navigator !== 'undefined'
+        && /Safari/.test(navigator.userAgent)
+        && !/Chrome|Chromium|Edg\//.test(navigator.userAgent);
 export const isOsx
     = typeof window !== 'undefined'
         && window.navigator

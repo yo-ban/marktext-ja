@@ -47,4 +47,18 @@ describe('shouldCrossBlockCut (#3491)', () => {
         expect(shouldCrossBlockCut('ArrowDown', false, false)).toBe(false);
         expect(shouldCrossBlockCut('Shift', false, false)).toBe(false);
     });
+
+    // IME keydowns over a cross-block selection: the composition owns them —
+    // cutting would mutate the DOM the composition is anchored to and corrupt
+    // the input. Covers both the mid-composition case (isComposing) and the
+    // keyCode-229 keydown that opens the composition (isComposing still false,
+    // key is 'Process' on Windows/Linux but the raw key on macOS).
+    it('does NOT cut while an IME composition is open', () => {
+        expect(shouldCrossBlockCut('a', false, false, true, 229)).toBe(false);
+    });
+
+    it('does NOT cut on the keyCode-229 keydown that starts a composition', () => {
+        expect(shouldCrossBlockCut('Process', false, false, false, 229)).toBe(false);
+        expect(shouldCrossBlockCut('a', false, false, false, 229)).toBe(false);
+    });
 });

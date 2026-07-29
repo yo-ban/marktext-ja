@@ -626,7 +626,14 @@ class Format extends Content {
         }
 
         const { domNode } = this;
-        const { start, end } = this.getCursor()!;
+        // The selection can be unresolvable when this runs from a
+        // compositionend that fired while the IME had dropped the DOM
+        // selection — nothing to anchor the edit to, so skip; the next input
+        // with a live cursor re-reads the full textContent and re-syncs.
+        const liveCursor = this.getCursor();
+        if (!liveCursor)
+            return;
+        const { start, end } = liveCursor;
         const textContent = getTextContent(domNode!, [
             CLASS_NAMES.MU_MATH_RENDER,
             CLASS_NAMES.MU_RUBY_RENDER,

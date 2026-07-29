@@ -5,12 +5,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Muya } from '../../../../muya';
 
 // `TableCellContent.composeHandler` (tableCell/index.ts) guards an empty cell
-// against the IME bug where composing CJK in an empty contenteditable table
-// cell corrupts the table: on `compositionstart` it seeds a zero-width space
-// (`\u200B`) ONLY when the cell is empty, and on `compositionend` it strips the
-// trailing char (the committed text is inserted before the seed, so the seed
-// ends up last) leaving the clean text. The e2e ime.spec.ts deliberately seeds
-// a NON-empty cell to avoid this branch, so the empty-cell path is unit-only.
+// against the SAFARI IME bug where composing CJK in an empty contenteditable
+// table cell corrupts the table: on `compositionstart` it seeds a zero-width
+// space (`\u200B`) ONLY when the cell is empty, and on `compositionend` it
+// strips the trailing char (the committed text is inserted before the seed, so
+// the seed ends up last) leaving the clean text. The workaround is gated to
+// Safari \u2014 on other engines the compositionstart rewrite would replace the
+// text node the IME anchored to (see imeZwsp.spec.ts for the non-Safari
+// contract) \u2014 so this spec forces `isSafari` on. The e2e ime.spec.ts
+// deliberately seeds a NON-empty cell to avoid this branch, so the empty-cell
+// path is unit-only.
+
+vi.mock('../../../../config', async importOriginal => ({
+    ...(await importOriginal<typeof import('../../../../config')>()),
+    isSafari: true,
+}));
 
 const ZWSP = '\u200B';
 

@@ -4,7 +4,7 @@ import type Table from '../../gfm/table';
 import type Cell from '../../gfm/table/cell';
 import type Row from '../../gfm/table/row';
 import type TableInner from '../../gfm/table/table';
-import { EVENT_KEYS, isOsx } from '../../../config';
+import { EVENT_KEYS, isOsx, isSafari } from '../../../config';
 import { isKeyboardEvent } from '../../../utils';
 import Format from '../../base/format';
 import { ScrollPage } from '../../scrollPage';
@@ -264,7 +264,11 @@ class TableCellContent extends Format {
     // zero-width character after entering the Chinese.
     override composeHandler(event: Event) {
         super.composeHandler(event);
-        if (event.type === 'compositionstart' && this.text === '') {
+        // Safari-only: on every other engine rewriting textContent here
+        // replaces the text node the IME just anchored to at
+        // compositionstart, breaking the composition (and the compensating
+        // strip on compositionend ate the last committed character).
+        if (isSafari && event.type === 'compositionstart' && this.text === '') {
             this._hasZeroWidthSpaceAtBeginning = true;
             this.domNode!.textContent = '\u200B';
         }

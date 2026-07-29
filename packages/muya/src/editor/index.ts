@@ -246,6 +246,11 @@ export class Editor {
 
     private _activeContentBlock: Nullable<Content> = null;
 
+    // The block whose compositionstart opened the current IME composition;
+    // compositionend is routed back to it even when the selection gate can no
+    // longer resolve a block (see _dispatchEvents).
+    private _composingBlock: Nullable<Content> = null;
+
     constructor(private _muya: Muya) {
         const state = _muya.options.json || _muya.options.markdown || '';
 
@@ -297,6 +302,19 @@ export class Editor {
         const { domNode } = this._muya;
 
         const eventHandler = (event: Event) => {
+            // A compositionend must always reach the block whose
+            // compositionstart set `isComposed`: when the selection gate below
+            // dropped it (selection momentarily unresolvable mid-IME), the
+            // flag stuck true and the block silently ignored all further
+            // input, with no way to recover.
+            if (event.type === 'compositionend' && this._composingBlock) {
+                const composing = this._composingBlock;
+                this._composingBlock = null;
+                this.activeContentBlock = composing;
+                composing.composeHandler(event);
+                return;
+            }
+
             const selectionResult = this.selection.getSelection();
             const anchorBlock = selectionResult?.anchor.block;
             const isSelectionInSameBlock = selectionResult?.isSelectionInSameBlock;
@@ -336,8 +354,14 @@ export class Editor {
                     anchorBlock.keyupHandler(event);
                     break;
                 }
-                case 'compositionend':
                 case 'compositionstart': {
+                    this._composingBlock = anchorBlock;
+                    anchorBlock.composeHandler(event);
+                    break;
+                }
+                // compositionend without a recorded compositionstart (the
+                // start itself was dropped): deliver normally.
+                case 'compositionend': {
                     anchorBlock.composeHandler(event);
                     break;
                 }

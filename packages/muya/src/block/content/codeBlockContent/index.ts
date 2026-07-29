@@ -237,7 +237,12 @@ class CodeBlockContent extends Content {
             return;
 
         const textContent = this.domNode!.textContent!;
-        const { start, end } = this.getCursor()!;
+        // Unresolvable selection (compositionend after the IME dropped the
+        // DOM selection): skip — see format.ts inputHandler.
+        const cursor = this.getCursor();
+        if (!cursor)
+            return;
+        const { start, end } = cursor;
         const { needRender, text } = this.autoPair(
             event,
             textContent,
