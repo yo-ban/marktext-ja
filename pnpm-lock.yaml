@@ -54,63 +54,27 @@ importers:
 
   packages/desktop:
     dependencies:
-      '@electron-toolkit/preload':
-        specifier: ^3.0.2
-        version: 3.0.2(electron@42.1.0)
       '@electron-toolkit/utils':
         specifier: ^4.0.0
         version: 4.0.0(electron@42.1.0)
-      '@element-plus/icons-vue':
-        specifier: ^2.3.2
-        version: 2.3.2(vue@3.5.38(typescript@6.0.3))
       '@hfelix/electron-localshortcut':
         specifier: ^4.0.1
         version: 4.0.1
-      '@intlify/core-base':
-        specifier: ^11.4.6
-        version: 11.4.6
-      '@marktext/file-icons':
-        specifier: ^1.0.6
-        version: 1.0.6
-      '@muyajs/core':
-        specifier: workspace:*
-        version: link:../muya
-      '@popperjs/core':
-        specifier: ^2.11.8
-        version: 2.11.8
       '@vscode/ripgrep':
         specifier: ^1.18.0
         version: 1.18.0
       arg:
         specifier: ^5.0.2
         version: 5.0.2
-      axios:
-        specifier: ^1.18.0
-        version: 1.18.0
       ced:
         specifier: ^2.0.0
         version: 2.0.0
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
-      codemirror:
-        specifier: ^5.65.21
-        version: 5.65.21
       command-exists:
         specifier: ^1.2.9
         version: 1.2.9
-      deep-equal:
-        specifier: ^2.2.3
-        version: 2.2.3
-      dom-autoscroller:
-        specifier: ^2.3.4
-        version: 2.3.4
-      dompurify:
-        specifier: ^3.4.11
-        version: 3.4.11
-      dragula:
-        specifier: ^3.7.3
-        version: 3.7.3
       electron-log:
         specifier: ^5.4.4
         version: 5.4.4
@@ -123,18 +87,6 @@ importers:
       electron-window-state:
         specifier: ^5.0.3
         version: 5.0.3
-      element-plus:
-        specifier: ^2.14.2
-        version: 2.14.2(vue@3.5.38(typescript@6.0.3))
-      element-resize-detector:
-        specifier: ^1.2.4
-        version: 1.2.4
-      execall:
-        specifier: ^3.0.0
-        version: 3.0.0
-      flowchart.js:
-        specifier: ^1.18.0
-        version: 1.18.0
       font-list:
         specifier: ^2.1.0
         version: 2.1.0
@@ -144,88 +96,43 @@ importers:
       fuzzaldrin:
         specifier: ^2.1.0
         version: 2.1.0
-      github-markdown-css:
-        specifier: ^5.9.0
-        version: 5.9.0
-      html-tags:
-        specifier: ^5.1.0
-        version: 5.1.0
-      iso-639-1:
-        specifier: ^3.1.5
-        version: 3.1.5
-      joplin-turndown-plugin-gfm:
-        specifier: ^1.0.12
-        version: 1.0.12
-      katex:
-        specifier: ^0.17.0
-        version: 0.17.0
       keytar:
         specifier: ^7.9.0
         version: 7.9.0
-      lodash:
-        specifier: ^4.18.1
-        version: 4.18.1
-      mermaid:
-        specifier: ^11.15.0
-        version: 11.15.0
-      mitt:
-        specifier: ^3.0.1
-        version: 3.0.1
-      ms:
-        specifier: ^2.1.3
-        version: 2.1.3
-      pako:
-        specifier: ^2.1.0
-        version: 2.1.0
       pathe:
         specifier: ^2.0.3
         version: 2.0.3
-      pinia:
-        specifier: ^3.0.4
-        version: 3.0.4(typescript@6.0.3)(vue@3.5.38(typescript@6.0.3))
       plist:
         specifier: ^5.0.0
         version: 5.0.0
-      prismjs:
-        specifier: ^1.30.0
-        version: 1.30.0
-      snabbdom:
-        specifier: ^3.6.4
-        version: 3.6.4
-      snabbdom-to-html:
-        specifier: ^7.1.0
-        version: 7.1.0
-      snapsvg-cjs:
-        specifier: ^0.0.6
-        version: 0.0.6(eve@0.5.4)
-      turndown:
-        specifier: ^7.2.4
-        version: 7.2.4
-      underscore:
-        specifier: ^1.13.8
-        version: 1.13.8
-      vega-embed:
-        specifier: ^7.1.0
-        version: 7.1.0(vega-lite@6.4.3(vega@6.2.0))(vega@6.2.0)
-      vue-i18n:
-        specifier: ^11.4.6
-        version: 11.4.6(vue@3.5.38(typescript@6.0.3))
-      vue-router:
-        specifier: ^4.6.4
-        version: 4.6.4(vue@3.5.38(typescript@6.0.3))
-      webfontloader:
-        specifier: ^1.6.28
-        version: 1.6.28
       write-file-atomic:
         specifier: ^7.0.1
         version: 7.0.1
     devDependencies:
+      '@electron-toolkit/preload':
+        specifier: ^3.0.2
+        version: 3.0.2(electron@42.1.0)
       '@electron/rebuild':
         specifier: ^4.0.4
         version: 4.0.4
+      '@element-plus/icons-vue':
+        specifier: ^2.3.2
+        version: 2.3.2(vue@3.5.38(typescript@6.0.3))
+      '@intlify/core-base':
+        specifier: ^11.4.6
+        version: 11.4.6
+      '@marktext/file-icons':
+        specifier: ^1.0.6
+        version: 1.0.6
+      '@muyajs/core':
+        specifier: workspace:*
+        version: link:../muya
       '@playwright/test':
         specifier: ^1.61.0
         version: 1.61.0
+      '@popperjs/core':
+        specifier: ^2.11.8
+        version: 2.11.8
       '@types/codemirror':
         specifier: ^5.60.17
         version: 5.60.17
@@ -268,9 +175,27 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.1.9
         version: 4.1.9(vitest@4.1.9)
+      axios:
+        specifier: ^1.18.0
+        version: 1.18.0
+      codemirror:
+        specifier: ^5.65.21
+        version: 5.65.21
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
+      deep-equal:
+        specifier: ^2.2.3
+        version: 2.2.3
+      dom-autoscroller:
+        specifier: ^2.3.4
+        version: 2.3.4
+      dompurify:
+        specifier: ^3.4.11
+        version: 3.4.11
+      dragula:
+        specifier: ^3.7.3
+        version: 3.7.3
       electron:
         specifier: ~42.1.0
         version: 42.1.0
@@ -280,21 +205,87 @@ importers:
       electron-vite:
         specifier: ^5.0.0
         version: 5.0.0(vite@7.3.5(@types/node@22.20.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.16.9)(tsx@4.22.4)(yaml@2.9.0))
+      element-plus:
+        specifier: ^2.14.2
+        version: 2.14.2(vue@3.5.38(typescript@6.0.3))
+      element-resize-detector:
+        specifier: ^1.2.4
+        version: 1.2.4
+      execall:
+        specifier: ^3.0.0
+        version: 3.0.0
+      flowchart.js:
+        specifier: ^1.18.0
+        version: 1.18.0
+      github-markdown-css:
+        specifier: ^5.9.0
+        version: 5.9.0
+      html-tags:
+        specifier: ^5.1.0
+        version: 5.1.0
+      iso-639-1:
+        specifier: ^3.1.5
+        version: 3.1.5
+      joplin-turndown-plugin-gfm:
+        specifier: ^1.0.12
+        version: 1.0.12
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@2.2.0)
+      katex:
+        specifier: ^0.17.0
+        version: 0.17.0
+      lodash:
+        specifier: ^4.18.1
+        version: 4.18.1
+      mermaid:
+        specifier: ^11.15.0
+        version: 11.15.0
+      mitt:
+        specifier: ^3.0.1
+        version: 3.0.1
+      ms:
+        specifier: ^2.1.3
+        version: 2.1.3
+      pako:
+        specifier: ^2.1.0
+        version: 2.1.0
       patch-package:
         specifier: ^8.0.1
         version: 8.0.1
+      pinia:
+        specifier: ^3.0.4
+        version: 3.0.4(typescript@6.0.3)(vue@3.5.38(typescript@6.0.3))
       postcss-preset-env:
         specifier: ^11.3.1
         version: 11.3.1(postcss@8.5.15)
+      prismjs:
+        specifier: ^1.30.0
+        version: 1.30.0
+      snabbdom:
+        specifier: ^3.6.4
+        version: 3.6.4
+      snabbdom-to-html:
+        specifier: ^7.1.0
+        version: 7.1.0
+      snapsvg-cjs:
+        specifier: ^0.0.6
+        version: 0.0.6(eve@0.5.4)
       tsx:
         specifier: ^4.22.4
         version: 4.22.4
+      turndown:
+        specifier: ^7.2.4
+        version: 7.2.4
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      underscore:
+        specifier: ^1.13.8
+        version: 1.13.8
+      vega-embed:
+        specifier: ^7.1.0
+        version: 7.1.0(vega-lite@6.4.3(vega@6.2.0))(vega@6.2.0)
       vite:
         specifier: ^7.3.5
         version: 7.3.5(@types/node@22.20.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.16.9)(tsx@4.22.4)(yaml@2.9.0)
@@ -307,9 +298,18 @@ importers:
       vue:
         specifier: ^3.5.38
         version: 3.5.38(typescript@6.0.3)
+      vue-i18n:
+        specifier: ^11.4.6
+        version: 11.4.6(vue@3.5.38(typescript@6.0.3))
+      vue-router:
+        specifier: ^4.6.4
+        version: 4.6.4(vue@3.5.38(typescript@6.0.3))
       vue-tsc:
         specifier: ^3.3.5
         version: 3.3.5(typescript@6.0.3)
+      webfontloader:
+        specifier: ^1.6.28
+        version: 1.6.28
     optionalDependencies:
       native-keymap:
         specifier: ^3.3.9

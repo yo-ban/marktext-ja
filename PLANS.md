@@ -231,10 +231,18 @@ Windows 専用なら WebView2 = Chromium なので IME 懸念はほぼ消える�
     - PR #4980(XSS): muya 側ハンクのみ適用(muyajs 部分は削除済みで不要)。修正前に失敗することを確認した回帰テスト 2 件付き
 
 ### Phase 4 — 仕上げ
-11. ハードコード英語 50〜70 箇所の t() 化 + ja.json キー追加
-12. クラッシュ系 PR(#4931/#4913/#4911/#4930)、巨大ファイル(#4942+#4946)取り込み
-13. ripgrep setEncoding ほか小修正
-14. サイズ最適化の再適用(上記 2 ファイル)
+11. ~~ハードコード英語の t() 化~~ **完了**(2026-07-29)
+    - desktop: autoUpdates(4)+main 送信文言、project.ts(6)、クラッシュダイアログ、file.ts(ダイアログ/フィルタ名/Untitled/リンク空白 9 箇所)、dock メニュー(ビルダー関数化して言語ロード後に解決)、ジャンプリスト、PDF 目次見出し、コマンドパレット(export HTML/PDF は getter 化、改行コード/最終改行/スペルチェッカー)
+    - muya: footnoteTool(4)、previewToolBar tooltip、codeBlockLanguageSelector 'No result'。ロケール 10 言語すべてにキー追加(ja は翻訳、他は英語。muya は en の型が全ロケールの契約なので全ファイル必須)
+    - 未対応(意図的): emojiSelector の日本語絵文字検索は「機能追加」なので別途
+12. ~~PR 取り込み~~ **完了**(2026-07-29)
+    - #4946 適用(#4942 をスタック済みのため #4946 のみで両方入る。upstream で 19 論点レビュー+回帰テスト 31 件付き)
+    - #4931: content.ts のみ手動統合(Phase 1 の isComposed ガードと同一ハンク)。サロゲート境界スナップは **!isComposed 時のみ実行**に変更(変換中の DOM 選択操作は IME アンカーを壊すため)
+    - #4913: muya 側のみ適用(muyajs 側ハンクは削除済みエンジン向けで不要)
+    - #4911: スキップ — 新エンジンには同等ガード実装済みと確認(codeBlockLanguageSelector #4654)
+    - #4930(CodeMirror/Vue proxy)適用
+13. ~~ripgrep ほか小修正~~ **完了**(2026-07-29)— setEncoding('utf8') 2 箇所、getPositionFromColumn 境界チェック、Save As/リネームのウォッチャー抑止(window-change-file-path に集約)、_ignoreChangeEvents の期限切れ掃除(60s 猶予で GH#3044 維持)、Untitled-NaN 修正。keybindings ダイアログは input readonly 化で IME 問題を根治(FIXME 解消)
+14. ~~サイズ最適化の再適用~~ **完了**(2026-07-29)— 37 deps 移動(muyajs は削除済み)+ excludes 2 行。main の外部 require 18 種を静的検証(ajv/ajv-formats は electron-store 経由の production クロージャ内と確認)。build:unpack 成功
 
 ---
 
