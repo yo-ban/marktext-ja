@@ -10,13 +10,14 @@ MarkText is a WYSIWYG markdown editor built on Electron + Vue 3. It supports Com
 
 - **Version**: see `package.json`
 - **License**: MIT
-- **Repository**: https://github.com/marktext/marktext
+- **Upstream**: https://github.com/marktext/marktext — provenance only;
+  this clone has no git remote configured
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Language | TypeScript 5.9 (strict mode) — `packages/muyajs/` retained as JS via ambient shim |
+| Language | TypeScript 5.9 (strict mode) |
 | Desktop shell | Electron 42 |
 | Build system | electron-vite 5 |
 | Packaging | electron-builder 26 |
@@ -28,23 +29,23 @@ MarkText is a WYSIWYG markdown editor built on Electron + Vue 3. It supports Com
 | E2E tests | Playwright |
 | Package manager | pnpm >=10 workspace (`packageManager: pnpm@10.33.4`) |
 | Repo layout | pnpm monorepo — see Directory Structure |
-| Node.js minimum | >=20.19.0 (PR CI: Node 22.21.1 · release CI: Node 24.14.1) |
+| Node.js minimum | >=20.19.0 |
 
 ## Directory Structure
 
-This is a pnpm workspace. Three packages live under `packages/`, and the
-root holds only shared tooling and CI-facing scripts.
+This is a pnpm workspace. Two packages live under `packages/`, and the
+root holds only shared tooling and workspace-level scripts.
 
 ```
 <repo-root>/
-  package.json              Workspace orchestrator — every CI-facing script
+  package.json              Workspace orchestrator — every top-level script
                             proxies to packages/desktop via `pnpm --filter
-                            marktext ...`. CI invocations are unchanged.
+                            marktext ...`.
   pnpm-workspace.yaml       `packages: ['packages/*']` plus allowBuilds.
   pnpm-lock.yaml            Single lockfile, shared across all packages.
-  eslint.config.js          Root ESLint v9 flat config (covers desktop +
-                            muyajs; website has its own ESLint v8 config
-                            and is ignored here).
+  eslint.config.js          Root ESLint v9 flat config (covers the desktop
+                            package; packages/muya self-lints with its own
+                            antfu-based config).
   scripts/                  Workspace-level scripts. postinstall.ts,
                             minify-locales.ts, generateThirdPartyLicense.ts,
                             validateLicenses.ts, thirdPartyChecker.ts all
@@ -52,13 +53,12 @@ root holds only shared tooling and CI-facing scripts.
   docs/                     Long-form developer docs.
   dist/                     Packaged installers from electron-builder
                             (git-ignored; electron-builder writes here via
-                            `directories.output: ../../dist` so CI artifact
-                            globs `dist/*` still apply).
+                            `directories.output: ../../dist`).
   packages/
     desktop/                The Electron app (name: "marktext").
       package.json          Holds all Electron / Vue / build-time deps and
                             the dev/build/test/typecheck scripts. Depends on
-                            @marktext/muyajs via workspace:*.
+                            @muyajs/core via workspace:*.
       electron.vite.config.ts
       electron-builder.yml  directories.output points at ../../dist.
       tsconfig.json / tsconfig.base.json
@@ -80,10 +80,9 @@ root holds only shared tooling and CI-facing scripts.
                             management, auto-updater).
         preload/            Electron preload scripts. The renderer runs
                             sandboxed (contextIsolation: true,
-                            nodeIntegration: false, sandbox: true since
-                            #4244) — all Node access flows through the typed
-                            contextBridge surface in
-                            packages/desktop/src/preload/index.ts.
+                            nodeIntegration: false, sandbox: true) — all Node
+                            access flows through the typed contextBridge
+                            surface in packages/desktop/src/preload/index.ts.
         renderer/           Vue 3 application (editor UI, Pinia stores).
           src/
             components/     Vue single-file components.
@@ -94,50 +93,66 @@ root holds only shared tooling and CI-facing scripts.
         shared/             Cross-process types (`shared/types/`) and the
                             IPC contract (`shared/types/ipc.ts`).
         types/              Ambient .d.ts declarations.
-    muyajs/                 Legacy markdown editor engine
-                            (name: "@marktext/muyajs"). Primarily JS + DOM,
-                            avoids Electron APIs. Exception:
-                            packages/muyajs/lib/parser/render/plantuml.js
-                            imports Node's `zlib`. Being retired: the
-                            desktop renderer now consumes @muyajs/core
-                            (packages/muya) as its editor engine; only a
-                            handful of legacy `muya/` alias call sites
-                            remain (see #4244 era sandbox work for the
-                            boundary tightening).
-      lib/
-        contentState/       Block structure and document transformations.
-        parser/             Markdown parser.
-        renderers/          WYSIWYG renderer.
-        ui/                 Inline toolbar, emoji picker, etc.
-        utils/              Internal utilities.
-      themes/               Editor themes (Prism + fonts).
-    muya/                   TypeScript rewrite of muya
+    muya/                   The editor engine the desktop renderer consumes
                             (name: "@muyajs/core"; upstream:
                             https://github.com/marktext/muya). Built on
                             ot-json1 + ot-text-unicode + snabbdom + marked@16
                             + rxjs. Self-contained: own eslint config
                             (antfu), own stylelint, own madge, own vitest
-                            spec suites (CommonMark + GFM). Now the editor
-                            engine the desktop renderer consumes; legacy
-                            packages/muyajs is being retired. See
+                            spec suites (CommonMark + GFM). See
                             packages/muya/CLAUDE.md for layout and commands.
       src/                  TS source. Public entrypoint src/index.ts.
       test/spec/            CommonMark 0.31 + GFM 0.29-gfm conformance.
       examples/             muya-examples — vite vanilla-TS dev demo
                             (listed in pnpm-workspace.yaml).
-      e2e/                  muya-e2e — Playwright suite. CI runs Chromium
-                            only via muya-e2e.yml; Firefox + WebKit are
-                            wired in playwright.config.ts but deferred
-                            until BACKLOG Phase 3 lands engine-independent
-                            specs.
-    website/                marktext-website (Vite + React 18). Standalone
-                            toolchain; depends on @muyajs/core from npm,
-                            not on the local muyajs package. Not part of
-                            desktop CI today.
-      src/ / public/ / build/ / vite.config.ts / tsconfig.json
+      e2e/                  muya-e2e — Playwright suite. Chromium is the
+                            default target; Firefox + WebKit are wired in
+                            playwright.config.ts but not run by default.
 ```
 
 The root has no `src/`, `test/`, `static/`, or `build/` of its own anymore — they all live in `packages/desktop/`.
+
+## Package Registry
+
+Dependencies are installed from **https://npm.flatt.tech/** rather than the
+default `registry.npmjs.org`. The repo-root `.npmrc` is not registry-pinned by
+default, so set it explicitly — a registry configured at the workspace root
+applies to every package under `packages/`.
+
+Add to the repo-root `.npmrc`:
+
+```ini
+registry=https://npm.flatt.tech/
+```
+
+Or set it without editing the file:
+
+```bash
+pnpm install --registry https://npm.flatt.tech/   # one-off, this install only
+pnpm config set registry https://npm.flatt.tech/  # persists to ~/.npmrc
+```
+
+What the registry does and does not change:
+
+| Concern | Source |
+|---|---|
+| Package metadata (version lists, dist-tags) | `npm.flatt.tech` |
+| Package tarballs | `registry.npmjs.org` — the mirror returns upstream tarball URLs rather than re-hosting the archives |
+| Integrity verification | Unchanged — `pnpm-lock.yaml` integrity hashes are enforced on every install |
+
+The mirror passes through upstream `dist.integrity` values verbatim and points
+`dist.tarball` at `registry.npmjs.org`, so resolved versions and hashes match
+the official registry. `pnpm-lock.yaml` records no registry host of its own,
+which means a lockfile generated against either registry installs cleanly under
+the other — switching registries does not produce a lockfile diff.
+
+To check which registry is in effect, and to fall back if the mirror is
+unreachable:
+
+```bash
+pnpm config get registry
+pnpm install --registry https://registry.npmjs.org/   # fallback; no lockfile change needed
+```
 
 ## Development Workflow
 
@@ -171,10 +186,6 @@ pnpm run minify-locales
 # Performance debugging — exposes a Node inspector on :5858 against the previewed build
 pnpm run perf:inspect       # attach when ready
 pnpm run perf:inspect-brk   # break on first line
-
-# Website (not yet wired into CI)
-pnpm --filter marktext-website dev      # Vite dev server
-pnpm --filter marktext-website build    # static build → packages/website/build/
 ```
 
 If you need to invoke a script directly inside a package, use
@@ -196,8 +207,8 @@ All platform build scripts automatically run `minify-locales` and `electron-rebu
 pnpm run test          # All unit tests (Vitest)
 pnpm run test:unit     # Unit tests only
 pnpm run test:e2e      # End-to-end tests (Playwright)
-pnpm run lint          # ESLint (run before committing; CI enforces)
-pnpm run typecheck     # vue-tsc --noEmit (CI enforces)
+pnpm run lint          # ESLint
+pnpm run typecheck     # vue-tsc --noEmit
 
 # Run a single spec — paths are relative to packages/desktop. Use `-C` so
 # pnpm resolves the spec path inside the desktop package's vitest config.
@@ -216,7 +227,7 @@ Enforced by ESLint + Prettier. Run `pnpm run lint` and `pnpm run typecheck` befo
 - 2-space indentation
 - No semicolons
 - Single quotes
-- TypeScript with `strict: true`; see `packages/website/content/docs/dev/TYPESCRIPT.md`
+- TypeScript with `strict: true`; see `docs/dev/TYPESCRIPT.md`
 - Cross-process types live in `packages/desktop/src/shared/types/`; ambient declarations in `packages/desktop/src/types/`
 - IPC channels are typed via the contract in `packages/desktop/src/shared/types/ipc.ts`
 - The renderer is fully sandboxed — every IPC and Node access goes through `window.electron.*` / `window.fileUtils.*` etc. (typed in `packages/desktop/src/types/global.d.ts`)
@@ -227,9 +238,9 @@ Follow `.github/COMMENTING-GUIDELINES.md` for every comment you write. The core 
 
 ## Architecture: Three-Process Electron Model
 
-All Electron processes live in `packages/desktop/`. Muya is a separate
-workspace package that the renderer (and tests) consume via the `muya`
-alias / `@marktext/muyajs` workspace dep.
+All Electron processes live in `packages/desktop/`. Muya (`@muyajs/core`,
+`packages/muya`) is a separate workspace package that the renderer (and
+tests) consume as the editor engine.
 
 ```
 main process  (packages/desktop/src/main/)
@@ -250,24 +261,22 @@ renderer  (packages/desktop/src/renderer/)
   ├── Hosts both Muya (WYSIWYG) and CodeMirror (source-code mode)
   └── Compiled to ES Modules only
 
-Muya  (packages/muyajs/)            ← workspace package @marktext/muyajs
-  ├── Self-contained editor backend
-  ├── Primarily avoids Electron APIs; uses Node's zlib for PlantUML encoding
-  ├── Handles markdown parsing, block data structure, document export, rendering
-  └── packages/muya/ (@muyajs/core, the TS rewrite from
-      https://github.com/marktext/muya) has landed and is now the engine
-      the desktop renderer consumes; muyajs is being retired.
+Muya  (packages/muya/)              ← workspace package @muyajs/core
+  ├── Self-contained editor backend (TypeScript rewrite from
+  │   https://github.com/marktext/muya)
+  ├── Browser-only — no Electron / Node APIs
+  └── Handles markdown parsing, block data structure, document export, rendering
 ```
 
 ## IPC Conventions
 
 Most IPC channels between main and renderer use the `mt::` prefix (e.g. `mt::open-new-tab`, `mt::file-saved`). Some internal channels do not follow this convention (e.g. `language-changed`).
 
-See `packages/website/content/docs/dev/IPC.md` for conventions and examples.
+See `docs/dev/IPC.md` for conventions and examples.
 
 ## Further Reading
 
-`packages/website/content/docs/dev/` contains the deeper developer documentation referenced by this guide. Same files are published as the developer docs section on https://marktext.me/docs/dev/overview:
+`docs/dev/` contains the deeper developer documentation referenced by this guide:
 
 - `ARCHITECTURE.md` — process/module layering beyond the summary above
 - `BUILD.md` — full platform build prerequisites (including the Arch Linux deps added recently)
@@ -284,19 +293,19 @@ See `packages/website/content/docs/dev/IPC.md` for conventions and examples.
 - **Minify locales**: `pnpm run minify-locales` must run before production builds. It is included in `build:win/mac/linux` but not in `dev`.
 - **Native modules**: After changing Electron version, run `pnpm run rebuild-native` (`electron-rebuild -f`).
 - **Hot reload**: The renderer hot-reloads via Vite HMR. `Ctrl+R` in the dev window reloads the renderer and re-runs the preload script. Changes to `main/` source are NOT picked up by a window reload — restart `pnpm run dev` to pick them up.
-- **electron-builder output**: `directories.output` in `packages/desktop/electron-builder.yml` is set to `../../dist` so installers land in the repo-root `dist/` (where CI artifact globs look for them). `out/` from electron-vite stays inside `packages/desktop/`.
+- **electron-builder output**: `directories.output` in `packages/desktop/electron-builder.yml` is set to `../../dist` so installers land in the repo-root `dist/`. `out/` from electron-vite stays inside `packages/desktop/`.
 - **Path aliases** (defined in `packages/desktop/electron.vite.config.ts`, mirrored in `vitest.config.ts` and `tsconfig.base.json`):
   - `@` → `packages/desktop/src/renderer/src`
   - `common` → `packages/desktop/src/common`
   - `@shared` → `packages/desktop/src/shared`
-  - `muya` → `../muyajs` (i.e. `packages/muyajs`). Renderer-side imports therefore look like `muya/lib/...` (the alias) — the workspace dep `@marktext/muyajs` is declared in `packages/desktop/package.json` so module resolution stays inside the workspace.
-- **Workspace deps**: muya's own npm runtime deps (`github-markdown-css`, `katex`, `dompurify`, `snabbdom`, …) are declared in `packages/muyajs/package.json` so Node module resolution from `packages/muyajs/lib/*.js` finds them inside the workspace rather than walking out to a parent directory.
 - **Patches**: `patch-package` patches live at `packages/desktop/patches/`. The root `postinstall` calls patch-package with `cwd=packages/desktop` so the path resolves correctly.
 
-## Contribution
+## Repository State
 
-- Submit PRs to the **`develop`** branch (not `main`).
-- Reference the related issue in the PR description.
-- Run `pnpm run lint` before submitting.
-- All PRs must pass CI before merge.
-- See `.github/CONTRIBUTING.md` for the full contributing guide.
+This is a detached clone of upstream MarkText with **no git remote configured**,
+checked out on `develop`. Nothing here pushes anywhere.
+
+Upstream's contribution workflow does not apply — do not assume a PR target
+branch, a CI gate, or a release process. The `.github/` workflows and
+`CONTRIBUTING.md` that came with the clone describe upstream's process, not
+this copy's.
