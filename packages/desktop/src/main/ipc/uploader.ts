@@ -87,22 +87,60 @@ const parsePicgoOutput = (text: unknown): string | null => {
   return null
 }
 
-const uploadByPicgo = (localPath: string): Promise<string> =>
+// Keep only a plain-ASCII extension when building the temp name below; a
+// hostile "extension" is part of the attack surface too.
+const safeExtension = (p: string): string => {
+  const ext = path.extname(p)
+  return /^\.[A-Za-z0-9]+$/.test(ext) ? ext : ''
+}
+
+const runPicgo = (cmd: string, imagePath: string): Promise<string> =>
   new Promise((resolve, reject) => {
-    const cmd = resolvePicgoBinary()
-    if (!cmd) return reject(new Error('PicGo command not found in PATH'))
-    exec(
-      `${cmd} u "${localPath}"`,
-      { env: { ...process.env, PATH: buildPreferredPathEnv() } },
-      (err, stdout, stderr) => {
-        if (err) return reject(err)
-        const text = String(stdout || '') + (stderr ? `\n${String(stderr)}` : '')
-        const url = parsePicgoOutput(text)
-        if (url) resolve(url)
-        else reject(new Error(`PicGo upload error: cannot parse output\n${text.slice(0, 400)}`))
+    const env = { ...process.env, PATH: buildPreferredPathEnv() }
+    const handleOutput = (
+      err: Error | null,
+      stdout: string | Buffer,
+      stderr: string | Buffer
+    ): void => {
+      if (err) return reject(err)
+      const text = String(stdout || '') + (stderr ? `\n${String(stderr)}` : '')
+      const url = parsePicgoOutput(text)
+      if (url) resolve(url)
+      else reject(new Error(`PicGo upload error: cannot parse output\n${text.slice(0, 400)}`))
+    }
+
+    execFile(cmd, ['u', imagePath], { env }, (err, stdout, stderr) => {
+      // npm installs picgo as a `picgo.cmd` shim on Windows, which execFile
+      // cannot spawn (ENOENT/EINVAL). Only then fall back to a shell — safe
+      // here because both `cmd` (from our resolver) and `imagePath` (our own
+      // temp file) are fully under our control, never document content.
+      const code = (err as NodeJS.ErrnoException | null)?.code
+      if (err && process.platform === 'win32' && (code === 'ENOENT' || code === 'EINVAL')) {
+        exec(`${cmd} u "${imagePath}"`, { env }, handleOutput)
+        return
       }
-    )
+      handleOutput(err, stdout, stderr)
+    })
   })
+
+const uploadByPicgo = async(localPath: string): Promise<string> => {
+  const cmd = resolvePicgoBinary()
+  if (!cmd) throw new Error('PicGo command not found in PATH')
+  // The image path comes from document content (pasted / dragged files). The
+  // old `exec(`picgo u "${localPath}"`)` let a crafted filename like
+  // `x";rm -rf ~;".png` run arbitrary commands. Copy the image to a temp path
+  // whose name we generate, so no document-controlled string ever reaches a
+  // command line.
+  const safePath = path.join(tmpdir(), `marktext-upload-${Date.now()}${safeExtension(localPath)}`)
+  await fs.copy(localPath, safePath)
+  try {
+    return await runPicgo(cmd, safePath)
+  } finally {
+    await fs.remove(safePath).catch(() => {
+      /* temp cleanup is best-effort */
+    })
+  }
+}
 
 const uploadByCli = (cliScript: string, localPath: string): Promise<string> =>
   new Promise((resolve, reject) => {
