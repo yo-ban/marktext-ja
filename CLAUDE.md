@@ -10,8 +10,9 @@ MarkText is a WYSIWYG markdown editor built on Electron + Vue 3. It supports Com
 
 - **Version**: see `package.json`
 - **License**: MIT
-- **Upstream**: https://github.com/marktext/marktext — provenance only;
-  this clone has no git remote configured
+- **Upstream**: https://github.com/marktext/marktext — provenance only
+- **Origin**: https://github.com/yo-ban/marktext-ja — the Japanese-first
+  fork this clone pushes to (`origin/develop`)
 
 ## Tech Stack
 
@@ -302,10 +303,12 @@ See `docs/dev/IPC.md` for conventions and examples.
 
 ## Repository State
 
-This is a detached clone of upstream MarkText with **no git remote configured**,
-checked out on `develop`. Nothing here pushes anywhere.
+This clone works on the Japanese-first fork **marktext-ja**: `origin` is
+https://github.com/yo-ban/marktext-ja (a GitHub fork of upstream), and work
+happens on `develop`, which pushes to `origin/develop`. The roadmap and audit
+log for the fork live in `PLANS.md`.
 
-Upstream's contribution workflow does not apply — do not assume a PR target
-branch, a CI gate, or a release process. The `.github/` workflows and
-`CONTRIBUTING.md` that came with the clone describe upstream's process, not
-this copy's.
+Upstream's contribution workflow does not apply — do not assume an upstream PR
+target, a CI gate, or a release process. The `.github/` workflows and
+`CONTRIBUTING.md` that came with the clone describe upstream's process and are
+kept for reference only.
