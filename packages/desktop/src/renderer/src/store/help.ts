@@ -1,4 +1,5 @@
 import type { IFileState } from '@shared/types/files'
+import { wordCount } from '@muyajs/core'
 import { getUniqueId, deepClone } from '../util'
 
 // Helper module (NOT a Pinia store): defaults and factories for the editor
@@ -122,6 +123,8 @@ export const getBlankFileState = (
     id,
     filename: `${defaultFilenamePrefix}-${++untitleId}`,
     markdown,
+    // See createDocumentState — a seeded untitled tab starts with its count.
+    wordCount: wordCount(markdown),
     // The freshly-loaded document IS its on-disk/clean baseline. The engine
     // clears its undo history on `setContent`, so the baseline undo-stack depth
     // (the synthetic save-tracking id) is 0. Seeding `lastSavedHistoryId` to 0
@@ -147,6 +150,14 @@ export const createDocumentState = (
     if (src[key] !== undefined) {
       ;(docState as Record<string, unknown>)[key] = src[key]
     }
+  }
+
+  // The title-bar counter only refreshes on engine change events, so a
+  // freshly opened document must arrive with its count precomputed —
+  // otherwise it reads 0 until the first edit (or a source-mode round trip).
+  // A restored buffer that carries its own count keeps it.
+  if (src.wordCount === undefined && typeof docState.markdown === 'string') {
+    docState.wordCount = wordCount(docState.markdown)
   }
 
   return Object.assign(docState, {
