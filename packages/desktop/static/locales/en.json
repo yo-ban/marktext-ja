@@ -733,7 +733,8 @@
       "defaultLanguage": "Default language",
       "enableSpellChecking": "Enable spell checking",
       "hideMarksForErrors": "Hide marks for spelling errors",
-      "title": "Spell Checker"
+      "title": "Spell Checker",
+      "languageCoverageNote": "Spell checking covers English (en-US) only — Japanese and other CJK text is not checked."
     }
   },
   "about": {

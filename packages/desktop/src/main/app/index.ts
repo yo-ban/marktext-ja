@@ -148,10 +148,15 @@ class App {
    */
   private async _initializeLanguage(): Promise<void> {
     try {
-      let currentLanguage = this._accessor.preferences.getItem<string>('language')
+      const preferences = this._accessor.preferences
+      let currentLanguage = preferences.getItem<string>('language')
 
-      // If no language is set, auto-detect based on the system language
-      if (!currentLanguage) {
+      // Auto-detect on the app's FIRST start (not only when nothing is
+      // stored): the Preference constructor runs before app-ready, where
+      // app.getLocale() is still empty, so its own first-start detection can
+      // only fall back to the shipped default. Here (post-ready) the real OS
+      // locale is available.
+      if (!currentLanguage || !preferences.hasPreferencesFile) {
         const systemLanguage = app.getLocale()
         log.info(`System language detected: ${systemLanguage}`)
 
@@ -194,16 +199,23 @@ class App {
           'ru-RU': 'ru'
         }
 
-        currentLanguage = languageMap[systemLanguage] || 'en'
-
-        // If the detected language is not in the supported list, use English
-        if (!supportedLanguages.includes(currentLanguage)) {
-          currentLanguage = 'en'
+        const detected = languageMap[systemLanguage]
+        if (detected && supportedLanguages.includes(detected)) {
+          currentLanguage = detected
+          preferences.setItems({
+            language: currentLanguage,
+            // Chromium ships no Japanese dictionary, so if the (default-off)
+            // spell checker is ever enabled its en-US pass over Japanese text
+            // yields only noise marks — start Japanese installs with the
+            // squiggles hidden. See preferences/index.ts.
+            spellcheckerNoUnderline: currentLanguage === 'ja'
+          })
+          log.info(`Auto-detected and set language to: ${currentLanguage}`)
+        } else if (!currentLanguage) {
+          // Detection failed and nothing is stored: this fork ships Japanese
+          // as its default.
+          currentLanguage = 'ja'
         }
-
-        // Save the detected language setting
-        this._accessor.preferences.setItem('language', currentLanguage)
-        log.info(`Auto-detected and set language to: ${currentLanguage}`)
       }
 
       setLanguage(currentLanguage)

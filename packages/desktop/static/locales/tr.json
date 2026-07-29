@@ -733,7 +733,8 @@
       "defaultLanguage": "Varsayılan dil",
       "enableSpellChecking": "Yazım denetimini etkinleştir",
       "hideMarksForErrors": "Yazım hataları için işaretleri gizle",
-      "title": "Yazım Denetleyici"
+      "title": "Yazım Denetleyici",
+      "languageCoverageNote": "Spell checking covers English (en-US) only — Japanese and other CJK text is not checked."
     }
   },
   "about": {

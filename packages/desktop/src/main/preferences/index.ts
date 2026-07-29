@@ -98,11 +98,22 @@ class Preference extends TypedEmitter<PreferenceEvents> {
         defaultSettings!.theme = 'dark'
       }
 
-      // Set system language on first application start
+      // Set system language on first application start. When detection finds
+      // no supported language the static default applies — this fork ships
+      // with Japanese as that default.
       if (!this.hasPreferencesFile) {
         const systemLanguage = this._getSystemLanguage()
         if (systemLanguage) {
           defaultSettings!.language = systemLanguage
+        }
+
+        // Chromium has no Japanese dictionary, so if the user ever turns the
+        // (default-off) spell checker on, its en-US pass over Japanese text
+        // produces only noise marks. Start Japanese installs with the
+        // squiggles hidden — right-click suggestions keep working, and the
+        // preference can re-show them explicitly.
+        if (defaultSettings!.language === 'ja') {
+          defaultSettings!.spellcheckerNoUnderline = true
         }
       }
     } catch (err) {
@@ -225,8 +236,15 @@ class Preference extends TypedEmitter<PreferenceEvents> {
    */
   _getSystemLanguage(): string | null {
     try {
-      // Get the system language
+      // Get the system language. NOTE: before app-ready (where this class is
+      // constructed) getLocale() returns '' — without this guard the empty
+      // primary tag matched EVERY supported language via startsWith('') and
+      // detection always "found" the first list entry, en.
       const systemLocale = app.getLocale()
+      if (!systemLocale) {
+        log.info('System locale not available yet (before app-ready)')
+        return null
+      }
       log.info(`System locale detected: ${systemLocale}`)
 
       // Get the list of supported languages

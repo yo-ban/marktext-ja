@@ -1,6 +1,9 @@
 <template>
   <div class="pref-spellchecker">
     <h4>{{ t('preferences.spellchecker.title') }}</h4>
+    <div class="description">
+      {{ t('preferences.spellchecker.languageCoverageNote') }}
+    </div>
     <compound>
       <template #head>
         <bool

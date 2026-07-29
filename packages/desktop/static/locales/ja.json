@@ -733,7 +733,8 @@
       "defaultLanguage": "デフォルト言語",
       "enableSpellChecking": "スペルチェックを有効",
       "hideMarksForErrors": "スペルエラーのマークを隠す",
-      "title": "スペルチェック"
+      "title": "スペルチェック",
+      "languageCoverageNote": "スペルチェックの対象は英語(en-US)のみです。日本語などの CJK テキストはチェックされません。"
     }
   },
   "about": {

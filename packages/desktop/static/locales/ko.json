@@ -733,7 +733,8 @@
       "defaultLanguage": "기본 언어",
       "enableSpellChecking": "맞춤법 검사 활성화",
       "hideMarksForErrors": "맞춤법 오류 표시 숨기기",
-      "title": "맞춤법 검사기"
+      "title": "맞춤법 검사기",
+      "languageCoverageNote": "Spell checking covers English (en-US) only — Japanese and other CJK text is not checked."
     }
   },
   "about": {

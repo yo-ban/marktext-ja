@@ -19,7 +19,7 @@
 - `packages/desktop/static/locales/ja.json`: **745 キー完訳**(英語と同一の 37 件はすべてテーマ名等の固有名詞)
 - `packages/muya/src/locales/ja.ts`: 85 キー完訳
 - 言語ピッカーに「日本語」登録済み(`renderer/src/prefComponents/general/config.ts:123-126`)
-- 初回起動時の OS 言語自動検出も `ja` 対応(`main/preferences/index.ts:196-228`)
+- ~~初回起動時の OS 言語自動検出も `ja` 対応~~ → **実は常に en に化ける既存バグだった**(2026-07-30 発見・修正): Preference 構築は app-ready 前で `app.getLocale()` が空文字を返し、空の primary タグが `startsWith('')` で必ずリスト先頭の en にマッチしていた。修正: 空ロケールガード + ready 後の `_initializeLanguage` が初回起動時に再検出。あわせて**フォークのデフォルト言語を ja に**(static/preference.json)。検出成功時は OS 言語優先、失敗時 ja。初回起動が ja に解決した場合は `spellcheckerNoUnderline: true` を既定に(Chromium に日本語辞書がなく、en-US チェッカーの日本語文への下線はノイズのため。チェッカー自体は既定 OFF のまま、右クリック提案は有効)。設定画面に「対象は英語のみ」の注記追加。実機起動で ja UI + 設定値をスクリーンショット確認済み
 - ロケール切替の e2e テストに ja ケースあり(`packages/muya/e2e/tests/i18n/locale-switch.spec.ts`)
 - i18n は 3 系統: renderer = vue-i18n v11 / main = 自前 `t()`(`common/i18n.ts`)/ muya = 英文キーの自前辞書
 - 新規ロケールは `pnpm run minify-locales` 必須(`electron-builder.yml` が `.min.json` 以外を除外)

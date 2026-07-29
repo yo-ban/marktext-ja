@@ -733,7 +733,8 @@
       "defaultLanguage": "Idioma predeterminado",
       "enableSpellChecking": "Habilitar corrección ortográfica",
       "hideMarksForErrors": "Ocultar marcas para errores ortográficos",
-      "title": "Corrector Ortográfico"
+      "title": "Corrector Ortográfico",
+      "languageCoverageNote": "Spell checking covers English (en-US) only — Japanese and other CJK text is not checked."
     }
   },
   "about": {

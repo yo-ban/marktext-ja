@@ -27,8 +27,8 @@ export default [
       'packages/muya/**',
       'packages/desktop/src/renderer/src/assets/symbolIcon/index.js',
       '**/*.min.json',
-      'test-results/**',
-      'playwright-report/**'
+      '**/test-results/**',
+      '**/playwright-report/**'
     ]
   },
 
