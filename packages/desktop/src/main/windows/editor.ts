@@ -11,6 +11,7 @@ import { TITLE_BAR_HEIGHT, editorWinOptions, isLinux, isOsx } from '../config'
 import { showEditorContextMenu } from '../contextMenu/editor'
 import { loadMarkdownFile } from '../filesystem/markdown'
 import { switchLanguage } from '../spellchecker'
+import { t } from '../i18n'
 import fs from 'fs'
 
 type RawMarkdownDocument = Awaited<ReturnType<typeof loadMarkdownFile>>
@@ -638,6 +639,28 @@ class EditorWindow extends BaseWindow {
         })
     } catch (e) {
       log.error('Failed to restore editor state:', e)
+
+      // Keep the unreadable buffer for manual recovery — the next state flush
+      // overwrites this file, which may hold the only copy of the user's
+      // unsaved work.
+      const bufferPath = bufferStoreInfo!.filePath!
+      let backupPath: string | null = null
+      try {
+        backupPath = `${bufferPath}.corrupt-${Date.now()}`
+        fs.copyFileSync(bufferPath, backupPath)
+      } catch (backupErr) {
+        log.error('Could not back up the corrupt editor buffer:', backupErr)
+        backupPath = null
+      }
+
+      // The old code swallowed the error: the window came up with zero tabs
+      // and no explanation. Tell the user and give them a usable blank tab.
+      browserWindow!.webContents.send('mt::show-notification', {
+        title: t('error.recoveryBufferCorruptTitle'),
+        type: 'error',
+        message: t('error.recoveryBufferCorruptMessage', { path: backupPath ?? bufferPath })
+      })
+      this.openUntitledTab(true, '')
     }
   }
 }

@@ -154,6 +154,15 @@ const handleResponseForPrint = async(e: IpcMainEvent): Promise<void> => {
   })
 }
 
+// Distinguishes the three ways a save can end so callers that gate a window
+// close on it (mt::close-window-confirm) can react: only 'saved' may proceed
+// to close — treating 'canceled' or 'failed' as success silently destroys the
+// unsaved document.
+export type SaveOutcome =
+  | { status: 'saved' }
+  | { status: 'canceled' }
+  | { status: 'failed'; message: string }
+
 const handleResponseForSave = async(
   e: IpcMainEvent,
   id: string,
@@ -162,10 +171,10 @@ const handleResponseForSave = async(
   markdown: string,
   options: UnsavedFile['options'],
   defaultPath?: string
-): Promise<string | void> => {
+): Promise<SaveOutcome> => {
   const win = BrowserWindow.fromWebContents(e.sender)
   if (!win) {
-    return Promise.resolve()
+    return { status: 'canceled' }
   }
   let recommendFilename = getRecommendTitleFromMarkdownString(markdown)
   if (!recommendFilename) {
@@ -191,7 +200,7 @@ const handleResponseForSave = async(
 
   // Save dialog canceled by user - no error.
   if (!filePath) {
-    return Promise.resolve()
+    return { status: 'canceled' }
   }
 
   filePath = path.resolve(filePath)
@@ -204,7 +213,7 @@ const handleResponseForSave = async(
   // populates every field for the unsaved-file dialog payload, so the cast
   // is safe at this seam.
   return writeMarkdownFile(filePath, markdown, options as Parameters<typeof writeMarkdownFile>[2])
-    .then(() => {
+    .then((): SaveOutcome => {
       if (!alreadyExistOnDisk) {
         ipcMain.emit('window-add-file-path', win.id, filePath)
         ipcMain.emit('menu-add-recently-used', filePath)
@@ -215,12 +224,13 @@ const handleResponseForSave = async(
         ipcMain.emit('window-file-saved', win.id, filePath)
         win.webContents.send('mt::tab-saved', id)
       }
-      return id
+      return { status: 'saved' }
     })
-    .catch((err: unknown) => {
+    .catch((err: unknown): SaveOutcome => {
       log.error('Error while saving:', err)
       const msg = err instanceof Error ? err.message : String(err)
       win.webContents.send('mt::tab-save-failure', id, msg)
+      return { status: 'failed', message: msg }
     })
 }
 
@@ -298,43 +308,53 @@ ipcMain.on('mt::save-tabs', (e, unsavedFiles: UnsavedFile[]) => {
   ).catch(log.error)
 })
 
-ipcMain.on('mt::save-and-close-tabs', async(e, unsavedFiles: UnsavedFile[]) => {
-  const win = BrowserWindow.fromWebContents(e.sender)
-  if (!win) {
-    return
-  }
-  const userResult = await showUnsavedFilesMessage(win, unsavedFiles)
-  if (!userResult) {
-    return
-  }
+// `savedTabIds` are the already-on-disk tabs the renderer wants closed with
+// the same gesture (close project / close all). The renderer keeps them open
+// until this dialog resolves — closing them up front made Cancel destructive
+// (the saved tabs were already gone).
+ipcMain.on(
+  'mt::save-and-close-tabs',
+  async(e, unsavedFiles: UnsavedFile[], savedTabIds: string[] = []) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win) {
+      return
+    }
+    const userResult = await showUnsavedFilesMessage(win, unsavedFiles)
+    if (!userResult) {
+      // Canceled — close nothing, including the saved tabs.
+      return
+    }
 
-  const { needSave } = userResult
-  if (needSave) {
-    Promise.all(
-      unsavedFiles.map((file) =>
-        handleResponseForSave(
-          e,
-          file.id,
-          file.filename,
-          file.pathname,
-          file.markdown,
-          file.options,
-          file.defaultPath
+    const { needSave } = userResult
+    if (needSave) {
+      const results = await Promise.all(
+        unsavedFiles.map((file) =>
+          handleResponseForSave(
+            e,
+            file.id,
+            file.filename,
+            file.pathname,
+            file.markdown,
+            file.options,
+            file.defaultPath
+          )
         )
       )
-    )
-      .then((arr) => {
-        const tabIds = arr.filter((id): id is string => id != null)
+      // Close only tabs whose file actually reached disk; a canceled or
+      // failed save keeps its tab (and its content) open.
+      const savedNowIds = unsavedFiles
+        .filter((_, i) => results[i].status === 'saved')
+        .map((f) => f.id)
+      const tabIds = [...savedTabIds, ...savedNowIds]
+      if (tabIds.length) {
         win.webContents.send('mt::force-close-tabs-by-id', tabIds)
-      })
-      .catch((err: unknown) => {
-        log.error('Error while save all:', err)
-      })
-  } else {
-    const tabIds = unsavedFiles.map((f) => f.id)
-    win.webContents.send('mt::force-close-tabs-by-id', tabIds)
+      }
+    } else {
+      const tabIds = [...savedTabIds, ...unsavedFiles.map((f) => f.id)]
+      win.webContents.send('mt::force-close-tabs-by-id', tabIds)
+    }
   }
-})
+)
 
 ipcMain.on(
   'mt::response-file-save-as',
@@ -416,7 +436,11 @@ ipcMain.on('mt::close-window-confirm', async(e, unsavedFiles: UnsavedFile[]) => 
 
   const { needSave } = userResult
   if (needSave) {
-    Promise.all(
+    // handleResponseForSave never rejects — it reports 'saved' / 'canceled' /
+    // 'failed' per file. Close only when every file actually reached disk:
+    // the old code closed unconditionally, destroying documents whose save
+    // dialog was Esc-canceled or whose write failed.
+    const results = await Promise.all(
       unsavedFiles.map((file) =>
         handleResponseForSave(
           e,
@@ -429,27 +453,31 @@ ipcMain.on('mt::close-window-confirm', async(e, unsavedFiles: UnsavedFile[]) => 
         )
       )
     )
-      .then(() => {
-        ipcMain.emit('window-close-by-id', win.id)
-      })
-      .catch((err: unknown) => {
-        log.error('Error while saving before quit:', err)
 
-        const msg = err instanceof Error ? err.message : String(err)
-        // Notify user about the problem.
-        dialog
-          .showMessageBox(win, {
-            type: 'error',
-            buttons: [t('dialog.close'), t('dialog.keepOpen')],
-            message: t('dialog.saveFailure'),
-            detail: msg
-          })
-          .then(({ response }) => {
-            if (win.id && response === 0) {
-              ipcMain.emit('window-close-by-id', win.id)
-            }
-          })
+    const failed = results.filter(
+      (r): r is Extract<SaveOutcome, { status: 'failed' }> => r.status === 'failed'
+    )
+    if (failed.length > 0) {
+      log.error('Error while saving before quit:', failed.map((f) => f.message).join('\n'))
+      const { response } = await dialog.showMessageBox(win, {
+        type: 'error',
+        buttons: [t('dialog.close'), t('dialog.keepOpen')],
+        message: t('dialog.saveFailure'),
+        detail: failed.map((f) => f.message).join('\n')
       })
+      if (response === 0) {
+        ipcMain.emit('window-close-by-id', win.id)
+      }
+      return
+    }
+
+    // A canceled save dialog means the user backed out of closing — keep the
+    // window open, same as canceling the unsaved-files prompt itself.
+    if (results.some((r) => r.status === 'canceled')) {
+      return
+    }
+
+    ipcMain.emit('window-close-by-id', win.id)
   } else {
     ipcMain.emit('window-close-by-id', win.id)
   }

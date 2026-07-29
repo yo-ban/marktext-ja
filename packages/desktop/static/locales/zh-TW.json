@@ -893,7 +893,11 @@
     "unsafeFileTitle": "潛在不安全的檔案",
     "unsafeFileMessage": "此連結將開啟一個可執行程式碼的檔案",
     "unsafeFileDetail": "「{name}」是可執行檔或指令碼檔案。開啟它可能會在你的電腦上執行程式。請僅在信任此文件時繼續。",
-    "openAnyway": "仍要開啟"
+    "openAnyway": "仍要開啟",
+    "updateDownloadedDetail": "Install it now? MarkText will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
+    "updateDownloadedMessage": "Update downloaded",
+    "updateInstallNow": "Quit and Install",
+    "updateLater": "Later"
   },
   "error": {
     "configSchemaViolation": "設定結構違規",
@@ -905,7 +909,11 @@
     "terminatedDueToError": "因錯誤而終止",
     "unexpectedErrorWithMessage": "意外錯誤訊息",
     "unexpectedMainProcess": "意外的主程序錯誤",
-    "unexpectedRendererProcess": "意外的渲染程序錯誤"
+    "unexpectedRendererProcess": "意外的渲染程序錯誤",
+    "preferencesResetTitle": "Preferences were reset",
+    "preferencesResetMessage": "The settings file was corrupt and has been reset to defaults. The old file was saved to: {path}",
+    "recoveryBufferCorruptTitle": "Session could not be restored",
+    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}"
   },
   "notifications": {
     "defaultMessage": "預設訊息",

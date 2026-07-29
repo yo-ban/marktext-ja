@@ -1,8 +1,9 @@
 import { autoUpdater } from 'electron-updater'
-import { BrowserWindow, Menu, ipcMain } from 'electron'
+import { BrowserWindow, Menu, app, dialog, ipcMain } from 'electron'
 import { COMMANDS } from '../../commands'
 import type { CommandManager } from '../../commands'
 import { isOsx } from '../../config'
+import { t } from '../../i18n'
 
 let runningUpdate = false
 let win: BrowserWindow | null = null
@@ -38,17 +39,31 @@ autoUpdater.on('update-not-available', (_info) => {
   runningUpdate = false
 })
 
-autoUpdater.on('update-downloaded', (_event) => {
-  // TODO: We should ask the user, so that the user can save all documents and
-  // not just force close the application.
-
+autoUpdater.on('update-downloaded', async(_event) => {
   if (win) {
-    win.webContents.send(
-      'mt::UPDATE_DOWNLOADED',
-      'Update downloaded, application will be quit for update...'
-    )
+    win.webContents.send('mt::UPDATE_DOWNLOADED', t('dialog.updateDownloadedMessage'))
   }
-  setImmediate(() => autoUpdater.quitAndInstall())
+
+  // Never quitAndInstall() directly: it tears the windows down without the
+  // unsaved-files flow, silently destroying open documents. A normal
+  // app.quit() runs every window's close prompt, and electron-updater's
+  // autoInstallOnAppQuit (default on) installs the downloaded update once the
+  // app exits — including a later, user-initiated quit if they pick "Later".
+  const options = {
+    type: 'info' as const,
+    buttons: [t('dialog.updateInstallNow'), t('dialog.updateLater')],
+    defaultId: 0,
+    cancelId: 1,
+    message: t('dialog.updateDownloadedMessage'),
+    detail: t('dialog.updateDownloadedDetail'),
+    noLink: true
+  }
+  const { response } = win
+    ? await dialog.showMessageBox(win, options)
+    : await dialog.showMessageBox(options)
+  if (response === 0) {
+    app.quit()
+  }
 })
 
 ipcMain.on('mt::NEED_UPDATE', (_e, { needUpdate }: { needUpdate: boolean }) => {

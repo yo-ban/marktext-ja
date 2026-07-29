@@ -1,8 +1,9 @@
 import fs from 'fs'
 import path from 'path'
 import Store, { type Schema } from 'electron-store'
-import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron'
 import log from 'electron-log'
+import { t } from '../i18n'
 import { isWindows } from '../config'
 import { hasSameKeys } from '../utils'
 import { onInternalChannel } from '../utils/internalIpc'
@@ -31,7 +32,9 @@ class Preference extends TypedEmitter<PreferenceEvents> {
   /**
    * @param paths The path instance.
    *
-   * NOTE: This throws an exception when validation fails.
+   * A corrupt or schema-violating preferences.json is moved aside and the
+   * store restarts from defaults — a bad settings file must never brick
+   * startup (there is no other way for the user to recover in-app).
    */
   constructor(paths: AppPaths) {
     // TODO: Preferences should not loaded if global.MARKTEXT_SAFE_MODE is set.
@@ -39,23 +42,47 @@ class Preference extends TypedEmitter<PreferenceEvents> {
 
     const { preferencesPath } = paths
     this.preferencesPath = preferencesPath
-    this.hasPreferencesFile = fs.existsSync(
-      path.join(this.preferencesPath, `./${PREFERENCES_FILE_NAME}.json`)
-    )
-    this.store = new Store<IUserPreferences>({
-      schema: schema as unknown as Schema<IUserPreferences>,
-      name: PREFERENCES_FILE_NAME,
-      migrations: {
-        '0.18.6': (store) => {
-          if (store.get('startUpAction') === 'lastState') {
-            store.set('startUpAction', 'openLastFolder')
+    const preferencesFilePath = path.join(this.preferencesPath, `${PREFERENCES_FILE_NAME}.json`)
+    this.hasPreferencesFile = fs.existsSync(preferencesFilePath)
+
+    const createStore = () =>
+      new Store<IUserPreferences>({
+        schema: schema as unknown as Schema<IUserPreferences>,
+        name: PREFERENCES_FILE_NAME,
+        migrations: {
+          '0.18.6': (store) => {
+            if (store.get('startUpAction') === 'lastState') {
+              store.set('startUpAction', 'openLastFolder')
+            }
           }
+        },
+        beforeEachMigration: (_store, context) => {
+          log.info(`Preferences migration: ${context.fromVersion} -> ${context.toVersion}`)
         }
-      },
-      beforeEachMigration: (_store, context) => {
-        log.info(`Preferences migration: ${context.fromVersion} -> ${context.toVersion}`)
+      })
+
+    try {
+      this.store = createStore()
+    } catch (err) {
+      // Schema violation or unparseable JSON. Keep the broken file for manual
+      // inspection, then start over from defaults.
+      log.error('Preferences file is corrupt or violates the schema:', err)
+      const backupPath = `${preferencesFilePath}.corrupt-${Date.now()}`
+      try {
+        fs.renameSync(preferencesFilePath, backupPath)
+      } catch (renameErr) {
+        log.error('Could not back up the corrupt preferences file:', renameErr)
+        fs.rmSync(preferencesFilePath, { force: true })
       }
-    })
+      // Behave like a first start so init() seeds all defaults (and the
+      // system language) into the fresh store.
+      this.hasPreferencesFile = false
+      this.store = createStore()
+      dialog.showErrorBox(
+        t('error.preferencesResetTitle'),
+        t('error.preferencesResetMessage', { path: backupPath })
+      )
+    }
 
     this.staticPath = path.join(global.__static, 'preference.json')
     this.init()

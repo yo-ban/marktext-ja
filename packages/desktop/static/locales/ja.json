@@ -893,7 +893,11 @@
     "unsafeFileTitle": "安全でない可能性のあるファイル",
     "unsafeFileMessage": "このリンクはコードを実行できるファイルを開きます",
     "unsafeFileDetail": "「{name}」は実行可能ファイルまたはスクリプトファイルです。開くとコンピューター上でプログラムが実行される可能性があります。この文書を信頼できる場合のみ続行してください。",
-    "openAnyway": "それでも開く"
+    "openAnyway": "それでも開く",
+    "updateDownloadedDetail": "今すぐインストールしますか?MarkText は通常の手順で終了し、未保存のドキュメントがあれば先に保存を確認します。「後で」を選ぶと、次回終了時にインストールされます。",
+    "updateDownloadedMessage": "アップデートをダウンロードしました",
+    "updateInstallNow": "終了してインストール",
+    "updateLater": "後で"
   },
   "error": {
     "configSchemaViolation": "設定スキーマ違反",
@@ -905,7 +909,11 @@
     "terminatedDueToError": "エラーにより終了",
     "unexpectedErrorWithMessage": "予期しないエラーメッセージ",
     "unexpectedMainProcess": "予期しないメインプロセスエラー",
-    "unexpectedRendererProcess": "予期しないレンダラープロセスエラー"
+    "unexpectedRendererProcess": "予期しないレンダラープロセスエラー",
+    "preferencesResetTitle": "設定をリセットしました",
+    "preferencesResetMessage": "設定ファイルが壊れていたため、初期設定に戻しました。元のファイルは次の場所に保存されています: {path}",
+    "recoveryBufferCorruptTitle": "セッションを復元できませんでした",
+    "recoveryBufferCorruptMessage": "クラッシュ復旧データが読み取れなかったため、前回のタブを再度開けませんでした。読み取れなかったファイルは次の場所に保存されています: {path}"
   },
   "notifications": {
     "defaultMessage": "デフォルトメッセージ",

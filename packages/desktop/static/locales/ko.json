@@ -893,7 +893,11 @@
     "unsafeFileTitle": "안전하지 않을 수 있는 파일",
     "unsafeFileMessage": "이 링크는 코드를 실행할 수 있는 파일을 엽니다",
     "unsafeFileDetail": "\"{name}\"은(는) 실행 파일 또는 스크립트 파일입니다. 열면 컴퓨터에서 프로그램이 실행될 수 있습니다. 이 문서를 신뢰하는 경우에만 계속하세요.",
-    "openAnyway": "그래도 열기"
+    "openAnyway": "그래도 열기",
+    "updateDownloadedDetail": "Install it now? MarkText will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
+    "updateDownloadedMessage": "Update downloaded",
+    "updateInstallNow": "Quit and Install",
+    "updateLater": "Later"
   },
   "error": {
     "configSchemaViolation": "구성 스키마 위반",
@@ -905,7 +909,11 @@
     "terminatedDueToError": "오류로 인해 종료됨",
     "unexpectedErrorWithMessage": "메시지와 함께 예상치 못한 오류",
     "unexpectedMainProcess": "예상치 못한 메인 프로세스 오류",
-    "unexpectedRendererProcess": "예상치 못한 렌더러 프로세스 오류"
+    "unexpectedRendererProcess": "예상치 못한 렌더러 프로세스 오류",
+    "preferencesResetTitle": "Preferences were reset",
+    "preferencesResetMessage": "The settings file was corrupt and has been reset to defaults. The old file was saved to: {path}",
+    "recoveryBufferCorruptTitle": "Session could not be restored",
+    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}"
   },
   "notifications": {
     "defaultMessage": "기본 메시지",

@@ -162,7 +162,7 @@ export interface IpcSendChannels {
   ]
   'mt::response-print': []
   'mt::rg::cancel': [searchId: string]
-  'mt::save-and-close-tabs': [tabs: unknown[]]
+  'mt::save-and-close-tabs': [tabs: unknown[], savedTabIds?: string[]]
   'mt::save-tabs': [tabs: unknown[]]
   'mt::select-default-directory-to-open': []
   'mt::set-user-data': [partial: unknown]

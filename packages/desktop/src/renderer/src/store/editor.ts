@@ -704,8 +704,17 @@ export const useEditorStore = defineStore('editor', {
 
       if (closeTabs) {
         if (unsavedFiles.length) {
-          this.CLOSE_TABS(tabs.filter((f) => f.isSaved).map((f) => f.id))
-          window.electron.ipcRenderer.send('mt::save-and-close-tabs', deepClone(unsavedFiles))
+          // Keep the saved tabs open until the user answers the save dialog —
+          // main closes them together with the saved-now tabs, and Cancel
+          // leaves the whole window untouched. Closing them up front made
+          // Cancel destructive.
+          const unsavedIds = new Set(unsavedFiles.map((f) => f.id))
+          const savedTabIds = tabs.filter((f) => f.isSaved && !unsavedIds.has(f.id)).map((f) => f.id)
+          window.electron.ipcRenderer.send(
+            'mt::save-and-close-tabs',
+            deepClone(unsavedFiles),
+            savedTabIds
+          )
         } else {
           this.CLOSE_TABS(tabs.map((f) => f.id))
         }
@@ -1607,7 +1616,10 @@ export const useEditorStore = defineStore('editor', {
       if (lineEnding !== oldLineEnding) {
         this.currentFile.lineEnding = lineEnding
         this.currentFile.adjustLineEndingOnSave = lineEnding !== 'lf'
-        this.currentFile.isSaved = true
+        // The new line ending exists only in memory until the next save —
+        // marking the tab saved here let the window close without a prompt,
+        // silently dropping the change (and any other pending edits).
+        this.currentFile.isSaved = false
         this.UPDATE_LINE_ENDING_MENU()
         debouncedSendBufferedState()
       }
@@ -1629,7 +1641,8 @@ export const useEditorStore = defineStore('editor', {
         if (encoding !== encodingName) {
           this.currentFile.encoding.encoding = encodingName as string
           this.currentFile.encoding.isBom = false
-          this.currentFile.isSaved = true
+          // In memory only until the next save — see SET_LINE_ENDING.
+          this.currentFile.isSaved = false
           debouncedSendBufferedState()
         }
       })
@@ -1641,7 +1654,8 @@ export const useEditorStore = defineStore('editor', {
         const { trimTrailingNewline } = this.currentFile
         if (trimTrailingNewline !== value) {
           this.currentFile.trimTrailingNewline = value as number
-          this.currentFile.isSaved = true
+          // In memory only until the next save — see SET_LINE_ENDING.
+          this.currentFile.isSaved = false
           debouncedSendBufferedState()
         }
       })
