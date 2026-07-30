@@ -7,7 +7,7 @@
         type="text"
         class="search-input"
         :placeholder="t('sideBar.search.searchInFolder')"
-        @keyup="search"
+        @keyup="onSearchKeyup"
       >
       <div class="controls">
         <span
@@ -105,6 +105,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import debounce from 'lodash/debounce'
 import { useLayoutStore } from '@/store/layout'
 import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
@@ -248,6 +249,25 @@ const search = (): void => {
     })
 
   searcherCancelCallback = cancellable.cancel.bind(cancellable)
+}
+
+// Every keyup used to launch a full ripgrep run over the folder — with many
+// documents each keystroke spawned and cancelled a fresh search and the
+// sidebar stalled (#3556). Debounce until typing pauses; Enter searches
+// immediately.
+const debouncedSearch = debounce(search, 300)
+
+const onSearchKeyup = (event: KeyboardEvent): void => {
+  // Keys operating an IME composition never search the half-composed term.
+  if (event.isComposing) {
+    return
+  }
+  if (event.key === 'Enter') {
+    debouncedSearch.cancel()
+    search()
+    return
+  }
+  debouncedSearch()
 }
 
 const handleFindInFolder = (executeSearch: boolean | unknown = true): void => {

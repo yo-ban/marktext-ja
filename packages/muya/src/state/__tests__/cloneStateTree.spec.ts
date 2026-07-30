@@ -71,4 +71,39 @@ describe('cloneStateTree', () => {
         muya.destroy();
         muya.domNode.remove();
     });
+
+    it('copies array-valued meta fields — mutating a clone never leaks into the source', () => {
+        const source: TState[] = [
+            {
+                name: 'order-list',
+                meta: { start: 1, loose: false, delimiter: '.', sourceMarkers: ['1.', '1.'] },
+                children: [{ name: 'list-item', children: [{ name: 'paragraph', text: 'a' }] }],
+            } as unknown as TState,
+        ];
+
+        const clone = cloneStateTree(source);
+        const cloneMeta = (clone[0] as { meta: { sourceMarkers: string[] } }).meta;
+        cloneMeta.sourceMarkers[0] = '9.';
+
+        const sourceMeta = (source[0] as { meta: { sourceMarkers: string[] } }).meta;
+        expect(sourceMeta.sourceMarkers[0]).toBe('1.');
+    });
+
+    it('survives pathological nesting without overflowing the call stack (#4747)', () => {
+        // 10k-deep single-child chain — far past the ~600 levels that
+        // overflowed the recursive implementation.
+        let node: TState = { name: 'paragraph', text: 'leaf' } as TState;
+        for (let i = 0; i < 10_000; i++)
+            node = { name: 'block-quote', children: [node] } as unknown as TState;
+
+        const clone = cloneStateTree([node]);
+
+        let depth = 0;
+        let probe = clone[0] as { children?: TState[] };
+        while (Array.isArray(probe.children)) {
+            probe = probe.children[0] as { children?: TState[] };
+            depth++;
+        }
+        expect(depth).toBe(10_000);
+    });
 });
