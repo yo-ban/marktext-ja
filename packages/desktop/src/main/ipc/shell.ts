@@ -1,6 +1,5 @@
 import { ipcMain, shell, clipboard } from 'electron'
 import log from 'electron-log'
-import * as plist from 'plist'
 
 export const registerShellHandlers = (): void => {
   ipcMain.handle('mt::shell::open-external', async(_e, url: string) => {
@@ -46,10 +45,14 @@ export const registerShellHandlers = (): void => {
     }
   })
 
-  ipcMain.handle('mt::clipboard::guess-file-path', () => {
+  ipcMain.handle('mt::clipboard::guess-file-path', async() => {
     try {
       if (process.platform === 'darwin') {
         if (clipboard.has('NSFilenamesPboardType')) {
+          // plist drags in ~340KB of XML machinery (xmldom + xmlbuilder) for
+          // this one macOS clipboard format, so it is loaded with the first
+          // paste that needs it rather than at every launch on every platform.
+          const plist = await import('plist')
           const parsed = plist.parse(clipboard.read('NSFilenamesPboardType'))
           return Array.isArray(parsed) && parsed.length ? parsed[0] : ''
         }
