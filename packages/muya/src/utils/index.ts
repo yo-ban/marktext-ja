@@ -184,20 +184,121 @@ export function escapeInBlockHtml(html: string) {
 // character as one word (the same convention as VSCode / Word). The previous
 // range covered only common Han ideographs, so an all-hiragana Japanese
 // paragraph counted as a single "word".
-const CJK_CHAR_REG = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu;
+const CJK_CHAR_REG = /^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]$/u;
 
+// Lowest code point of any block those four scripts occupy. Latin text never
+// reaches the regex — or the cache — at all.
+const CJK_MIN_CODE_POINT = 0x2E80;
+
+const cjkByCodePoint = new Map<number, boolean>();
+
+function isCjkCodePoint(code: number) {
+    if (code < CJK_MIN_CODE_POINT)
+        return false;
+
+    let cjk = cjkByCodePoint.get(code);
+
+    if (cjk === undefined) {
+        cjk = CJK_CHAR_REG.test(String.fromCodePoint(code));
+        cjkByCodePoint.set(code, cjk);
+    }
+
+    return cjk;
+}
+
+// `\s` exactly as the RegExp engine defines it — words used to be delimited by
+// `split(/\s+/)`.
+function isWhitespaceCode(code: number) {
+    return (
+        code === 0x20
+        || (code >= 0x09 && code <= 0x0D)
+        || code === 0xA0
+        || code === 0x1680
+        || (code >= 0x2000 && code <= 0x200A)
+        || code === 0x2028
+        || code === 0x2029
+        || code === 0x202F
+        || code === 0x205F
+        || code === 0x3000
+        || code === 0xFEFF
+    );
+}
+
+/**
+ * Count words / paragraphs / characters of a markdown document.
+ *
+ * One pass over the string, deliberately: the desktop status bar recounts the
+ * WHOLE document on every keystroke, and the previous implementation built
+ * three intermediate copies of it (a CJK-stripped string, the token array, and
+ * the paragraph array) to do so.
+ *
+ * Counts are in UTF-16 code units, so an astral character (a rare CJK extension
+ * ideograph, an emoji) counts as two — the arithmetic the string-length version
+ * did, kept as-is so the displayed numbers do not shift.
+ */
 export function wordCount(markdown: string) {
-    const paragraph = markdown.split(/\n{2,}/).filter(line => line).length;
+    const all = markdown.length;
     let word = 0;
     let character = 0;
-    let all = 0;
+    let paragraph = 0;
+    // Set by any character outside a paragraph separator, so an empty segment
+    // between two separators is skipped (the `.filter` on the split result).
+    let segmentHasContent = false;
+    // A word is a whitespace-delimited run holding at least one non-CJK
+    // character: each CJK character counts as its own word, and stripping them
+    // could leave the run empty — an empty run was never a token.
+    let runHasNonCjk = false;
 
-    const removedCJK = markdown.replace(CJK_CHAR_REG, '');
-    const tokens = removedCJK.split(/\s+/).filter(t => t);
-    const cjkLength = markdown.length - removedCJK.length;
-    word += cjkLength + tokens.length;
-    character += tokens.reduce((acc, t) => acc + t.length, 0) + cjkLength;
-    all += markdown.length;
+    for (let i = 0; i < all;) {
+        const code = markdown.codePointAt(i) ?? 0;
+        const size = code > 0xFFFF ? 2 : 1;
+
+        i += size;
+
+        // Two or more newlines separate paragraphs; a single one does not.
+        if (code === 0x0A && markdown.charCodeAt(i) === 0x0A) {
+            while (markdown.charCodeAt(i) === 0x0A)
+                i++;
+
+            if (runHasNonCjk) {
+                word++;
+                runHasNonCjk = false;
+            }
+
+            if (segmentHasContent) {
+                paragraph++;
+                segmentHasContent = false;
+            }
+
+            continue;
+        }
+
+        segmentHasContent = true;
+
+        if (isWhitespaceCode(code)) {
+            if (runHasNonCjk) {
+                word++;
+                runHasNonCjk = false;
+            }
+
+            continue;
+        }
+
+        character += size;
+
+        // A CJK character does not break the surrounding run: with it removed,
+        // the text on either side of it formed a single token.
+        if (isCjkCodePoint(code))
+            word += size;
+        else
+            runHasNonCjk = true;
+    }
+
+    if (runHasNonCjk)
+        word++;
+
+    if (segmentHasContent)
+        paragraph++;
 
     return { word, paragraph, character, all };
 }

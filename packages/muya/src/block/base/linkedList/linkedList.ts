@@ -62,8 +62,23 @@ export class LinkedList<T extends ILinkedNode> {
         this.length += 1;
     }
 
+    // Walks the `next` chain instead of materializing the list: this is called
+    // via `Parent.offset` from every block's `path` getter, so it runs on the
+    // scroll page's whole child list on every document mutation. The array the
+    // spread built was the cost, not the comparisons.
     offset(node: T) {
-        return [...this.iterator()].indexOf(node);
+        let index = 0;
+        let cur = this.head;
+
+        while (index < this.length && cur) {
+            if (cur === node)
+                return index;
+
+            index++;
+            cur = cur.next as T;
+        }
+
+        return -1;
     }
 
     remove(node: T) {
@@ -89,7 +104,11 @@ export class LinkedList<T extends ILinkedNode> {
         if (index < 0 || index >= this.length)
             return null;
 
-        return [...this.iterator()][index];
+        let cur = this.head;
+        for (let i = 0; i < index && cur; i++)
+            cur = cur.next as T;
+
+        return cur;
     }
 
     forEach(callback: (cur: T, i: number) => void) {
@@ -108,10 +127,18 @@ export class LinkedList<T extends ILinkedNode> {
         });
     }
 
+    // Snapshots first (like `forEach`/`reduce`) so a callback that mutates the
+    // list still sees the original members, but accumulates with `push`: the
+    // `[...acc, x]` fold it replaces copied the whole result array per element,
+    // making a long list quadratic.
     map<M>(callback: (cur: T, i: number) => M): M[] {
-        return this.reduce((acc: M[], node: T, i: number) => {
-            return [...acc, callback(node, i)];
-        }, []);
+        const nodes = [...this.iterator()];
+        const result: M[] = [];
+
+        for (let i = 0; i < nodes.length; i++)
+            result.push(callback(nodes[i], i));
+
+        return result;
     }
 
     reduce<M>(callback: (memo: M, cur: T, i: number) => M, memo: M): M {

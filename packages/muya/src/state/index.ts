@@ -269,7 +269,11 @@ class JSONState {
     }
 
     getMarkdown() {
-        return this.getMarkdownFromState(this.getState());
+        // Serializes the LIVE tree: `StateToMarkdown` only reads it (it clones
+        // the one `meta` it needs to adjust itself), so the whole-document copy
+        // `getState()` makes was pure overhead on a path the desktop runs on
+        // every keystroke.
+        return this.getMarkdownFromState(this._state);
     }
 
     getTOC() {

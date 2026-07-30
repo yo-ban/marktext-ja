@@ -60,3 +60,103 @@ describe('wordCount', () => {
         });
     });
 });
+
+// `wordCount` was rewritten from three whole-string transforms into a single
+// pass (it runs on the entire document on every keystroke). The counts it
+// reports are user-visible, so they must not shift by even one: this pins the
+// new implementation against the old one over inputs that exercise every branch
+// it has — separator runs, CJK-only tokens, exotic whitespace, astral pairs.
+describe('wordCount — identical to the string-splitting implementation', () => {
+    const CJK_CHAR_REG
+        = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu;
+
+    function reference(markdown: string) {
+        const paragraph = markdown.split(/\n{2,}/).filter(line => line).length;
+        const removedCJK = markdown.replace(CJK_CHAR_REG, '');
+        const tokens = removedCJK.split(/\s+/).filter(t => t);
+        const cjkLength = markdown.length - removedCJK.length;
+
+        return {
+            word: cjkLength + tokens.length,
+            paragraph,
+            character: tokens.reduce((acc, t) => acc + t.length, 0) + cjkLength,
+            all: markdown.length,
+        };
+    }
+
+    const cases = [
+        '',
+        ' ',
+        '\n',
+        '\n\n',
+        '\n\n\n\n',
+        '\n\na',
+        'a\n\n',
+        'a\n\n \n\nb',
+        'a\nb',
+        'a\r\n\r\nb',
+        'hello world',
+        '   leading and trailing   ',
+        '日本語のテスト',
+        'これはAPIです',
+        '漢 字',
+        'a漢b',
+        'a漢 b',
+        '漢字だけ\n\n漢字だけ',
+        '한국어 테스트',
+        'tabs\tand nbsp　ideographic',
+        'zero​width﻿marks',
+        '𠮷野家',
+        'emoji 🎉 and 𝔘𝔫𝔦𝔠𝔬𝔡𝔢',
+        '# Heading\n\n- item one\n- item two\n\n| a | b |\n| - | - |\n',
+    ];
+
+    it.each(cases)('matches for %j', (input) => {
+        expect(wordCount(input)).toEqual(reference(input));
+    });
+
+    it('matches for randomly assembled documents', () => {
+        const alphabet = [
+            'a',
+            'z',
+            'Q',
+            '9',
+            '.',
+            '-',
+            '#',
+            '*',
+            '`',
+            ' ',
+            '\t',
+            '\n',
+            ' ',
+            '　',
+            ' ',
+            '漢',
+            'あ',
+            'ア',
+            '한',
+            '𠮷',
+            '🎉',
+        ];
+        // Deterministic PRNG: a failure has to be reproducible from the seed.
+        let seed = 0x2F6E2B1;
+        const next = () => {
+            seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+            return seed;
+        };
+
+        for (let doc = 0; doc < 500; doc++) {
+            const length = next() % 120;
+            let input = '';
+
+            for (let i = 0; i < length; i++)
+                input += alphabet[next() % alphabet.length];
+
+            expect({ input, ...wordCount(input) }).toEqual({
+                input,
+                ...reference(input),
+            });
+        }
+    });
+});
