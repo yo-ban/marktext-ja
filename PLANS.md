@@ -268,6 +268,20 @@ issues/ スナップショット全 563 件を再調査した結果。今回対�
 - **PDF/印刷の失敗経路で印刷用 DOM コピーが残るリーク修正** — printToPDF の例外・書き込み失敗・`print()` の例外/失敗コールバックで `mt::print-service-clearup` が飛ばず、文書 1 部ぶんの DOM(画像・図込み)がセッション終了まで残っていた。`finally` と try/catch で全経路をカバー、印刷失敗は理由付きでログ
   - 調査メモ: `article.print-container` は画面上では `display: none`(印刷メディアでのみ反転して唯一の表示要素になる)。**したがってこれは「UI が印刷ビューに覆われてフリーズ」ではなくメモリリーク**。#3880 の本体(フリーズ)は下記のとおり未対応
 
+### 今回の対応(2026-07-30 第 3 ラウンド:キーストローク毎の処理削減 + 検索バーの競合修正)
+
+計測は 98KB / 1500 行の文書に対する連続入力、CDP サンプリングプロファイラ(scratchpad `typing-profile.cjs`)。**キーストローク往復の中央値 160ms → 81ms**、レンダラーの idle 17% → 37%。
+
+- **`blocks: getState()` の削除**(デスクトップ)— content-change ペイロードが毎打鍵でブロックツリー全体をクローンしていたが、誰も読んでいなかった(store が `tab.blocks` に代入し `sourceCode.vue` が消すだけ)。ペイロード・store・`IFileState`・`file-changed` emit から除去
+- **`deep-equal` → 専用比較関数**(デスクトップ)— TOC の差分判定が入力中 CPU の約 39%。TOC エントリは `{level, content, slug}` のフラットなレコードなので要素毎の浅い比較で等価。依存パッケージごと削除
+- **content ハッシュを cyrb64 化**(デスクトップ `syntheticHistory`)— BigInt FNV-1a が約 6%。文字毎の BigInt 乗算をやめ `Math.imul` 2 レーンへ。末尾改行の除去も文字列コピーではなく終端インデックスの走査に
+- **不要な deepClone の除去**(デスクトップ)— `SEARCH` のマッチ集合、画像自動パス・リネーム IPC が現在ファイル丸ごとのクローンを main に送っていた(main は数フィールドしか見ない)
+- **muya `LinkedList.offset()` の配列化を廃止** — 全ブロックの `path` ゲッター経由で毎ミューテーション呼ばれる。`next` チェーン走査に。`find()` も同様、`map()` の `[...acc, x]` fold(要素毎に累積配列をコピー = 二次オーダー)も解消
+- **muya `getMarkdown()` の防御的クローン削除** — `StateToMarkdown` は state を読むだけ(調整する `meta` は自前で deepClone)
+- **muya `wordCount()` の単一パス化** — 全文に対し 3 回の文字列変換(CJK 正規表現除去 → `/\s+/` split → reduce)を毎打鍵実行していた。コードポイント 1 パスに書き換え(プロファイル比 2.0% → 1.2%)。**カウントはユーザーに見える値なので、旧実装をテスト内に埋め込んだ差分テストで固定**(区切り連続・CRLF・特殊空白・サロゲートペア・CJK 混在の 24 ケース + シード固定 PRNG の 500 文書)
+- **検索バーの実バグ修正** — 入力は検索を 150ms デバウンスでスケジュールするだけなので、その窓の内側で Enter を押すと**前のクエリのマッチ集合**を送り、直後に着弾したデバウンス検索がハイライトを 1 件目に戻していた。ステップ前に `debouncedSearchFn.flush()`
+- 残りのホットスポット(次の候補): `structuredClone` 0.9%、`cloneStateTree` 0.6%、直列化系(`_serializeTable` / `stringWidth` / `_serializeTextParagraph`)合計約 1.5%
+
 ### 高優先(バグ)
 
 1. **#4989/#5012/#4943** — テーブル編集で ot-json1 の状態破壊。**2026-07-30 再現試行**: 構造操作(行/列の挿入・削除の全オフセット + 交互操作 + 全消し)を flush 付きで総当たりする `structuralOpsFuzz.spec.ts` を追加したが再現せず。ペースト/undo 絡みか、実トレース(ユーザーの再現 md)待ち。fuzz スイートは回帰網として常設
@@ -302,6 +316,8 @@ issues/ スナップショット全 563 件を再調査した結果。今回対�
 - 起動確認は Playwright `_electron` で可能。ワンショットスクリプト例はこのセッションの scratchpad `launch-check.mjs`(要点: `executablePath: packages/desktop/node_modules/.bin/electron`, `args: ['--no-sandbox', <appDir>]`, playwright-core は repo ルート node_modules に hoist 済み)
 - `postinstall` の electron-rebuild は **pkg-config / X11 ヘッダ不足で失敗する**(native-keymap)が、prebuilt バイナリで動作するため実害なし。直すなら `apt-get install pkg-config libx11-dev libxkbfile-dev`
 - ユニットテスト: `pdf.spec.ts` の 2 件がフルスイートでのみ失敗する既存 flake(変更の検証時は単独実行で切り分けること)
-- **e2e は `out/` のビルド済みコードを実行する**。ソース変更後にビルドせず走らせると原因不明の失敗になる(実例: `find-replace` の findPrev が 3/3 で止まる。再ビルド後は 15/15 通過)。e2e 実行中に `build:unpack` を走らせるのも同じ理由で禁止
+- **e2e は `out/` のビルド済みコードを実行する**。ソース変更後にビルドせず走らせると原因不明の失敗になる。e2e 実行中に `build:unpack` を走らせるのも同じ理由で禁止
+- `find-replace` の findPrev("2 / 3" が "3 / 3" になる)は**実バグの検出だった**(検索バーのデバウンス競合、第 3 ラウンドで修正済み)。非フォーカスのウィンドウでは Chromium がタイマーを絞るため、デバウンスの trailing edge が約 1 秒遅れて着弾し、e2e でだけ顕在化していた。この種の失敗を「ビルドが古い」で片付けないこと
+- `find-replace` の findPrev テストは**直前のテストの状態(1/3)から継続する**ため `-g` で単独実行すると "0 / 0" になる。describe ブロックごと走らせること
 - `launchElectron([folder])` の位置引数フォルダは **`openFolderInNewWindow` により別ウィンドウで開く**ため `firstWindow()` には現れない。テスト対象ウィンドウでフォルダを開くには内部チャンネルを直接叩く: `ipcMain.emit('app-open-directory-by-id', win.id, folder, true)`(サイドバーの「フォルダを開く」と同じ経路。ネイティブダイアログのみ迂回)
 - Playwright は `pnpm exec playwright test test/e2e` とパスを明示する(パス無しだと `test/unit` も収集して失敗)
