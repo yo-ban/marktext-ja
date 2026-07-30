@@ -327,6 +327,17 @@ Muya → .eventCenter → .events[] → 登録オブジェクト → .target <i 
 - **サイドバーのリスナー解放漏れ** — `tree.vue` の document 直付け 3 種(click / contextmenu / keydown)と `bus` 購読、`treeFolder.vue` / `treeFile.vue` の `bus` 購読に `onBeforeUnmount` を追加
 - **`search.vue` の競合** — 前の検索が返ってくると、キャンセル済みでも結果と実行中フラグを上書きしていた。実行 id を発行して古い応答を捨てるように。アンマウント時のデバウンス・検索キャンセル・タイマー停止も追加
 
+### 今回の対応(2026-07-30 第 5 ラウンド:PDF エクスポートの非表示ウィンドウ化 + 小修正)
+
+- **#3880 — PDF エクスポートを非表示ウィンドウへ移設**。renderer は書き出し HTML を `mt::response-export` の `content` に載せて送るだけになり、印刷用 DOM コピー(printService)は PDF 経路から消滅。main は一時 HTML ファイル → `javascript: false` の隠し BrowserWindow → `loadFile`(did-finish-load で解決)→ `printToPDF` → `finally` で破棄 + 一時ファイル削除
+  - printService.css のうち**内容を整形する側**のルール(`padding: 0`、checkbox 隣接 p、fenced code の折返し、図の中央寄せ / max-width、`@page background`)を `hiddenWindowPrintCss`(util/pdf.ts)として書き出し HTML に同梱。ページ余白は元々ダイアログ設定由来の `@page` が extraCss に入っているため追加不要だった
+  - **ページ送りのパリティ検証**(懸念だった printService.css 非同梱による改ページ変化): 8 ページのフィクスチャで新旧 PDF を比較 — **ページ数 8/8 一致**、159,177 → 158,033 bytes、pdftoppm レンダリングの目視で全ページの改ページ位置・内容一致(表の列幅にごく僅かな差のみ)
+  - **フリーズ実測**(459KB / 約 6,000 ブロック): エクスポート中のレンダラー最大停止 **2,318ms → 376ms**(残余は exportStyledHTML の HTML 生成そのもの)、エクスポート全体 4.8s → 3.0s
+  - e2e 更新: PDF 経路で `.print-container` が一切マウントされないこと、隠しウィンドウが後始末されること、`loadFile` 失敗時にウィンドウ・ファイル・成功通知のどれも残らないこと(`BrowserWindow.prototype.loadFile` スタブで失敗注入)を固定
+  - 物理印刷経路は従来どおり可視ウィンドウ + printService.css(スコープ外のまま)
+- **検索バーを開くと書式ツールバーが上に残る問題を修正** — テキスト選択中に Ctrl+F を押すと muya のインラインフォーマットツールバーが検索バーに重なり置換トグルのクリックを奪っていた。`find` / `replace` バスイベントで `hideAllFloatTools()`(前セッションの仕掛かりを完成)。e2e は実マウスドラッグ → Find → フロート退避を検証し、修正を外すと失敗することを確認済み
+- (前セッション分の記録)レンダラーの esbuild minify 化(`f0bc95a9`)— 起動チャンク 3.3MB → 1.85MB。起動時間・常駐メモリは不変で、フットプリント削減のみと計測済み
+
 ### 高優先(バグ)
 
 1. **#4989/#5012/#4943** — テーブル編集で ot-json1 の状態破壊。**2026-07-30 再現試行**: 構造操作(行/列の挿入・削除の全オフセット + 交互操作 + 全消し)を flush 付きで総当たりする `structuralOpsFuzz.spec.ts` を追加したが再現せず。ペースト/undo 絡みか、実トレース(ユーザーの再現 md)待ち。fuzz スイートは回帰網として常設
@@ -345,7 +356,7 @@ Muya → .eventCenter → .events[] → 登録オブジェクト → .target <i 
 ### パフォーマンス(未対応)
 
 - #3893/#1035 — 1 万ファイル級フォルダでツリー仮想化なし(開けない事例も)。大規模リファクタ
-- #3880 — PDF エクスポートが表示中ウィンドウの webContents で printToPDF(フリーズ)→ 非表示ウィンドウ化。**フリーズ要因は 2 つ**: (a) `printService.renderMarkdown()` が生きているウィンドウの DOM に文書 1 部ぶんを同期でパース・レイアウトする (b) その webContents 自身で印刷レイアウトを走らせる。非表示ウィンドウ化で両方消える。エクスポート HTML は既に自己完結(`exportStyledHTML`)なので `javascript: false` の隠しウィンドウ + 一時ファイル読み込み + `did-finish-load` 待ちで実装可能。**要検証**: `printService.css` の `@media print` 規則(@page マージン、`markdown-body max-width 980px`)はアプリ側 CSS にあり書き出し HTML には含まれないため、そのままではページ送りが変わる。移行時は現行/新方式の PDF をページ数・バイト数・目視で比較すること
+- ~~#3880~~ **対応済み**(2026-07-30 第 5 ラウンド)— PDF エクスポートを非表示ウィンドウ化。ページ送りパリティは新旧 PDF 比較で検証済み(上記ラウンド記録参照)
 - #3368 — アニメ GIF の CPU 消費、#2300 — 起動 2-3 秒(#4645 が一部)、#3640 — 巨大ファイルでの書式適用ラグ(開くのは #4946 で解決済み)
 - #3685 — フォルダ検索 100 ファイル上限(現状はエラーメッセージ表示あり。上限の設定化が候補)
 
