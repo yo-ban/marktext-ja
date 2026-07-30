@@ -114,8 +114,6 @@ function rederiveAncestors(item: TaskListItem): void {
 class TaskListCheckbox extends TreeNode {
     private _checked: boolean;
 
-    private _eventIds: string[] = [];
-
     static override blockName = 'task-list-checkbox';
 
     static create(muya: Muya, meta: ITaskListItemMeta) {
@@ -156,8 +154,7 @@ class TaskListCheckbox extends TreeNode {
     }
 
     listen() {
-        const { domNode, muya } = this;
-        const { eventCenter } = muya;
+        const { domNode } = this;
         const clickHandler = (event: Event) => {
             if (!isMouseEvent(event))
                 return;
@@ -176,11 +173,13 @@ class TaskListCheckbox extends TreeNode {
             }
         };
 
-        const eventIds = [
-            eventCenter.attachDOMEvent(domNode!, 'click', clickHandler),
-        ];
-
-        this._eventIds.push(...eventIds);
+        // Bound directly to the checkbox's own node instead of through
+        // `eventCenter`: the event center holds every registration — and its
+        // target element — for the lifetime of the Muya instance, while
+        // attachments are never `remove()`d when the document is replaced. A
+        // registration here would therefore pin this checkbox, and through its
+        // `__MUYA_BLOCK__` back-reference the entire discarded block tree.
+        domNode!.addEventListener('click', clickHandler);
     }
 
     update = (checked: boolean, source = 'api') => {
@@ -231,18 +230,6 @@ class TaskListCheckbox extends TreeNode {
 
         if (isHTMLInputElement(this.domNode) && this.domNode.checked !== checked && !isFirefox)
             this.domNode.checked = checked;
-    }
-
-    private _detachDOMEvents() {
-        for (const id of this._eventIds)
-            this.muya.eventCenter.detachDOMEvent(id);
-    }
-
-    override remove(_source: string) {
-        super.remove();
-        this._detachDOMEvents();
-
-        return this;
     }
 
     getState() {

@@ -21,6 +21,13 @@ class EventCenter {
     /**
      * [attachDOMEvent] bind event listener to target, and return a unique ID,
      * this ID
+     *
+     * The registration — including a strong reference to `target` — lives until
+     * `detachDOMEvent`/`detachAllDomEvents`, i.e. normally until the Muya
+     * instance is destroyed. Only register long-lived targets (document, body,
+     * the editor root) here. A per-block element must bind its own listeners
+     * directly, otherwise it survives the document that owned it and drags its
+     * whole block tree along through `__MUYA_BLOCK__`.
      */
     attachDOMEvent(
         target: HTMLElement | Document,

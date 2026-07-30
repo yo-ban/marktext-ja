@@ -19,8 +19,6 @@ const debug = logger('headingCopyLink:');
 // stable slug — the SAME value `getTOC()` exposes as `ITocItem.slug` — so the
 // host can resolve it back to a TOC entry (`copyGithubSlug`).
 class HeadingCopyLink extends TreeNode {
-    private _eventIds: string[] = [];
-
     static override blockName = 'heading-copy-link';
 
     // `_state` is unused — the affordance carries no document state — but the
@@ -63,8 +61,7 @@ class HeadingCopyLink extends TreeNode {
     }
 
     private _listen() {
-        const { domNode, muya } = this;
-        const { eventCenter } = muya;
+        const { domNode } = this;
 
         const clickHandler = (event: Event) => {
             // The handler is bound to a `click` DOM event on the affordance, so
@@ -87,10 +84,14 @@ class HeadingCopyLink extends TreeNode {
             this._activate();
         };
 
-        this._eventIds.push(
-            eventCenter.attachDOMEvent(domNode!, 'click', clickHandler),
-            eventCenter.attachDOMEvent(domNode!, 'keydown', keydownHandler),
-        );
+        // Bound directly to the affordance's own node instead of through
+        // `eventCenter`: the event center holds every registration — and its
+        // target element — for the lifetime of the Muya instance, while
+        // attachments are never `remove()`d when the document is replaced. A
+        // registration here would therefore pin this icon, and through its
+        // `__MUYA_BLOCK__` back-reference the entire discarded block tree.
+        domNode!.addEventListener('click', clickHandler);
+        domNode!.addEventListener('keydown', keydownHandler);
     }
 
     // Emit `heading-copy-link` with the heading's stable slug. At activation
@@ -118,18 +119,6 @@ class HeadingCopyLink extends TreeNode {
         this.muya.eventCenter.emit('heading-copy-link', {
             key: stableSlug(node),
         });
-    }
-
-    private _detachDOMEvents() {
-        for (const id of this._eventIds)
-            this.muya.eventCenter.detachDOMEvent(id);
-    }
-
-    override remove(_source: string) {
-        super.remove();
-        this._detachDOMEvents();
-
-        return this;
     }
 
     getState() {
