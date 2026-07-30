@@ -85,6 +85,13 @@ export class ImageResizeBar {
 
     private _render() {
         const { eventCenter } = this.muya;
+        // The render is queued behind a setTimeout, so the transformer can be
+        // dismissed (image deleted, edit dialog opened) before it runs; the
+        // reference is null then and there is nothing to attach to (#4995).
+        const reference = this._reference;
+        if (!reference)
+            return;
+
         if (this._status)
             this.hide();
 
@@ -94,7 +101,7 @@ export class ImageResizeBar {
         this._update();
         // Reposition the handles whenever the image moves (window/ancestor
         // resize, sidebar toggle, scroll), so they stay attached to it (#2939).
-        this._cleanup = autoUpdate(this._reference!, this._container, () => this._update());
+        this._cleanup = autoUpdate(reference, this._container, () => this._update());
         eventCenter.emit('muya-float', this, true);
     }
 
@@ -109,9 +116,17 @@ export class ImageResizeBar {
     }
 
     private _update() {
-        const rect = this._reference!.getBoundingClientRect();
+        // Guarded: the autoUpdate loop and a trailing mousemove can both fire
+        // after the transformer was dismissed.
+        const reference = this._reference;
+        if (!reference)
+            return;
+
+        const rect = reference.getBoundingClientRect();
         VERTICAL_BAR.forEach((c) => {
-            const bar: HTMLDivElement = this._container.querySelector(`.${c}`)!;
+            const bar = this._container.querySelector<HTMLDivElement>(`.${c}`);
+            if (!bar)
+                return;
 
             switch (c) {
                 case 'left':
@@ -155,16 +170,27 @@ export class ImageResizeBar {
             return;
 
         event.preventDefault();
+        // The drag can be dismissed under the pointer (image deleted from the
+        // toolbar, document replaced): reference and bars are gone but this
+        // listener may still see one more event (#4995).
+        const reference = this._reference;
+        if (!reference || !this._movingAnchor)
+            return;
+
         const { clientX } = event;
         let width: number | string = '';
-        let relativeAnchor: HTMLDivElement;
-        const image = this._reference!.querySelector('img');
+        const image = reference.querySelector('img');
         if (!image)
+            return;
+
+        const relativeAnchor = this._container.querySelector<HTMLDivElement>(
+            this._movingAnchor === 'left' ? '.right' : '.left',
+        );
+        if (!relativeAnchor)
             return;
 
         switch (this._movingAnchor) {
             case 'left':
-                relativeAnchor = this._container.querySelector('.right')!;
                 width = Math.max(
                     relativeAnchor.getBoundingClientRect().left + CIRCLE_RADIO - clientX,
                     50,
@@ -172,7 +198,6 @@ export class ImageResizeBar {
                 break;
 
             case 'right':
-                relativeAnchor = this._container.querySelector('.left')!;
                 width = Math.max(
                     clientX - relativeAnchor.getBoundingClientRect().left - CIRCLE_RADIO,
                     50,
@@ -188,26 +213,32 @@ export class ImageResizeBar {
 
     private _mouseUp = (event: Event) => {
         event.preventDefault();
-        const { eventCenter } = this.muya;
-        if (this._eventId.length) {
-            for (const id of this._eventId)
-                eventCenter.detachDOMEvent(id);
+        const width = this._width;
+        this._endResize();
 
-            this._eventId = [];
-        }
-
-        if (typeof this._width === 'number' && this._block && this._imageInfo) {
-            this._block.updateImage(this._imageInfo, 'width', String(this._width));
+        if (typeof width === 'number' && this._block && this._imageInfo) {
+            this._block.updateImage(this._imageInfo, 'width', String(width));
             this.hide();
         }
+    };
 
+    // Tear down an in-flight drag. The mousemove/mouseup listeners live on
+    // document.body, so they outlive the bars unless every path that removes
+    // the bars also ends the drag.
+    private _endResize() {
+        const { eventCenter } = this.muya;
+        for (const id of this._eventId)
+            eventCenter.detachDOMEvent(id);
+
+        this._eventId = [];
         this._width = null;
         this._resizing = false;
         this._movingAnchor = null;
-    };
+    }
 
     hide() {
         const { eventCenter } = this.muya;
+        this._endResize();
         this._cleanup?.();
         this._cleanup = null;
         const circles = this._container.querySelectorAll('.bar');
@@ -219,6 +250,7 @@ export class ImageResizeBar {
     // Remove the `.mu-transformer` container appended to document.body in the
     // constructor; invoked by `Muya.destroy()` so it is not leaked (#3315).
     destroy() {
+        this._endResize();
         this._cleanup?.();
         this._cleanup = null;
         this._container.remove();
