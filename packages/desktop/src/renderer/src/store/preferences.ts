@@ -106,6 +106,7 @@ export interface PreferencesState {
   searchIncludeHidden: boolean
   searchNoIgnore: boolean
   searchFollowSymlinks: boolean
+  searchResultLimit: number
 
   watcherUsePolling: boolean
 
@@ -219,6 +220,7 @@ export const usePreferencesStore = defineStore('preferences', {
     searchIncludeHidden: false,
     searchNoIgnore: false,
     searchFollowSymlinks: true,
+    searchResultLimit: 100,
 
     watcherUsePolling: false,
 

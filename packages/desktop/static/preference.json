@@ -77,6 +77,7 @@
   "searchIncludeHidden": false,
   "searchNoIgnore": false,
   "searchFollowSymlinks": true,
+  "searchResultLimit": 100,
 
   "watcherUsePolling": false
 }

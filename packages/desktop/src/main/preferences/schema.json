@@ -403,6 +403,12 @@
     "type": "boolean",
     "default": true
   },
+  "searchResultLimit": {
+    "description": "Searcher--Maximum number of files with matches before the search stops.--internal",
+    "type": "number",
+    "minimum": 1,
+    "default": 100
+  },
   "watcherUsePolling": {
     "description": "Watcher--Whether to use polling. Polling may leads to high CPU utilization but is necessary to watch files over a network.--internal",
     "type": "boolean",

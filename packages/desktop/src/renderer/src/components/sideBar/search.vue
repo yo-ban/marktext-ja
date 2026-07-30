@@ -149,7 +149,8 @@ const {
   searchMaxFileSize,
   searchIncludeHidden,
   searchNoIgnore,
-  searchFollowSymlinks
+  searchFollowSymlinks,
+  searchResultLimit
 } = storeToRefs(preferencesStore)
 
 const searchMatches = computed(() => currentFile.value?.searchMatches)
@@ -220,11 +221,13 @@ const search = (): void => {
       newSearchResult.push(res as SearchResult)
     },
     didSearchPaths: (numPathsFound: unknown) => {
-      // More than 100 files with (multiple) matches were found.
-      if (!canceled && typeof numPathsFound === 'number' && numPathsFound > 100) {
+      // More files with (multiple) matches were found than the configured
+      // limit allows (searchResultLimit, #3685).
+      const limit = searchResultLimit.value > 0 ? searchResultLimit.value : 100
+      if (!canceled && typeof numPathsFound === 'number' && numPathsFound > limit) {
         canceled = true
         cancellable.cancel()
-        searchErrorString.value = t('search.searchLimited', { count: 100 })
+        searchErrorString.value = t('search.searchLimited', { count: limit })
       }
     },
 
