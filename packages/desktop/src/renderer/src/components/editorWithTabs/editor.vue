@@ -1275,6 +1275,14 @@ const handleFindAction = (action: unknown) => {
   scrollToHighlight()
 }
 
+// Opening Find over a selection leaves muya's inline format toolbar floating
+// where the selection is. It sits above the find bar and swallows clicks on
+// the replace toggle, so dismiss it as the bar appears. The selection itself
+// is untouched — the find bar prefills from it.
+const hideFloatToolsForFind = () => {
+  editor.value?.hideAllFloatTools()
+}
+
 interface ExportOptions {
   type: string
   header?: unknown
@@ -1871,6 +1879,8 @@ onMounted(() => {
   bus.on('format', handleInlineFormat)
   bus.on('searchValue', handleSearch)
   bus.on('replaceValue', handReplace)
+  bus.on('find', hideFloatToolsForFind)
+  bus.on('replace', hideFloatToolsForFind)
   bus.on('find-action', handleFindAction)
   bus.on('insert-image', insertImage)
   bus.on('image-uploaded', handleUploadedImage)
@@ -2025,6 +2035,8 @@ onBeforeUnmount(() => {
   bus.off('format', handleInlineFormat)
   bus.off('searchValue', handleSearch)
   bus.off('replaceValue', handReplace)
+  bus.off('find', hideFloatToolsForFind)
+  bus.off('replace', hideFloatToolsForFind)
   bus.off('find-action', handleFindAction)
   bus.off('insert-image', insertImage)
   bus.off('image-uploaded', handleUploadedImage)
