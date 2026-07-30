@@ -118,7 +118,6 @@ const handleResponseForExport = async(e: IpcMainEvent, payload: ExportPayload): 
         }
         Object.assign(options, getPdfPageOptions(pageOptions))
         const data = await win.webContents.printToPDF(options)
-        removePrintServiceFromWindow(win)
         await writeFile(filePath, data, extension!, 'binary')
       } else {
         if (!content) {
@@ -136,6 +135,15 @@ const handleResponseForExport = async(e: IpcMainEvent, payload: ExportPayload): 
         type: 'error',
         message: ERROR_MSG
       })
+    } finally {
+      // A PDF export leaves a full second copy of the rendered document in the
+      // window's DOM (services/printService.ts) until main tells the renderer
+      // to drop it. printToPDF throwing, or the write failing, must not strand
+      // that copy — with images and diagrams it is the size of the document
+      // itself and it would outlive the export for the rest of the session.
+      if (type === 'pdf') {
+        removePrintServiceFromWindow(win)
+      }
     }
   } else {
     // User canceled save dialog
@@ -150,9 +158,20 @@ const handleResponseForPrint = async(e: IpcMainEvent): Promise<void> => {
   if (!win) {
     return
   }
-  win.webContents.print({ printBackground: true }, () => {
+  // print() throws when there is no usable printer, and reports the same class
+  // of failure through the callback — the document copy the renderer is holding
+  // has to be dropped in both cases, not only on success.
+  try {
+    win.webContents.print({ printBackground: true }, (success, failureReason) => {
+      if (!success) {
+        log.error('Printing failed:', failureReason)
+      }
+      removePrintServiceFromWindow(win)
+    })
+  } catch (err) {
+    log.error('Failed to start printing:', err)
     removePrintServiceFromWindow(win)
-  })
+  }
 }
 
 // Distinguishes the three ways a save can end so callers that gate a window

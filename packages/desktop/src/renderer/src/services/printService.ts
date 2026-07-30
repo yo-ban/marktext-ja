@@ -5,7 +5,9 @@ class MarkdownPrint {
 
   /**
    * Prepare document export and append a hidden print container to the window.
-   * Everything outside of this hidden print container will be hidden with display: none.
+   * The container is `display: none` on screen; under print media that inverts —
+   * it becomes the only visible element (see assets/styles/printService.css), so
+   * printToPDF and print() paginate it instead of the editor UI.
    *
    * @param html HTML string
    * @param renderStatic Render for static files like PDF documents

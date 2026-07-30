@@ -197,6 +197,46 @@ test.describe('PDF export to a real file (item 231)', () => {
     expect(successes.find((s) => s.filePath === out)).toBeFalsy()
   })
 
+  // The renderer holds a second, hidden copy of the rendered document (the
+  // print container) for the duration of a PDF export. When printToPDF failed,
+  // main reported the error but never sent `mt::print-service-clearup`, so that
+  // copy stayed in the DOM for the rest of the session.
+  test('a failing printToPDF still tears down the hidden print copy', async() => {
+    const out = '/tmp/marktext-e2e-export-' + Date.now() + '-fail.pdf'
+    await clearExportSuccesses(page)
+    await stubSaveDialog(app, out)
+
+    await app.evaluate(({ BrowserWindow }) => {
+      const wc = BrowserWindow.getAllWindows()[0].webContents
+      const g = global as unknown as { __mt_orig_printToPDF__?: unknown }
+      g.__mt_orig_printToPDF__ ??= wc.printToPDF.bind(wc)
+      ;(wc as unknown as { printToPDF: unknown }).printToPDF = async() => {
+        throw new Error('synthetic printToPDF failure')
+      }
+    })
+
+    try {
+      await triggerPdfExportViaDialog(app, page)
+
+      await expect
+        .poll(() => page.locator('.print-container').count(), { timeout: 10000 })
+        .toBe(0)
+      await expect(page.locator('.editor-wrapper').first()).toBeVisible()
+
+      expect(fs.existsSync(out)).toBe(false)
+      const successes = await getExportSuccesses(page)
+      expect(successes.find((s) => s.filePath === out)).toBeFalsy()
+    } finally {
+      await app.evaluate(({ BrowserWindow }) => {
+        const wc = BrowserWindow.getAllWindows()[0].webContents
+        const g = global as unknown as { __mt_orig_printToPDF__?: unknown }
+        if (g.__mt_orig_printToPDF__) {
+          ;(wc as unknown as { printToPDF: unknown }).printToPDF = g.__mt_orig_printToPDF__
+        }
+      })
+    }
+  })
+
   test('the renderer EXPORT path round-trips a second export to a fresh path', async() => {
     // Re-export to a different path to prove the print service is re-armed and
     // the wiring is not single-shot.
