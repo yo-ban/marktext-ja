@@ -190,7 +190,12 @@ const editHistoryMarker = (tab: IFileState): number | null => {
   return entry && typeof entry.id === 'number' ? entry.id : null
 }
 
+// Only a write to a path the tab already has is recorded. A save that has to
+// ask for a path answers nothing at all when the dialog is dismissed (main
+// returns early), so a marker recorded for it would sit in the queue forever
+// and every later acknowledgement would be matched against the wrong save.
 const recordPendingSave = (tab: IFileState): void => {
+  if (!tab.pathname) return
   const markers = pendingSaveMarkers.get(tab.id)
   if (markers) markers.push(editHistoryMarker(tab))
   else pendingSaveMarkers.set(tab.id, [editHistoryMarker(tab)])
@@ -205,6 +210,17 @@ const takePendingSave = (tabId: string): number | null | undefined => {
   const marker = markers.shift()
   if (markers.length === 0) pendingSaveMarkers.delete(tabId)
   return marker
+}
+
+// Drop the bookkeeping a closed tab leaves behind. Both maps are keyed by tab
+// id and live as long as the window, so anything not dropped here stays for
+// good — and a pending auto-save would write a tab that is no longer open.
+const forgetClosedTab = (tabId: string | undefined): void => {
+  if (!tabId) return
+  const timer = autoSaveTimers.get(tabId)
+  if (timer) clearTimeout(timer)
+  autoSaveTimers.delete(tabId)
+  pendingSaveMarkers.delete(tabId)
 }
 
 // Apply a successful write: the tab is clean only if nothing was edited while
@@ -630,7 +646,8 @@ export const useEditorStore = defineStore('editor', {
       const defaultPath = getRootFolderFromState(projectStore)
 
       if (id) {
-        recordPendingSave(this.currentFile)
+        // No marker: "save as" always opens the dialog, and a dismissed dialog
+        // is answered with silence — see `recordPendingSave`.
         window.electron.ipcRenderer.send(
           'mt::response-file-save-as',
           id,
@@ -809,8 +826,8 @@ export const useEditorStore = defineStore('editor', {
       const defaultPath = getRootFolderFromState(projectStore)
       if (!id) return
       if (!pathname) {
-        // if current file is a newly created file, just save it!
-        recordPendingSave(this.currentFile)
+        // A newly created file has no path yet, so this opens the save dialog
+        // and records no marker — see `recordPendingSave`.
         window.electron.ipcRenderer.send(
           'mt::response-file-save',
           id,
@@ -853,8 +870,8 @@ export const useEditorStore = defineStore('editor', {
       const defaultPath = getRootFolderFromState(projectStore)
       if (!id) return
       if (!pathname) {
-        // if current file is a newly created file, just save it!
-        recordPendingSave(this.currentFile)
+        // A newly created file has no path yet, so this opens the save dialog
+        // and records no marker — see `recordPendingSave`.
         window.electron.ipcRenderer.send(
           'mt::response-file-save',
           id,
@@ -1093,12 +1110,7 @@ export const useEditorStore = defineStore('editor', {
         this.updateTabIdToIndex()
       }
 
-      if (file.id && autoSaveTimers.has(file.id)) {
-        const timer = autoSaveTimers.get(file.id)
-        if (timer) clearTimeout(timer)
-        autoSaveTimers.delete(file.id)
-      }
-      if (file.id) pendingSaveMarkers.delete(file.id)
+      forgetClosedTab(file.id)
 
       this.updateTabIdToIndex() // Update before sending it out to prevent stale mappings.
 
@@ -1182,6 +1194,7 @@ export const useEditorStore = defineStore('editor', {
         }
 
         this.tabs.splice(index, 1)
+        forgetClosedTab(id)
         if (this.currentFile?.id === id) {
           this.currentFile = null
           window.DIRNAME = ''

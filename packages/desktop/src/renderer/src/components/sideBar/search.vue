@@ -200,6 +200,10 @@ const search = (): void => {
   if (!keyword.value) {
     searchResult.value = []
     searcherRunning.value = false
+    // The run this one replaced no longer clears the Cancel button when it
+    // completes — it is not the newest run any more — so clear it here, or an
+    // inert Cancel stays on screen after the keyword is emptied.
+    stopShowSearchCancelAreaTimer()
     return
   }
 

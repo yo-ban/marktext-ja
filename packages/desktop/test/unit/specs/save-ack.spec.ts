@@ -179,6 +179,51 @@ describe('editor store — save acknowledgement bookkeeping', () => {
     expect(tab.lastSavedHistoryId).toBe(2)
   })
 
+  // Dismissing the save dialog is answered with silence — main returns without
+  // sending anything. A save that can open that dialog must therefore leave no
+  // pending marker behind, or every later acknowledgement is matched against
+  // the abandoned one and the tab can never be shown as saved again.
+  it('a save that may open the dialog leaves no marker for later saves to trip on', () => {
+    const store = useEditorStore()
+    const untitled = makeTab({ pathname: '' })
+    seed(store, untitled)
+    const handlers = captureIpcHandlers()
+    store.LISTEN_FOR_SET_PATHNAME()
+
+    store.FILE_SAVE() // untitled: opens the dialog
+    store.FILE_SAVE_AS() // always opens the dialog
+    // Dialogs dismissed: no acknowledgement arrives at all.
+
+    // The file now has a path, is edited further, and is saved normally.
+    untitled.pathname = '/tmp/note.md'
+    untitled.history.lastEditIndex = 1
+    store.FILE_SAVE()
+    handlers.get('mt::tab-saved')!(null, 'tab-1')
+
+    expect(untitled.isSaved).toBe(true)
+  })
+
+  it('closing a tab drops its pending saves so a reused id cannot inherit them', () => {
+    const store = useEditorStore()
+    const tab = makeTab()
+    seed(store, tab)
+    const handlers = captureIpcHandlers()
+    store.LISTEN_FOR_SET_PATHNAME()
+
+    store.FILE_SAVE()
+    store.CLOSE_TABS(['tab-1'])
+
+    const reopened = makeTab({
+      isSaved: false,
+      history: { stack: [{ id: 1 }, { id: 2 }], lastEditIndex: 1, lastInitIndex: -1 }
+    })
+    seed(store, reopened)
+    store.FILE_SAVE()
+    handlers.get('mt::tab-saved')!(null, 'tab-1')
+
+    expect(reopened.isSaved).toBe(true)
+  })
+
   // The timer used to send the pathname captured when it was scheduled. A
   // rename in between recreated the old file with the new content, while the
   // renamed file kept the stale content and the tab claimed to be saved.
