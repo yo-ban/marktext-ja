@@ -1,6 +1,6 @@
-import Fuse from 'fuse.js';
 import Prism from 'prismjs';
 import { languages } from 'prismjs/components.js';
+import { ensureFuse } from '../fuse';
 import initLoadLanguage, { loadedLanguages, transformAliasToOrigin } from './loadLanguage';
 
 const prism = Prism;
@@ -54,10 +54,11 @@ for (const name of Object.keys(languages)) {
 
 const loadLanguage = initLoadLanguage(Prism);
 
-function search(text: string) {
+async function search(text: string) {
     if (!text || typeof text !== 'string')
         return [];
 
+    const Fuse = await ensureFuse();
     const fuse = new Fuse(langs, {
         includeScore: true,
         keys: ['name', 'title', 'alias'],

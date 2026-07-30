@@ -54,6 +54,9 @@ export class CodeBlockLanguageSelector extends BaseScrollFloat {
     public override capturesContentKeydown = true;
     private _oldVNode: VNode | null = null;
     private _block: ParagraphContent | LangInputContent | null = null;
+    // Bumped per keystroke so a search that resolves after a newer one started
+    // cannot overwrite the fresher result.
+    private _searchToken = 0;
 
     constructor(muya: Muya, options = {}) {
         const name = 'mu-list-picker';
@@ -81,23 +84,32 @@ export class CodeBlockLanguageSelector extends BaseScrollFloat {
                 lang = text;
             }
 
-            const modes = search(lang);
-            if (modes.length) {
-                this._block = block;
-                this.show(domNode);
-                this.renderArray = modes;
-                this.activeItem = modes[0];
-                this.render();
-            }
-            else {
-                this.hide();
-            }
+            const token = ++this._searchToken;
+            search(lang).then((modes) => {
+                if (token !== this._searchToken)
+                    return;
+
+                if (modes.length) {
+                    this._block = block;
+                    this.show(domNode);
+                    this.renderArray = modes;
+                    this.activeItem = modes[0];
+                    this.render();
+                }
+                else {
+                    this.hide();
+                }
+            });
         });
 
         // Self-hide when the caret leaves the picker's target block (#4654).
         eventCenter.on('selection-change', ({ anchorBlock }) => {
-            if (this.status && anchorBlock !== this._block)
+            if (this.status && anchorBlock !== this._block) {
+                // Also discard any in-flight search, or it would re-show the
+                // picker for the block the caret just left.
+                this._searchToken++;
                 this.hide();
+            }
         });
     }
 

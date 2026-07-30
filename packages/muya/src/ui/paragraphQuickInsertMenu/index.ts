@@ -3,11 +3,11 @@ import type { Muya } from '../../index';
 import type {
     IQuickInsertMenuItem,
 } from './config';
-import Fuse from 'fuse.js';
 import { replaceBlockByLabel } from '../../block/blockTransforms';
 import ParagraphContent from '../../block/content/paragraphContent';
 import { deepClone } from '../../utils';
 import { query } from '../../utils/dom';
+import { ensureFuse, fuseIfLoaded } from '../../utils/fuse';
 import { h, patch } from '../../utils/snabbdom';
 import BaseScrollFloat from '../baseScrollFloat';
 import {
@@ -35,6 +35,9 @@ export class ParagraphQuickInsertMenu extends BaseScrollFloat {
 
     public oldVNode: VNode | null = null;
     private _block: ParagraphContent | null = null;
+    // Bumped per query so a fuzzy match that resolves after a newer keystroke
+    // cannot overwrite the fresher result.
+    private _searchToken = 0;
     public override activeItem: IQuickInsertMenuItem['children'][number] | null = null;
     public override renderArray: IQuickInsertMenuItem['children'] = [];
     private _renderData: IQuickInsertMenuItem[] = [];
@@ -87,6 +90,9 @@ export class ParagraphQuickInsertMenu extends BaseScrollFloat {
                 this._search(text.substring(1)); // remove `/` char
             }
             else {
+                // Discard any in-flight query, or it would repaint the panel
+                // after the trigger text stopped qualifying.
+                this._searchToken++;
                 this.hide();
             }
         });
@@ -184,7 +190,7 @@ export class ParagraphQuickInsertMenu extends BaseScrollFloat {
         this.oldVNode = vnode;
     }
 
-    private _search(text: string) {
+    private async _search(text: string) {
         const { muya, _block: block } = this;
         const { i18n } = muya;
         const canInsertFrontMatter = checkCanInsertFrontMatter(muya, block!);
@@ -196,35 +202,48 @@ export class ParagraphQuickInsertMenu extends BaseScrollFloat {
                 ?.children
                 .splice(2, 1);
         }
-        let result = menuConfig;
-        if (text !== '') {
-            result = [];
 
-            for (const menu of menuConfig) {
-                for (const child of menu.children)
-                    child.i18nTitle = i18n.t(child.title);
+        const token = ++this._searchToken;
 
-                const fuse = new Fuse(menu.children, {
-                    includeScore: true,
-                    keys: ['i18nTitle', 'title'],
-                });
-                const match = fuse
-                    .search(text)
-                    .map(i => ({ score: i.score, ...i.item }));
-                if (match.length) {
-                    result.push({
-                        name: menu.name,
-                        children: match,
-                    });
-                }
-            }
+        if (text === '') {
+            this.renderData = menuConfig;
+            this.render();
+            return;
+        }
 
-            if (result.length) {
-                result.sort((a, b) => {
-                    return a.children[0].score! < b.children[0].score! ? -1 : 1;
+        // The bare `/` above opens the panel without fuse.js, so the fuzzy
+        // matcher only has to be in memory by the first query character.
+        const Fuse = fuseIfLoaded() ?? await ensureFuse();
+        if (token !== this._searchToken)
+            return;
+
+        const result: IQuickInsertMenuItem[] = [];
+
+        for (const menu of menuConfig) {
+            for (const child of menu.children)
+                child.i18nTitle = i18n.t(child.title);
+
+            const fuse = new Fuse(menu.children, {
+                includeScore: true,
+                keys: ['i18nTitle', 'title'],
+            });
+            const match = fuse
+                .search(text)
+                .map(i => ({ score: i.score, ...i.item }));
+            if (match.length) {
+                result.push({
+                    name: menu.name,
+                    children: match,
                 });
             }
         }
+
+        if (result.length) {
+            result.sort((a, b) => {
+                return a.children[0].score! < b.children[0].score! ? -1 : 1;
+            });
+        }
+
         this.renderData = result;
         this.render();
     }
