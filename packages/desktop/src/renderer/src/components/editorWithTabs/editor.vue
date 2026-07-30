@@ -293,6 +293,18 @@ let scrollHandler: ((e: Event) => void) | null = null
 // store a SYNTHETIC desktop-shaped history.
 const engineHistoryByTab = new Map<string, unknown>()
 
+// The tab whose document the engine currently holds, and a snapshot taken from
+// it. Captured lazily — right before the engine's document is replaced — rather
+// than on every `json-change`: `getHistory()` deep-clones the whole undo+redo
+// stack (up to `maxStack` = 100 entries), and a source-mode exit records a
+// WHOLE-DOCUMENT `rebuild` op, so snapshotting per keystroke re-cloned the
+// entire document on every character typed after leaving source mode.
+let engineDocumentTabId: string | null = null
+const captureEngineHistory = (): void => {
+  if (!editor.value || !engineDocumentTabId) return
+  engineHistoryByTab.set(engineDocumentTabId, editor.value.getHistory())
+}
+
 // The WYSIWYG caret captured the instant the user switches INTO source mode.
 // Focus moves to CodeMirror while source mode is up, so by the time the tab is
 // handed back (`replaceContent`) the live DOM selection no longer points into
@@ -1467,9 +1479,14 @@ interface FileLoadedPayload {
 const setMarkdownToEditor = (payload: unknown) => {
   const { id, markdown: newMarkdown, cursor: newCursor } = (payload ?? {}) as FileLoadedPayload
   if (editor.value) {
+    // Opening a file replaces whatever document the engine held, so bank the
+    // outgoing tab's undo history first — switching back to it must still
+    // restore it.
+    captureEngineHistory()
     // `setContent` resets the document and clears the undo history; only set a
     // cursor afterwards (a freshly-opened file has no history to restore).
     editor.value.setContent(newMarkdown ?? '')
+    engineDocumentTabId = id ?? null
     // The freshly loaded content is this tab's clean baseline (id 0). Re-seed
     // the monotonic save-tracking allocator so undoing an edit back to this
     // content reads as clean again (matches the store's `lastSavedHistoryId: 0`).
@@ -1550,6 +1567,8 @@ const handleFileChange = (payload: unknown) => {
       // remapping below.
       editor.value.replaceContent(newMarkdown, preSourceModeSelection)
       preSourceModeSelection = null
+      // Same tab, same engine document — `replaceContent` keeps the undo stack.
+      engineDocumentTabId = id ?? engineDocumentTabId
       editorStore.UPDATE_TOC(editor.value.getTOC())
       // Map the CodeMirror `{ line, ch }` cursor onto a block-key cursor so the
       // WYSIWYG caret lands where the source-mode cursor was (PG2).
@@ -1572,6 +1591,7 @@ const handleFileChange = (payload: unknown) => {
         resetSyntheticHistory(id, newMarkdown)
       }
       editor.value.replaceContent(newMarkdown)
+      engineDocumentTabId = id ?? engineDocumentTabId
       editorStore.UPDATE_TOC(editor.value.getTOC())
       if (newCursor) {
         applyCursor(editor.value, newCursor)
@@ -1582,7 +1602,10 @@ const handleFileChange = (payload: unknown) => {
       // per-tab) afterwards — preserves undo/redo on in-session tab switch. The
       // `history` in the payload is the synthetic desktop-shaped history used
       // for save tracking, not the engine history.
+      // Bank the outgoing tab's undo stack before `setContent` clears it.
+      captureEngineHistory()
       editor.value.setContent(newMarkdown)
+      engineDocumentTabId = id ?? null
       // Tab switch swaps content without firing `json-change`, so re-seed the
       // TOC (otherwise returning to an open tab keeps the other tab's TOC).
       editorStore.UPDATE_TOC(editor.value.getTOC())
@@ -1811,6 +1834,10 @@ onMounted(() => {
   if (currentFile.value?.id) {
     getSyntheticHistory(currentFile.value.id, muya.getMarkdown())
   }
+  // Same reason the TOC is seeded above: the mount-loaded document never goes
+  // through `setMarkdownToEditor`, so record here which tab the engine holds.
+  // Without it the first tab's undo history is never banked on switch-away.
+  engineDocumentTabId = currentFile.value?.id ?? null
 
   const container = getScrollContainer()!
 
@@ -1876,13 +1903,13 @@ onMounted(() => {
     const { id } = currentFile.value
     if (!id) return
     const markdown = editor.value.getMarkdown()
-    // Stash the real engine history for in-session tab-switch restoration. The
-    // synthetic save-tracking id is derived from the live document content (a
-    // monotonic, never-reused id — see `syntheticHistory.ts`), NOT the engine
-    // undo-stack depth, which is reused and falsely showed a divergently
-    // re-edited tab as clean (Phase G — G6).
-    const engineHistory = editor.value.getHistory()
-    engineHistoryByTab.set(id, engineHistory)
+    // The engine keeps its own undo history; it is snapshotted for tab-switch
+    // restoration only when the document is about to be replaced
+    // (`captureEngineHistory`). What the store gets here is the SYNTHETIC
+    // save-tracking history, whose id is derived from the live document content
+    // (a monotonic, never-reused id — see `syntheticHistory.ts`) and NOT from
+    // the engine undo-stack depth, which is reused and falsely showed a
+    // divergently re-edited tab as clean (Phase G — G6).
     editorStore.LISTEN_FOR_CONTENT_CHANGE({
       id,
       markdown,

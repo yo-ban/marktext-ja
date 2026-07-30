@@ -108,9 +108,10 @@ test.describe('Tab switch restores the per-tab caret', () => {
 })
 
 // Item 252 — switching tabs restores each tab's OWN engine undo/redo history.
-// The `json-change` handler stashes `editor.getHistory()` per tab id in
-// `engineHistoryByTab`; the `file-changed` handler replays it via
-// `editor.setHistory(...)` after the `setContent` swap, so an undo issued on a
+// Right before it replaces the engine's document, the `file-changed` handler
+// stashes `editor.getHistory()` under the OUTGOING tab's id in
+// `engineHistoryByTab`, then replays the incoming tab's snapshot via
+// `editor.setHistory(...)` after the `setContent` swap. So an undo issued on a
 // returned-to tab walks that tab's history — not the tab that was last active.
 test.describe('Tab switch restores the per-tab undo history', () => {
   let app: ElectronApplication
