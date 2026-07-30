@@ -296,6 +296,37 @@ issues/ スナップショット全 563 件を再調査した結果。今回対�
 - **JS からの強制レイアウトは 1 打鍵あたり 1 回・0.01ms**(`Range.getClientRects` を計装して計測)。つまり JS がレイアウトを叩いているわけではなく、フレーム内の style/layout/paint そのものが文書サイズに比例している
 - `content-visibility: auto` + `contain-intrinsic-size` をトップレベルブロックに注入して A/B: **中央値は 80ms → 78ms でほぼ不変**、ただし p25 は 79ms → 58ms、最小は 59ms → 39ms と下振れ側だけ改善。効果が不安定な一方で、印刷 CSS・検索のスクロール追従・スクロールアンカリングへの影響が読めないため**今回は採用しない**(再挑戦するならまず印刷/検索の e2e を固めてから)
 
+### 今回の対応(2026-07-30 第 4 ラウンド:文書入れ替えのメモリリーク + 保存確認の取りこぼし)
+
+#### メモリリーク — タブを開いて閉じるたびに文書 1 部ぶんの DOM が残っていた
+
+計測は scratchpad `leak-shape.cjs`(1 ラウンド = ファイルを開く → タブを閉じる、毎ラウンド `HeapProfiler.collectGarbage` 後に `Performance.getMetrics`)。**1 ラウンドあたり Nodes 約 +33,700・JSEventListeners 約 +567 が積み上がり、生きている DOM のノード数は横ばい**だった = 切り離された(detached)ツリーが解放されていない。
+
+原因はヒープスナップショットの保持経路を BFS で辿って特定(`heap-snap.cjs` + `heap-retainers.cjs`):
+
+```
+Muya → .eventCenter → .events[] → 登録オブジェクト → .target <i class="mu-copy-header-link">
+     → __MUYA_BLOCK__ → HeadingCopyLink → .parent AtxHeading → .next … → ブロックツリー全体 + domNode
+```
+
+`EventCenter.attachDOMEvent` は `{eventId, target, event, listener, capture}` を **Muya インスタンスの生存期間ずっと**保持する。見出しのコピーリンク(1 見出しにつき click/keydown の 2 件)とタスクリストのチェックボックス(1 件)はブロック単位の要素なのにここへ登録されていた。文書入れ替え(`ScrollPage.updateState` → `empty()`)は `children` だけを辿って `removeChild` するので **`attachments` は誰も `remove()` を呼ばない** → 登録が残り、`target` 要素と、その `__MUYA_BLOCK__` 逆参照からブロックツリー丸ごとが GC されない。
+
+- 修正: ブロック単位のリスナーは `domNode.addEventListener` で**自分のノードに直接**バインド(ノードと一緒に死ぬ)。`eventCenter` は document / body / エディタルートのような長寿命ターゲット専用にし、その旨を `attachDOMEvent` の doc コメントに明記
+- 結果(4 ラウンド): Nodes 15,776 → 15,784(横ばい)、JSEventListeners 562 で一定、ヒープ 13.7MB(修正前は 6 ラウンドで 25.1MB)
+
+#### 保存確認の取りこぼし(データ損失級)3 件
+
+- **リネーム / 「移動」がタブを「保存済み」にしていた** — `mt::set-pathname` を保存(内容を書き出す)とリネーム・移動(ファイルを動かすだけ)の両方が使い回していた。未保存の編集があるタブをリネームすると `isSaved: true` になり、**閉じるときの確認ダイアログが出ないまま編集が消える**。ペイロードに `contentSaved: boolean` を追加して両者を区別
+- **書き込み中の打鍵が消える** — 保存 ack (`mt::tab-saved`) はタブ id しか運ばないため「今の内容は全部ディスクにある」と解釈していた。書き込み中に打った 1 文字はその ack の対象ではない。送信時点の履歴エントリ id をタブ毎の FIFO に積み、ack でそれを取り出して**現在の履歴位置と一致するときだけ** clean にする方式へ(書き込み失敗時はキューから取り除いて次のリトライとずれないように)
+- **自動保存がスケジュール時点のパスと内容を送っていた** — タイマー発火までにサイドバーからリネームすると、**旧パスのファイルが古い内容で復活し、リネーム後のファイルは更新されない**。タイマー本体で発火時にタブの現在値を読むよう変更
+- 回帰テスト `test/unit/specs/save-ack.spec.ts` 6 件(リネーム / パス選択を伴う保存 / 書き込み中の編集 / 通常保存 / 失敗後のリトライ / 自動保存中のリネーム)
+
+#### レンダラーのライフサイクル修正
+
+- **`editor.vue` の paddingBottom リセットが別の要素を触っていた** — `.mu-container` 側(エンジンが文書間で使い回すノード)の 100vh 末尾パディングを恒久的に潰していた。リセット対象を実際に付けた `firstChild` に修正
+- **サイドバーのリスナー解放漏れ** — `tree.vue` の document 直付け 3 種(click / contextmenu / keydown)と `bus` 購読、`treeFolder.vue` / `treeFile.vue` の `bus` 購読に `onBeforeUnmount` を追加
+- **`search.vue` の競合** — 前の検索が返ってくると、キャンセル済みでも結果と実行中フラグを上書きしていた。実行 id を発行して古い応答を捨てるように。アンマウント時のデバウンス・検索キャンセル・タイマー停止も追加
+
 ### 高優先(バグ)
 
 1. **#4989/#5012/#4943** — テーブル編集で ot-json1 の状態破壊。**2026-07-30 再現試行**: 構造操作(行/列の挿入・削除の全オフセット + 交互操作 + 全消し)を flush 付きで総当たりする `structuralOpsFuzz.spec.ts` を追加したが再現せず。ペースト/undo 絡みか、実トレース(ユーザーの再現 md)待ち。fuzz スイートは回帰網として常設
