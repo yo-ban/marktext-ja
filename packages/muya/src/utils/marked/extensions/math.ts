@@ -1,5 +1,4 @@
-import katex from 'katex';
-import 'katex/dist/contrib/mhchem.mjs';
+import { katexIfLoaded } from '../../katex';
 
 export interface IMathToken {
     type: 'inlineMath' | 'multiplemath';
@@ -39,7 +38,12 @@ function createRenderer(options: IOptions, newlineAfter: boolean) {
     return (token: IMathToken) => {
         const { useKatexRender, ...otherOpts } = options;
         const { type, text, displayMode, mathStyle } = token;
-        if (useKatexRender) {
+        // KaTeX is loaded on demand, and this renderer cannot wait for it.
+        // Callers that need rendered math await `ensureKatex()` first; without
+        // it the formula falls back to its source, same as `useKatexRender:
+        // false`.
+        const katex = useKatexRender ? katexIfLoaded() : null;
+        if (katex) {
             return (
                 katex.renderToString(text, {
                     ...otherOpts,

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { ensureKatex } from '../../utils/katex';
 import { renderToStaticHTML } from '../renderToStaticHTML';
 
 // `renderToStaticHTML` is the synchronous markdown -> HTML public API used by
@@ -24,6 +25,12 @@ import { renderToStaticHTML } from '../renderToStaticHTML';
 // inner HTML; hence a separate, sync API.
 
 describe('renderToStaticHTML', () => {
+    // The renderer is synchronous and KaTeX loads on demand, so the math
+    // assertions below only hold once it is in memory.
+    beforeAll(async () => {
+        await ensureKatex();
+    });
+
     it('renders a simple paragraph synchronously', () => {
         const html = renderToStaticHTML('Hello, world!');
         expect(html).toContain('<p>Hello, world!</p>');

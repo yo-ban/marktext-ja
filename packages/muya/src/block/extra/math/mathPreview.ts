@@ -1,12 +1,11 @@
 import type { Muya } from '../../../muya';
 import type { IMathBlockState, TState } from '../../../state/types';
-import katex from 'katex';
 import { fromEvent } from 'rxjs';
 import { CLASS_NAMES } from '../../../config';
 import { escapeHTML } from '../../../utils';
+import { ensureKatex, katexIfLoaded } from '../../../utils/katex';
 import logger from '../../../utils/logger';
 import Parent from '../../base/parent';
-import 'katex/dist/contrib/mhchem.mjs';
 
 const debug = logger('mathPreview:');
 
@@ -65,6 +64,24 @@ class MathPreview extends Parent {
         const { i18n } = this.muya;
 
         if (math) {
+            const katex = katexIfLoaded();
+            if (!katex) {
+                // Show the source until KaTeX arrives, then draw it properly.
+                this.domNode!.innerHTML = `<div class="${CLASS_NAMES.MU_MATH_TEXT}">${escapeHTML(math)}</div>`;
+                ensureKatex()
+                    .then(() => {
+                        // The block can be gone by the time KaTeX lands, and
+                        // the formula can have been edited since.
+                        if (this.domNode && this._math === math)
+                            this.update(math);
+                    })
+                    .catch((err) => {
+                        debug.error('Failed to load KaTeX', err);
+                    });
+
+                return;
+            }
+
             try {
                 const html = katex.renderToString(math, {
                     displayMode: true,

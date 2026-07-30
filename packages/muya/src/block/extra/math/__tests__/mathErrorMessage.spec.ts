@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 
 import type { Muya as MuyaType } from '../../../../muya';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { Muya } from '../../../../muya';
+import { ensureKatex } from '../../../../utils/katex';
 
 // #2220 — "How to debug <Invalid Mathematical Formula>?". The live editor
 // caught KaTeX's parse error and replaced it with an opaque generic message,
@@ -14,6 +15,12 @@ import { Muya } from '../../../../muya';
 const bootedHosts: HTMLElement[] = [];
 let originalVersion: string | undefined;
 let hadVersion = false;
+
+// KaTeX loads on demand and an editor booted before it arrives shows the
+// formula source instead of a parse error, so wait for it up front.
+beforeAll(async () => {
+    await ensureKatex();
+});
 
 beforeEach(() => {
     hadVersion = 'MUYA_VERSION' in window;

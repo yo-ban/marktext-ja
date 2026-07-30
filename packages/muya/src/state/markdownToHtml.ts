@@ -1,11 +1,9 @@
 import type { Muya } from '../muya';
-import githubMarkdownCss from 'github-markdown-css/github-markdown-light.css?inline';
-import katexCss from 'katex/dist/katex.css?inline';
-import prismCss from 'prismjs/themes/prism.css?inline';
 import exportStyle from '../assets/styles/exportStyle.css?inline';
 import { EXPORT_DOMPURIFY_CONFIG } from '../config';
 import { isHTMLElement, sanitize, unescapeHTML } from '../utils';
 import loadRenderer from '../utils/diagram';
+import { ensureKatex } from '../utils/katex';
 
 import { getHighlightHtml } from '../utils/marked';
 import { generateGithubSlug } from '../utils/slug';
@@ -182,6 +180,13 @@ export class MarkdownToHtml {
     // render pure html by marked
     async renderHtml() {
         const footnote = this._muya?.options?.footnote ?? false;
+        const math = this._muya?.options?.math ?? true;
+
+        // The markdown renderer is synchronous and skips math it cannot draw,
+        // so KaTeX has to be in memory before it runs.
+        if (math)
+            await ensureKatex();
+
         let html = getHighlightHtml(this.markdown, {
             superSubScript: this._muya?.options?.superSubScript ?? true,
             footnote,
@@ -277,11 +282,11 @@ export class MarkdownToHtml {
 
         let baseStyles: string;
         if (inlineStyles) {
-            // Embed the KaTeX fonts as data URIs so math renders offline. The
-            // font data (~300KB base64) is dynamically imported here so it only
-            // loads on export, never in the editor bundle.
-            const { embedKatexFonts } = await import('../utils/embedKatexFonts');
-            baseStyles = [githubMarkdownCss, embedKatexFonts(katexCss), prismCss]
+            // The base stylesheets and the KaTeX fonts embedded in them (~300KB
+            // of base64) are dynamically imported here so they only load on
+            // export, never in the editor bundle.
+            const { getInlineBaseStyles } = await import('../utils/exportBaseStyles');
+            baseStyles = getInlineBaseStyles()
                 .map(css => `  <style>${css}</style>`)
                 .join('\n');
         }

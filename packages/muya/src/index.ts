@@ -31,4 +31,5 @@ export { TableRowColumMenu } from './ui/tableRowColumMenu';
 export type { IImageInfo } from './utils/image';
 export { getImageInfo } from './utils/image';
 export { escapeHTML, sanitize, unescapeHTML, wordCount } from './utils/index';
+export { ensureKatex } from './utils/katex';
 export { generateGithubSlug } from './utils/slug';

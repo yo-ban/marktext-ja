@@ -4,6 +4,7 @@ import type { Muya } from '../muya';
 import type { IRenderCursor } from '../selection/types';
 import type { IParagraphState, TContainerState, TState } from '../state/types';
 import type { IHighlight, Labels } from './types';
+import { ensureKatex } from '../utils/katex';
 import logger from '../utils/logger';
 import { tokenizer } from './lexer';
 import Renderer from './renderer';
@@ -15,6 +16,7 @@ class InlineRenderer {
     public labels: Labels = new Map();
     public renderer: Renderer;
     private _labelsRevision = -1;
+    private _katexRequested = false;
 
     constructor(public muya: Muya) {
         this.renderer = new Renderer(muya, this);
@@ -58,6 +60,33 @@ class InlineRenderer {
             if (node.isContent())
                 node.update();
         });
+    }
+
+    /**
+     * Ask for KaTeX and re-render once it is here. Inline math that renders
+     * before the load finishes shows its source, so the blocks holding it have
+     * to be rendered again — the first token to find KaTeX missing calls this,
+     * and the rest of the pass rides on the same request.
+     */
+    requestKatexRender() {
+        if (this._katexRequested)
+            return;
+
+        this._katexRequested = true;
+        ensureKatex()
+            .then(() => {
+                const { scrollPage } = this.muya.editor;
+                if (!scrollPage)
+                    return;
+
+                scrollPage.breadthFirstTraverse((node) => {
+                    if (node.isContent())
+                        node.update();
+                });
+            })
+            .catch((err) => {
+                debug.error('Failed to load KaTeX', err);
+            });
     }
 
     patch(block: Format, cursor?: IRenderCursor, highlights: IHighlight[] = []) {

@@ -36,6 +36,11 @@ export interface IRenderToStaticHTMLOptions {
  *  - Sanitizes via the same `EXPORT_DOMPURIFY_CONFIG` as `MarkdownToHtml`, so
  *    XSS payloads (script tags, event-handler attributes, `javascript:` URLs)
  *    are stripped consistently with the live editor's export path.
+ *  - Math renders through KaTeX only if KaTeX is already in memory. KaTeX is
+ *    loaded on demand (it is the single largest dependency), and a
+ *    synchronous function cannot wait for it, so a caller that needs rendered
+ *    math must `await ensureKatex()` first. Otherwise formulas come out in
+ *    their source form, as with `math: false`.
  *
  * Empty input fast-paths to an empty string so callers don't have to special
  * case it.

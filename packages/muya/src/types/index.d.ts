@@ -18,6 +18,8 @@ declare module 'prismjs/plugins/keep-markup/prism-keep-markup';
 declare module 'prismjs/dependencies';
 declare module '@marktext/file-icons';
 declare module 'snapsvg-cjs';
+// Ships no types; imported only for the `\ce` macros it registers on KaTeX.
+declare module 'katex/dist/contrib/mhchem.mjs';
 
 declare module 'flowchart.js' {
     interface IFlowChartDrawOptions {

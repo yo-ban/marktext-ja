@@ -1,11 +1,8 @@
 import type { CodeEmojiMathToken, ISyntaxRenderOptions } from '../types';
 import type Renderer from './index';
-import katex from 'katex';
 import { CLASS_NAMES } from '../../config';
+import { katexIfLoaded } from '../../utils/katex';
 import { htmlToVNode } from '../../utils/snabbdom';
-import 'katex/dist/contrib/mhchem.mjs';
-
-import 'katex/dist/katex.min.css';
 
 export default function inlineMath(this: Renderer, {
     h,
@@ -51,8 +48,17 @@ export default function inlineMath(this: Renderer, {
     // Inline math errors stay compact to keep the surrounding text baseline
     // (#4100, inline-math-align); surface the parse reason via the title.
     let errorTitle = '';
+    const katex = katexIfLoaded();
+
     if (loadMathMap.has(key)) {
         mathVnode = loadMathMap.get(key);
+    }
+    else if (!katex) {
+        // Nothing to render the formula with yet. Show its source — unrendered
+        // but readable — and leave the cache untouched so the re-render that
+        // follows the load produces the real thing.
+        mathVnode = math;
+        this.parent.requestKatexRender();
     }
     else {
         try {
