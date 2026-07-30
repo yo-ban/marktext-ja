@@ -1504,7 +1504,6 @@ interface FileChangePayload {
   history?: unknown
   scrollTop?: number
   muyaIndexCursor?: unknown
-  blocks?: unknown
   isReload?: boolean
 }
 
@@ -1866,9 +1865,10 @@ onMounted(() => {
   // The engine emits a low-level `json-change` ({ op, source, prevDoc, doc })
   // on every document mutation (`doc` is a memoized lazy getter — reading it
   // clones the current state); the desktop's content-change pipeline wants the
-  // derived document snapshot (markdown / word count / cursor / history / TOC /
-  // block AST), so we compute it here — mirroring the legacy engine's
-  // `dispatchChange` payload.
+  // derived document snapshot (markdown / word count / cursor / history / TOC),
+  // so we compute it here — mirroring the legacy engine's `dispatchChange`
+  // payload. It deliberately does NOT carry the block tree: nothing reads it,
+  // and `getState()` copies the whole document.
   editor.value.on('json-change', () => {
     // There is a chance that this event is fired AFTER the tab is switched. If we purely rely on this.currentFile later on
     // it can cause invalid updates. Hence, we need the id to identify changes as part of each tab
@@ -1891,8 +1891,7 @@ onMounted(() => {
       // Synthetic, desktop-shaped history so the store's save/dirty tracking
       // keeps working (the engine history shape is incompatible).
       history: makeSyntheticHistory(id, markdown),
-      toc: editor.value.getTOC(),
-      blocks: editor.value.getState()
+      toc: editor.value.getTOC()
     })
   })
 

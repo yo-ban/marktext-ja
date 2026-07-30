@@ -85,8 +85,6 @@ export interface IFileState {
   muyaIndexCursor: unknown
   notifications: FileNotification[]
   lastSavedHistoryId?: number
-  // Muya block tree; only populated for the actively edited tab.
-  blocks?: unknown
   isMixedLineEndings?: boolean
 }
 
