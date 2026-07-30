@@ -1,4 +1,4 @@
-import { validEmoji } from '../../../utils/emoji';
+import { emojiForAlias } from '../../../utils/emoji';
 
 const START_REG = /(\s|^):(?!:)/;
 const EMOJI_REG = /^(:)([a-z_\d+-]+)\1/;
@@ -59,9 +59,9 @@ function getExtension(opts: IOptions) {
             const { isRenderEmoji } = opts;
             const { text, marker } = token;
             if (isRenderEmoji) {
-                const validate = validEmoji(text);
-                if (validate)
-                    return validate.emoji;
+                const character = emojiForAlias(text);
+                if (character)
+                    return character;
                 else
                     return `${marker}${text}${marker}`;
             }

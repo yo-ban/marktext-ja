@@ -24,6 +24,7 @@ export class EmojiSelector extends BaseScrollFloat {
     private _renderObj: Record<string, EmojiType[]> | null = null;
     private _oldVNode: VNode | null = null;
     private _emoji: Emoji = new Emoji();
+    private _queryId = 0;
     public override renderArray: EmojiType[] = [];
     public override activeItem: EmojiType | null = null;
 
@@ -57,23 +58,32 @@ export class EmojiSelector extends BaseScrollFloat {
         super.listen();
         const { eventCenter } = this.muya;
         eventCenter.on('muya-emoji-picker', ({ reference, emojiText, block }) => {
+            // The search loads the emoji table on first use, so results can land
+            // after the user has typed on — or after the picker should have
+            // closed. Only the newest query may paint.
+            const queryId = ++this._queryId;
             if (!emojiText)
                 return this.hide();
             const text = emojiText.trim();
             if (text) {
-                this.renderObj = this._emoji.search(text);
-                const cb: (item: EmojiType) => void = (item) => {
-                    if (block && block.setEmoji)
-                        block.setEmoji(item.aliases[0]);
-                };
+                this._emoji.search(text).then((renderObj) => {
+                    if (queryId !== this._queryId)
+                        return;
 
-                if (this.renderArray.length) {
-                    this.show(reference, cb);
-                    this.render();
-                }
-                else {
-                    this.hide();
-                }
+                    this.renderObj = renderObj;
+                    const cb: (item: EmojiType) => void = (item) => {
+                        if (block && block.setEmoji)
+                            block.setEmoji(item.aliases[0]);
+                    };
+
+                    if (this.renderArray.length) {
+                        this.show(reference, cb);
+                        this.render();
+                    }
+                    else {
+                        this.hide();
+                    }
+                });
             }
         });
     }

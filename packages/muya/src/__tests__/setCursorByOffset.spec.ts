@@ -9,7 +9,7 @@ import { injectSentinels, resolveSentinelCursor } from '../selection/offsetCurso
 // legacy muyajs index->block-key cursor conversion (sentinel injection + tree
 // walk) so the WYSIWYG caret lands on the block the source-mode cursor was in.
 
-const bootedHosts: HTMLElement[] = [];
+const booted: Muya[] = [];
 let originalVersion: string | undefined;
 let hadVersion = false;
 
@@ -20,10 +20,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-    while (bootedHosts.length) {
-        const host = bootedHosts.pop()!;
-        host.remove();
-    }
+    // Destroy rather than just detach: a document longer than the mount
+    // prefix still has a chunk timer queued, and it would fire against a
+    // torn-down environment while a later test file is running.
+    while (booted.length)
+        booted.pop()!.destroy();
     if (hadVersion)
         window.MUYA_VERSION = originalVersion as string;
     else
@@ -35,7 +36,7 @@ function bootMuya(markdown: string): Muya {
     document.body.appendChild(host);
     const muya = new Muya(host, { markdown } as ConstructorParameters<typeof Muya>[1]);
     muya.init();
-    bootedHosts.push(muya.domNode);
+    booted.push(muya);
     return muya;
 }
 

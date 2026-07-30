@@ -2,7 +2,7 @@ import type { VNode } from 'snabbdom';
 import type { CodeEmojiMathToken, ISyntaxRenderOptions } from '../types';
 import type Renderer from './index';
 import { CLASS_NAMES } from '../../config';
-import { validEmoji } from '../../utils/emoji';
+import { emojiForAlias } from '../../utils/emoji';
 
 // render token of emoji to vnode
 export default function emoji(
@@ -11,8 +11,8 @@ export default function emoji(
 ) {
     const { start: rStart, end: rEnd } = token.range;
     const className = this.getClassName(outerClass, block, token, cursor);
-    const validation = validEmoji(token.content);
-    const finalClass = validation ? className : CLASS_NAMES.MU_WARN;
+    const emojiCharacter = emojiForAlias(token.content);
+    const finalClass = emojiCharacter ? className : CLASS_NAMES.MU_WARN;
     const contentSelector
         = finalClass !== CLASS_NAMES.MU_GRAY
             ? `span.${finalClass}.${CLASS_NAMES.MU_INLINE_RULE}.${CLASS_NAMES.MU_EMOJI_MARKED_TEXT}`
@@ -55,7 +55,7 @@ export default function emoji(
             content.push(block.text.substring(pos, rEnd - 1));
     }
 
-    const emojiVNode = validation
+    const emojiVNode = emojiCharacter
         ? h(
                 contentSelector,
                 {
@@ -63,7 +63,7 @@ export default function emoji(
                         spellcheck: 'false',
                     },
                     dataset: {
-                        emoji: validation.emoji,
+                        emoji: emojiCharacter,
                     },
                 },
                 content,

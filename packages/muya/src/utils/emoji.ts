@@ -1,13 +1,20 @@
 import { CLASS_NAMES } from '../config';
-import emojis from '../config/emojis';
+import emojiAliases from '../config/emojiAliases';
 
 /**
- * check if one emoji code is in emojis, return undefined or found emoji
+ * The character `:alias:` stands for, or undefined if no emoji claims it.
+ *
+ * Backed by the alias map rather than the full table: this runs for every emoji
+ * token on every render, and the descriptions and tags only the picker needs
+ * would otherwise be part of the startup bundle.
  */
-export function validEmoji(text: string) {
-    return emojis.find((emoji) => {
-        return emoji.aliases.includes(text);
-    });
+export function emojiForAlias(alias: string): string | undefined {
+    // Typed rather than looked up with `hasOwn`: the alias comes from the
+    // document, so `:constructor:` and `:toString:` reach here and would
+    // otherwise resolve to functions off the prototype.
+    const character = emojiAliases[alias];
+
+    return typeof character === 'string' ? character : undefined;
 }
 
 /**
