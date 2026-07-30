@@ -6,6 +6,7 @@ import log from 'electron-log'
 import { app, BrowserWindow, clipboard, dialog, nativeTheme, shell, ipcMain } from 'electron'
 import type { BrowserWindowConstructorOptions } from 'electron'
 import { isChildOfDirectory } from 'common/filesystem/paths'
+import { detectSupportedLanguage } from 'common/i18n'
 import type { IUserPreferences } from '@shared/types/preferences'
 import { isLinux, isOsx, isWindows } from '../config'
 import parseArgs from '../cli/parser'
@@ -20,7 +21,7 @@ import { onInternalChannel } from '../utils/internalIpc'
 import { WindowType } from '../windows/base'
 import EditorWindow from '../windows/editor'
 import SettingWindow from '../windows/setting'
-import { setLanguage, t } from '../i18n'
+import { getSystemLanguageCandidates, setLanguage, t } from '../i18n'
 import { getNativeThemeSource, isDarkApplicationTheme } from './nativeTheme'
 import type Accessor from './accessor'
 import type WindowManager from './windowManager'
@@ -157,50 +158,16 @@ class App {
       // only fall back to the shipped default. Here (post-ready) the real OS
       // locale is available.
       if (!currentLanguage || !preferences.hasPreferencesFile) {
-        const systemLanguage = app.getLocale()
-        log.info(`System language detected: ${systemLanguage}`)
+        // Preference order first (on Windows the display language, where
+        // getLocale() reports the regional format), matched against the
+        // locales the app actually ships — the previous hand-written map
+        // offered 'ru', which has no locale file, so a Russian-locale user
+        // got raw translation keys for a UI.
+        const candidates = getSystemLanguageCandidates()
+        const detected = detectSupportedLanguage(candidates)
+        log.info(`System language candidates: ${candidates.join(', ') || '(none)'}`)
 
-        // Supported language list (based on languages actually supported by the project)
-        const supportedLanguages = [
-          'en',
-          'zh-CN',
-          'zh-TW',
-          'ja',
-          'ko',
-          'fr',
-          'de',
-          'es',
-          'pt',
-          'ru'
-        ]
-
-        // Language mapping: system language code -> application language code
-        const languageMap: Record<string, string> = {
-          'zh-CN': 'zh-CN',
-          'zh-TW': 'zh-TW',
-          'zh-HK': 'zh-TW',
-          zh: 'zh-CN',
-          en: 'en',
-          'en-US': 'en',
-          'en-GB': 'en',
-          ja: 'ja',
-          'ja-JP': 'ja',
-          ko: 'ko',
-          'ko-KR': 'ko',
-          fr: 'fr',
-          'fr-FR': 'fr',
-          de: 'de',
-          'de-DE': 'de',
-          es: 'es',
-          'es-ES': 'es',
-          pt: 'pt',
-          'pt-BR': 'pt',
-          ru: 'ru',
-          'ru-RU': 'ru'
-        }
-
-        const detected = languageMap[systemLanguage]
-        if (detected && supportedLanguages.includes(detected)) {
+        if (detected) {
           currentLanguage = detected
           preferences.setItems({
             language: currentLanguage,

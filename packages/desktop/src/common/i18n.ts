@@ -97,6 +97,37 @@ function isLanguageSupported(language: string): boolean {
   return (SUPPORTED_LANGUAGES as readonly string[]).includes(language)
 }
 
+/**
+ * Pick the first supported UI language from an ordered list of BCP 47-ish
+ * candidates (e.g. `app.getPreferredSystemLanguages()`, `app.getLocale()`, a
+ * normalized POSIX `LANG`). Each candidate is tried as a full tag first, then
+ * by primary subtag, so the caller's preference order wins over match quality
+ * — 'en-AU' before 'ja-JP' yields 'en', not 'ja'.
+ */
+function detectSupportedLanguage(candidates: string[]): string | null {
+  for (const raw of candidates) {
+    const tag = typeof raw === 'string' ? raw.trim() : ''
+    // 'C'/'POSIX' are locale-less env values, not languages.
+    if (!tag || tag === 'C' || tag === 'POSIX') {
+      continue
+    }
+    if (isLanguageSupported(tag)) {
+      return tag
+    }
+    // Traditional-script Chinese must not fall through the primary-subtag
+    // match onto zh-CN (first 'zh*' entry in the supported list).
+    if (/^zh/i.test(tag) && /Hant|TW|HK|MO/i.test(tag)) {
+      return 'zh-TW'
+    }
+    const primary = tag.split(/[-_]/)[0]!
+    const matched = SUPPORTED_LANGUAGES.find((lang) => lang.startsWith(primary))
+    if (matched) {
+      return matched
+    }
+  }
+  return null
+}
+
 function clearCache(): void {
   translationsCache = {}
 }
@@ -109,6 +140,7 @@ export {
   getTranslation,
   getSupportedLanguages,
   isLanguageSupported,
+  detectSupportedLanguage,
   clearCache,
   getAllTranslations,
   loadTranslations

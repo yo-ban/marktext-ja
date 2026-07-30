@@ -1,13 +1,13 @@
 import fs from 'fs'
 import path from 'path'
 import Store, { type Schema } from 'electron-store'
-import { app, BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron'
+import { BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron'
 import log from 'electron-log'
-import { t } from '../i18n'
+import { getSystemLanguageCandidates, t } from '../i18n'
 import { isWindows } from '../config'
 import { hasSameKeys } from '../utils'
 import { onInternalChannel } from '../utils/internalIpc'
-import { getSupportedLanguages, isLanguageSupported } from 'common/i18n'
+import { detectSupportedLanguage } from 'common/i18n'
 import { TypedEmitter } from '@shared/types/typedEmitter'
 import type { IUserPreferences } from '@shared/types/preferences'
 import schema from './schema.json'
@@ -236,37 +236,19 @@ class Preference extends TypedEmitter<PreferenceEvents> {
    */
   _getSystemLanguage(): string | null {
     try {
-      // Get the system language. NOTE: before app-ready (where this class is
-      // constructed) getLocale() returns '' — without this guard the empty
-      // primary tag matched EVERY supported language via startsWith('') and
-      // detection always "found" the first list entry, en.
-      const systemLocale = app.getLocale()
-      if (!systemLocale) {
-        log.info('System locale not available yet (before app-ready)')
-        return null
+      // NOTE: this runs before app-ready, where getLocale() (and possibly the
+      // preferred-languages list) is still empty; the POSIX locale environment
+      // in the candidate list is what can still succeed here. Empty candidates
+      // are skipped — an empty tag must not primary-match the first list
+      // entry via startsWith('').
+      const candidates = getSystemLanguageCandidates()
+      const matched = detectSupportedLanguage(candidates)
+      if (matched) {
+        log.info(`Using system language: ${matched} (candidates: ${candidates.join(', ')})`)
+      } else {
+        log.info(`No supported system language among: ${candidates.join(', ') || '(none)'}`)
       }
-      log.info(`System locale detected: ${systemLocale}`)
-
-      // Get the list of supported languages
-      const supportedLanguages = getSupportedLanguages()
-
-      // Directly match the full language code (e.g. zh-CN)
-      if (isLanguageSupported(systemLocale)) {
-        log.info(`Using system language: ${systemLocale}`)
-        return systemLocale
-      }
-
-      // Attempt to match the primary part of the language (e.g. zh)
-      const primaryLanguage = systemLocale.split('-')[0]!
-      const matchedLanguage = supportedLanguages.find((lang) => lang.startsWith(primaryLanguage))
-
-      if (matchedLanguage) {
-        log.info(`Using matched language: ${matchedLanguage} for system locale: ${systemLocale}`)
-        return matchedLanguage
-      }
-
-      log.info(`System language ${systemLocale} not supported, will use default language`)
-      return null
+      return matched
     } catch (error) {
       log.error('Error detecting system language:', error)
       return null
