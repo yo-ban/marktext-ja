@@ -71,6 +71,16 @@ export default defineConfig({
     // `/` separators and handles Windows drive letters correctly.
     assetsInclude: ['**/*.md'],
     build: {
+      // electron-vite ships with minification off for every process, so the
+      // renderer was shipping ~20MB of unminified JS. Minifying it cuts the
+      // installed renderer to ~13MB. This is a footprint win only: startup
+      // time and RSS were unchanged in measurement, because the renderer's
+      // pre-paint cost is top-level module *execution*, not parsing.
+      // Main is left unminified — it parses in ~20ms and readable frames
+      // matter more there, since it is what crash logs are written from.
+      // `keepNames` keeps function and class identifiers in renderer stack
+      // traces.
+      minify: 'esbuild',
       rollupOptions: {
         output: {
           manualChunks(id: string) {
@@ -93,6 +103,9 @@ export default defineConfig({
     // throw before Vue mounts.
     define: {
       global: 'globalThis'
+    },
+    esbuild: {
+      keepNames: true
     },
     resolve: {
       alias: {
