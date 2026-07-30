@@ -21,6 +21,33 @@ const getTempPath = (suffix = ''): string => {
   return path.join(os.tmpdir(), name)
 }
 
+// The UI language a freshly-installed app starts in.
+export const defaultUiLanguage = (): string => {
+  const prefs = JSON.parse(
+    fs.readFileSync(path.join(projectRoot, 'static/preference.json'), 'utf-8')
+  ) as { language?: string }
+  return prefs.language ?? 'en'
+}
+
+// Resolve a dotted renderer i18n key against a shipped locale file, so specs
+// assert the same string the UI renders instead of a hard-coded translation.
+export const localeString = (
+  lang: string,
+  key: string,
+  params: Record<string, string> = {}
+): string => {
+  const dict = JSON.parse(
+    fs.readFileSync(path.join(projectRoot, 'static/locales', `${lang}.json`), 'utf-8')
+  ) as Record<string, unknown>
+  const value = key.split('.').reduce<unknown>((node, part) => {
+    return node && typeof node === 'object' ? (node as Record<string, unknown>)[part] : undefined
+  }, dict)
+  if (typeof value !== 'string') {
+    throw new Error(`i18n key "${key}" is missing from static/locales/${lang}.json`)
+  }
+  return value.replace(/\{(\w+)\}/g, (match, name: string) => params[name] ?? match)
+}
+
 export const getElectronPath = (): string => {
   if (process.platform === 'win32') {
     return path.resolve(path.join('node_modules', '.bin', 'electron.cmd'))

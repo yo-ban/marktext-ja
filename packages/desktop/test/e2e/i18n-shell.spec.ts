@@ -1,16 +1,22 @@
 import { expect, test } from '@playwright/test'
 import type { ElectronApplication, Page } from 'playwright'
-import { launchWithMarkdown, sendIpcToRenderer, waitForMenuReady } from './helpers'
+import {
+  defaultUiLanguage,
+  launchWithMarkdown,
+  localeString,
+  sendIpcToRenderer,
+  waitForMenuReady
+} from './helpers'
 
 // Checklist item 278 — switching the UI language must re-translate the Vue
 // shell (menu bar / command palette / preferences tabs), not just the engine
 // hints covered by parity-cursor-lang.spec.ts (G8).
 //
 // We drive the command palette: its search input placeholder is rendered by
-// Vue via `t('commandPalette.placeholder')`. Reading it in English, switching
-// to zh-CN the way the main process does (`language-changed` BEFORE
-// `mt::user-preference`), then reopening the palette must surface the Chinese
-// string — and never the raw dotted i18n key.
+// Vue via `t('commandPalette.placeholder')`. Reading it in the app's default
+// language, switching to zh-CN the way the main process does
+// (`language-changed` BEFORE `mt::user-preference`), then reopening the palette
+// must surface the Chinese string — and never the raw dotted i18n key.
 
 const SEARCH_INPUT = '.search-wrapper input.search, input.search'
 
@@ -58,15 +64,16 @@ test.describe('i18n shell — language switch re-translates the Vue shell', () =
     if (app) await app.close()
   })
 
-  test('command palette placeholder re-translates en -> zh-CN', async() => {
-    // 1) Read the English shell label.
+  test('command palette placeholder re-translates the default language -> zh-CN', async() => {
+    // 1) Read the shell label in the language a fresh install starts in.
     await openPalette(app, page)
-    const enPlaceholder = await readPlaceholder(page)
-    expect(enPlaceholder).toBeTruthy()
-    // The English string from static/locales/en.json.
-    expect(enPlaceholder).toBe('Type a command to execute')
+    const initialPlaceholder = await readPlaceholder(page)
+    expect(initialPlaceholder).toBeTruthy()
+    expect(initialPlaceholder).toBe(
+      localeString(defaultUiLanguage(), 'commandPalette.placeholder')
+    )
     // Never the raw i18n key leaking through.
-    expect(enPlaceholder).not.toMatch(/commandPalette\./)
+    expect(initialPlaceholder).not.toMatch(/commandPalette\./)
     await closePalette(page)
 
     // 2) Drive a language switch the way the main process does: the
@@ -88,14 +95,14 @@ test.describe('i18n shell — language switch re-translates the Vue shell', () =
         },
         { timeout: 8000, intervals: [300, 500, 800] }
       )
-      .toBe('输入要执行的命令')
+      .toBe(localeString('zh-CN', 'commandPalette.placeholder'))
 
     // 3) Re-read once more and assert the post-switch invariants.
     await openPalette(app, page)
     const zhPlaceholder = await readPlaceholder(page)
     await closePalette(page)
     expect(zhPlaceholder).toBeTruthy()
-    expect(zhPlaceholder).not.toBe(enPlaceholder)
+    expect(zhPlaceholder).not.toBe(initialPlaceholder)
     // The Chinese label must not be the raw dotted key either.
     expect(zhPlaceholder).not.toMatch(/commandPalette\./)
   })

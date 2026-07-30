@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 import type { ElectronApplication, Page } from 'playwright'
 import {
+  defaultUiLanguage,
+  localeString,
   launchWithMarkdown,
   sendIpcToRenderer,
   focusEditor,
@@ -296,14 +298,18 @@ test.describe('Find bar — option toggles re-run the search (items 185, 186, 18
     // error and no search runs (no highlights).
     await page.locator(FIND_INPUT).fill('(')
     await expect(errorMsg).toBeVisible({ timeout: 5000 })
-    await expect(errorMsg).toContainText('Invalid regular expression')
+    await expect(errorMsg).toHaveText(
+      localeString(defaultUiLanguage(), 'search.invalidRegex', { pattern: '(' })
+    )
     await expect.poll(() => page.locator('.mu-highlight').count()).toBe(0)
 
     // (2) Empty-match pattern: "a*" matches the empty string -> dedicated error,
     // still no search.
     await page.locator(FIND_INPUT).fill('a*')
     await expect(errorMsg).toBeVisible({ timeout: 5000 })
-    await expect(errorMsg).toContainText('Regular expression matches empty string')
+    await expect(errorMsg).toHaveText(
+      localeString(defaultUiLanguage(), 'search.regexMatchEmpty', { pattern: 'a*' })
+    )
     await expect.poll(() => page.locator('.mu-highlight').count()).toBe(0)
 
     // (3) Valid pattern: matches "apple" and "apricot"; the error clears and the

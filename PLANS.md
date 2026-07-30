@@ -259,16 +259,16 @@ issues/ スナップショット全 563 件を再調査した結果。今回対�
 
 ### 高優先(バグ)
 
-1. **#4989/#5012/#4943** — テーブル編集で ot-json1 の `Cannot use numerical key for object container` / `Cannot insert into out of bounds index`。#4899(リスト outdent、修正済み)と同クラスの状態破壊がテーブル経路に残存。要再現調査
-2. **#4962/#4934** — 直列化の往復非収束(空行の消失、Links/Lists/Tables の roundTrip 3 件 baseline failure)。#4776 でリスト番号は解消。muya の `test/spec/roundTrip.spec.ts` が失敗テストを提供
-3. **#4789** — ネットワーク FS(SSHFS/WSL)でフォルダが開けない。readdir ポーリングの watcher フォールバック。910 行・#4788 スタック済みで clean apply 可、**次回レビューして取り込み推奨**(Windows ユーザー価値大)
-4. **#4973** — 巨大テーブル + Windows UIA クライアントで main プロセスがハング(Chromium AX ツリー起因、@muyajs/core でも再現と報告)。調査価値高いが Electron 層の対処が必要
+1. **#4989/#5012/#4943** — テーブル編集で ot-json1 の状態破壊。**2026-07-30 再現試行**: 構造操作(行/列の挿入・削除の全オフセット + 交互操作 + 全消し)を flush 付きで総当たりする `structuralOpsFuzz.spec.ts` を追加したが再現せず。ペースト/undo 絡みか、実トレース(ユーザーの再現 md)待ち。fuzz スイートは回帰網として常設
+2. **#4962** — 連続空行の 1 行への正規化(実測: `a\n\n\n\nb` → `a\n\nb`。単一空行は保持され、0.19.1 の「全部密着」は非再現)。保持には全ブロック種に `blankLinesBefore` 系 meta を通すエンジン級変更 + 編集時の意味論設計が必要(#4776 の sourceMarkers 方式の全面展開)。**#4934 の roundTrip 3 件 baseline failure は解消済みを確認**(15/15 通過、Tables は verbatim 同一)
+3. ~~#4789~~ **取り込み済み**(2026-07-30)— watcher 部分のみ(画像部分は #4788 と同一)。加えて UNC ファイルポーリング経路に自己書き込み抑止(`_shouldIgnoreEvent`)を追加(原 PR の抜け)
+4. **#4973** — 巨大テーブル + Windows UIA クライアントで main プロセスがハング(Chromium AX ツリー起因)。Electron 層の対処が必要
 5. #4958(watcher 誤検知バー直後のクラッシュ)、#4995(貼り付け画像のリサイズで null)— 要再現
 
 ### 中優先(取り込み候補 PR、レビュー待ち)
 
 - #4862(インライン書式ツールバーとカスタムキーバインド同期 + ネイティブ richtext 漏れ修正)
-- #4645(Element Plus オンデマンド化 + 設定ルート遅延で初回描画 -135ms / -1.7MB — #2300 系)
+- ~~#4645~~ **取り込み済み**(2026-07-30)— 実測: レンダラー主チャンク 6.94MB→5.44MB(-21%)、起動→エディタ表示の中央値 2245ms→2078ms(-167ms)。el-tree/タブ/ダイアログ系 e2e 通過
 - #4935/#5004(数式まわり、直列化の #4934 と要整合)、#4908(ソースモード行番号設定)、#4318(カスタムテーマ)、#4814(macOS 辞書)
 - #4322 の残価値: `app.getPreferredSystemLanguages()` + LANG 環境変数フォールバックのみ(検出本体はこちらの修正が優先)
 
