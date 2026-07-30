@@ -280,7 +280,21 @@ issues/ スナップショット全 563 件を再調査した結果。今回対�
 - **muya `getMarkdown()` の防御的クローン削除** — `StateToMarkdown` は state を読むだけ(調整する `meta` は自前で deepClone)
 - **muya `wordCount()` の単一パス化** — 全文に対し 3 回の文字列変換(CJK 正規表現除去 → `/\s+/` split → reduce)を毎打鍵実行していた。コードポイント 1 パスに書き換え(プロファイル比 2.0% → 1.2%)。**カウントはユーザーに見える値なので、旧実装をテスト内に埋め込んだ差分テストで固定**(区切り連続・CRLF・特殊空白・サロゲートペア・CJK 混在の 24 ケース + シード固定 PRNG の 500 文書)
 - **検索バーの実バグ修正** — 入力は検索を 150ms デバウンスでスケジュールするだけなので、その窓の内側で Enter を押すと**前のクエリのマッチ集合**を送り、直後に着弾したデバウンス検索がハイライトを 1 件目に戻していた。ステップ前に `debouncedSearchFn.flush()`
-- 残りのホットスポット(次の候補): `structuredClone` 0.9%、`cloneStateTree` 0.6%、直列化系(`_serializeTable` / `stringWidth` / `_serializeTextParagraph`)合計約 1.5%
+- **エンジン undo 履歴のスナップショットを打鍵毎 → タブ切替時に変更**(デスクトップ)— `json-change` が毎回 `editor.getHistory()`(undo+redo スタック最大 100 件を deep clone)を呼んでいた。ソースモードを一度出ると**文書全体を含む `rebuild` op** がスタックに載るため、以降は 1 文字毎に文書全体を再クローンしていた。読み出しはタブ切替時のみなので、エンジンが保持しているタブ id を追跡し `setContent` の直前に退避する方式へ。プロファイルから `structuredClone` が消滅
+  - 注意点: **最初の文書は Muya コンストラクタのオプション経由で読み込まれる**ため `file-loaded` も `file-changed` も走らない。マウント時に id を種付けしないと 1 つ目のタブの undo 履歴が切替時に失われる(e2e `tab-switch-cursor.spec.ts` が検出)
+- 残りのホットスポット(JS 側): `hashContent` 1.4%、`wordCount` 1.3%、`tocEquals` 0.8%、直列化系(`_serializeTable` / `stringWidth` / `_serializeTextParagraph`)合計約 1.5%。**JS は既に全体の 2 割程度で、残りはネイティブ側**
+
+#### ネイティブ側(Chromium)の調査 — 打鍵コストの主因はレイアウト/描画
+
+同一ハーネスで文書サイズだけを変えた比較(scratchpad `typing-profile.cjs` / `layout-probe.cjs` / `reflow-count.cjs`):
+
+| 文書 | 打鍵往復 中央値 | `(program)`(ネイティブ) | 1 段落変更後の強制レイアウト |
+|---|---|---|---|
+| 3KB / 40 行 | 41ms | 17.1%(≒9ms/打鍵) | 0.4ms |
+| 98KB / 1500 行 | 80ms | 42.8%(≒39ms/打鍵) | 10.1ms |
+
+- **JS からの強制レイアウトは 1 打鍵あたり 1 回・0.01ms**(`Range.getClientRects` を計装して計測)。つまり JS がレイアウトを叩いているわけではなく、フレーム内の style/layout/paint そのものが文書サイズに比例している
+- `content-visibility: auto` + `contain-intrinsic-size` をトップレベルブロックに注入して A/B: **中央値は 80ms → 78ms でほぼ不変**、ただし p25 は 79ms → 58ms、最小は 59ms → 39ms と下振れ側だけ改善。効果が不安定な一方で、印刷 CSS・検索のスクロール追従・スクロールアンカリングへの影響が読めないため**今回は採用しない**(再挑戦するならまず印刷/検索の e2e を固めてから)
 
 ### 高優先(バグ)
 
