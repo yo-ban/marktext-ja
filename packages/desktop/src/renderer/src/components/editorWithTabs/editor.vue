@@ -1709,8 +1709,12 @@ const handleResetPaddingBottom = () => {
     container.scrollHeight - container.clientHeight - parseFloat(firstChild.style.paddingBottom)
 
   if (currentFile.value && newScollableHeightWithoutPadding > currentFile.value.scrollTop) {
-    container.style.paddingBottom = ''
-    resizeObserverForEditor.unobserve(firstChild) // unobserve #ag-editor-id since we have removed the padding
+    // Clear it on the element `scrollToCords` padded — the container never had
+    // inline padding, and the engine reuses this child across documents, so a
+    // leftover value would override the stylesheet's end-of-document space for
+    // the rest of the window's life.
+    firstChild.style.paddingBottom = ''
+    resizeObserverForEditor.unobserve(firstChild)
   }
 }
 

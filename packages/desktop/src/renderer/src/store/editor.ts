@@ -109,12 +109,11 @@ interface ExportPayload {
   pageOptions?: PageOptions
 }
 
+// The write itself reads the tab, so only enough to identify a savable tab is
+// passed in.
 interface AutoSavePayload {
   id: string
-  filename: string
   pathname: string
-  markdown: string
-  options: ReturnType<typeof getOptionsFromState>
 }
 
 interface ContentChangePayload {
@@ -165,6 +164,63 @@ export interface EditorState {
 }
 
 const autoSaveTimers = new Map<string, ReturnType<typeof setTimeout>>()
+
+// Which edit each in-flight write is persisting, oldest first, per tab. The
+// save ack (`mt::tab-saved` / `mt::set-pathname`) only carries the tab id, so
+// without this a keystroke typed while the write is in flight would be marked
+// saved even though the snapshot on disk predates it — and with auto-save on,
+// the timer for that keystroke then skips itself because the tab looks clean.
+// `null` marks a snapshot taken with the document undone back to its original
+// content, where there is no history entry to point at.
+const pendingSaveMarkers = new Map<string, (number | null)[]>()
+
+// The history entry a tab's current content corresponds to, or `null` when the
+// document has been undone back to the state it was loaded in.
+const editHistoryMarker = (tab: IFileState): number | null => {
+  const { lastEditIndex, stack } = tab.history ?? {}
+  if (
+    typeof lastEditIndex !== 'number' ||
+    !stack ||
+    lastEditIndex < 0 ||
+    lastEditIndex >= stack.length
+  ) {
+    return null
+  }
+  const entry = stack[lastEditIndex]
+  return entry && typeof entry.id === 'number' ? entry.id : null
+}
+
+const recordPendingSave = (tab: IFileState): void => {
+  const markers = pendingSaveMarkers.get(tab.id)
+  if (markers) markers.push(editHistoryMarker(tab))
+  else pendingSaveMarkers.set(tab.id, [editHistoryMarker(tab)])
+}
+
+// Take the oldest in-flight save for `tabId`. `undefined` means the write was
+// not started by this window's save actions (the close/save-all flows send
+// their own payloads), in which case the caller falls back to trusting the ack.
+const takePendingSave = (tabId: string): number | null | undefined => {
+  const markers = pendingSaveMarkers.get(tabId)
+  if (!markers || markers.length === 0) return undefined
+  const marker = markers.shift()
+  if (markers.length === 0) pendingSaveMarkers.delete(tabId)
+  return marker
+}
+
+// Apply a successful write: the tab is clean only if nothing was edited while
+// the write was in flight.
+const applySaveAck = (tab: IFileState): void => {
+  const savedMarker = takePendingSave(tab.id)
+  if (savedMarker === undefined) {
+    const marker = editHistoryMarker(tab)
+    if (marker !== null) tab.lastSavedHistoryId = marker
+    tab.isSaved = true
+    return
+  }
+
+  if (savedMarker !== null) tab.lastSavedHistoryId = savedMarker
+  tab.isSaved = editHistoryMarker(tab) === savedMarker
+}
 
 export const useEditorStore = defineStore('editor', {
   state: (): EditorState => ({
@@ -542,6 +598,7 @@ export const useEditorStore = defineStore('editor', {
       const options = getOptionsFromState(this.currentFile)
       const defaultPath = getRootFolderFromState(projectStore)
       if (id) {
+        recordPendingSave(this.currentFile)
         window.electron.ipcRenderer.send(
           'mt::response-file-save',
           id,
@@ -573,6 +630,7 @@ export const useEditorStore = defineStore('editor', {
       const defaultPath = getRootFolderFromState(projectStore)
 
       if (id) {
+        recordPendingSave(this.currentFile)
         window.electron.ipcRenderer.send(
           'mt::response-file-save-as',
           id,
@@ -615,12 +673,16 @@ export const useEditorStore = defineStore('editor', {
         }
 
         // SET_PATHNAME
-        const { filename } = fileInfo
+        const { filename, contentSaved } = fileInfo
         if (id === this.currentFile?.id && pathname) {
           window.DIRNAME = window.path.dirname(pathname)
         }
         if (tab) {
-          Object.assign(tab, { filename, pathname, isSaved: true })
+          Object.assign(tab, { filename, pathname })
+          // Rename and "Move to" reuse this channel but only move the file on
+          // disk — its content is whatever the last write left there. Marking
+          // the tab saved would drop the pending edits without a prompt.
+          if (contentSaved) applySaveAck(tab)
           debouncedSendBufferedState()
         }
       })
@@ -628,23 +690,13 @@ export const useEditorStore = defineStore('editor', {
       window.electron.ipcRenderer.on('mt::tab-saved', (_, tabId) => {
         const tab = this.tabs.find((f) => f.id === tabId)
         if (tab) {
-          const lastEditIndex = tab.history.lastEditIndex
-          if (
-            typeof lastEditIndex === 'number' &&
-            lastEditIndex >= 0 &&
-            lastEditIndex < tab.history.stack.length
-          ) {
-            const entry = tab.history.stack[lastEditIndex]
-            if (entry && typeof entry.id === 'number') {
-              tab.lastSavedHistoryId = entry.id
-            }
-          }
-          tab.isSaved = true
+          applySaveAck(tab)
           debouncedSendBufferedState()
         }
       })
 
       window.electron.ipcRenderer.on('mt::tab-save-failure', (_, tabId, msg) => {
+        takePendingSave(tabId)
         const tab = this.tabs.find((t) => t.id === tabId)
         if (!tab) {
           notice.notify({
@@ -758,6 +810,7 @@ export const useEditorStore = defineStore('editor', {
       if (!id) return
       if (!pathname) {
         // if current file is a newly created file, just save it!
+        recordPendingSave(this.currentFile)
         window.electron.ipcRenderer.send(
           'mt::response-file-save',
           id,
@@ -801,6 +854,7 @@ export const useEditorStore = defineStore('editor', {
       if (!id) return
       if (!pathname) {
         // if current file is a newly created file, just save it!
+        recordPendingSave(this.currentFile)
         window.electron.ipcRenderer.send(
           'mt::response-file-save',
           id,
@@ -1044,6 +1098,7 @@ export const useEditorStore = defineStore('editor', {
         if (timer) clearTimeout(timer)
         autoSaveTimers.delete(file.id)
       }
+      if (file.id) pendingSaveMarkers.delete(file.id)
 
       this.updateTabIdToIndex() // Update before sending it out to prevent stale mappings.
 
@@ -1479,14 +1534,7 @@ export const useEditorStore = defineStore('editor', {
       if (isDirty) {
         tab.isSaved = false
         if (pathname && autoSave) {
-          const options = getOptionsFromState(tab)
-          this.HANDLE_AUTO_SAVE({
-            id,
-            filename,
-            pathname,
-            markdown,
-            options
-          })
+          this.HANDLE_AUTO_SAVE({ id, pathname })
         }
       } else if (history !== undefined && tab.lastSavedHistoryId !== -1) {
         // Check here is to prevent it from overriding a restored .isSaved state
@@ -1495,7 +1543,7 @@ export const useEditorStore = defineStore('editor', {
       debouncedSendBufferedState()
     },
 
-    HANDLE_AUTO_SAVE({ id, filename, pathname, markdown, options }: AutoSavePayload): void {
+    HANDLE_AUTO_SAVE({ id, pathname }: AutoSavePayload): void {
       if (!id || !pathname) {
         throw new Error('HANDLE_AUTO_SAVE: Invalid tab.')
       }
@@ -1515,14 +1563,20 @@ export const useEditorStore = defineStore('editor', {
 
         const tab = this.tabs.find((t) => t.id === id)
         if (tab && !tab.isSaved) {
+          // Read the path and content off the tab rather than reusing what was
+          // captured when the timer was scheduled: a rename in between (which
+          // updates the tab but leaves the timer running) would otherwise
+          // recreate the old file and leave the renamed one stale.
+          if (!tab.pathname) return
           const defaultPath = getRootFolderFromState(projectStore)
+          recordPendingSave(tab)
           window.electron.ipcRenderer.send(
             'mt::response-file-save',
             id,
-            filename,
-            pathname,
-            markdown,
-            deepClone(options),
+            tab.filename,
+            tab.pathname,
+            tab.markdown,
+            deepClone(getOptionsFromState(tab)),
             defaultPath
           )
         }

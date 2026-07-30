@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import debounce from 'lodash/debounce'
 import { useLayoutStore } from '@/store/layout'
 import { useProjectStore } from '@/store/project'
@@ -173,6 +173,9 @@ const showNoResultFoundMessage = computed(() => {
   )
 })
 
+// Identifies the newest search run; see the comment in `search`.
+let searchRunId = 0
+
 const search = (): void => {
   // No root directory is opened.
   if (showNoFolderOpenedMessage.value || !projectTree.value) {
@@ -184,6 +187,12 @@ const search = (): void => {
   if (searcherRunning.value && searcherCancelCallback) {
     searcherCancelCallback()
   }
+
+  // Cancelling resolves the searcher rather than rejecting it, so the run being
+  // replaced still completes. Stamp each run and let only the newest one write
+  // results, or a stale completion overwrites the current query's results and
+  // discards its cancel handle.
+  const runId = ++searchRunId
 
   searchErrorString.value = ''
   searcherCancelCallback = null
@@ -233,6 +242,7 @@ const search = (): void => {
 
   cancellable
     .then(() => {
+      if (runId !== searchRunId) return
       searchResult.value = newSearchResult
       searcherRunning.value = false
       searcherCancelCallback = null
@@ -242,6 +252,7 @@ const search = (): void => {
       canceled = true
       cancellable.cancel()
       log.error('Error while searching in directory:', err)
+      if (runId !== searchRunId) return
       searchResult.value = []
       searcherRunning.value = false
       searcherCancelCallback = null
@@ -349,6 +360,15 @@ onMounted(() => {
     searcherRunning.value = true
     search()
   }
+})
+
+// Leaving the Search panel destroys this component, so drop the subscription
+// and stop any ripgrep run still going — both would otherwise outlive it.
+onBeforeUnmount(() => {
+  bus.off('findInFolder', handleFindInFolder)
+  debouncedSearch.cancel()
+  cancelSearcher()
+  stopShowSearchCancelAreaTimer()
 })
 </script>
 

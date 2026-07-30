@@ -261,7 +261,12 @@ export interface IpcMainEventChannels {
   'mt::rg::progress': [payload: unknown]
   'mt::screenshot-captured': [filePath: string]
   'mt::set-line-ending': [lineEnding: LineEnding]
-  'mt::set-pathname': [payload: { id: string; pathname: string; filename: string }]
+  // `contentSaved` distinguishes the save flows, which wrote the tab's content
+  // to `pathname` before sending this, from rename / "move to", which only
+  // moved the existing file and left the tab's edits unwritten.
+  'mt::set-pathname': [
+    payload: { id: string; pathname: string; filename: string; contentSaved: boolean }
+  ]
   'mt::set-view-layout': [layout: unknown]
   'mt::show-command-palette': []
   'mt::show-export-dialog': [type: ExportType]

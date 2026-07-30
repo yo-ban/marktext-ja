@@ -149,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
@@ -252,34 +252,47 @@ const handleInputEnter = (event: KeyboardEvent): void => {
   projectStore.CREATE_FILE_DIRECTORY(createName.value)
 }
 
+// Hide rename / create inputs on outside clicks. Buttons that open these
+// inputs must use @click.stop so their click never reaches this listener.
+const handleDocumentClick = (event: MouseEvent): void => {
+  const target = event.target as HTMLElement | null
+  if (target && target.tagName !== 'INPUT') {
+    projectStore.CHANGE_ACTIVE_ITEM({})
+    projectStore.createCache = {}
+    projectStore.renameCache = null
+  }
+}
+
+const handleDocumentContextMenu = (event: MouseEvent): void => {
+  const target = event.target as HTMLElement | null
+  if (target && target.tagName !== 'INPUT') {
+    projectStore.createCache = {}
+    projectStore.renameCache = null
+  }
+}
+
+const handleDocumentKeydown = (event: KeyboardEvent): void => {
+  if (event.key === 'Escape') {
+    projectStore.createCache = {}
+    projectStore.renameCache = null
+  }
+}
+
 onMounted(() => {
   bus.on('SIDEBAR::show-new-input', handleInputFocus)
+  document.addEventListener('click', handleDocumentClick)
+  document.addEventListener('contextmenu', handleDocumentContextMenu)
+  document.addEventListener('keydown', handleDocumentKeydown)
+})
 
-  // Hide rename / create inputs on outside clicks. Buttons that open these
-  // inputs must use @click.stop so their click never reaches this listener.
-  document.addEventListener('click', (event) => {
-    const target = event.target as HTMLElement | null
-    if (target && target.tagName !== 'INPUT') {
-      projectStore.CHANGE_ACTIVE_ITEM({})
-      projectStore.createCache = {}
-      projectStore.renameCache = null
-    }
-  })
-
-  document.addEventListener('contextmenu', (event) => {
-    const target = event.target as HTMLElement | null
-    if (target && target.tagName !== 'INPUT') {
-      projectStore.createCache = {}
-      projectStore.renameCache = null
-    }
-  })
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      projectStore.createCache = {}
-      projectStore.renameCache = null
-    }
-  })
+// The sidebar destroys and recreates this component on every panel switch, so
+// without teardown each visit leaves another set of document listeners writing
+// into the project store on every click in the app.
+onBeforeUnmount(() => {
+  bus.off('SIDEBAR::show-new-input', handleInputFocus)
+  document.removeEventListener('click', handleDocumentClick)
+  document.removeEventListener('contextmenu', handleDocumentContextMenu)
+  document.removeEventListener('keydown', handleDocumentKeydown)
 })
 </script>
 

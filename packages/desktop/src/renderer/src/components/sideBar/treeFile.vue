@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
@@ -96,6 +96,12 @@ onMounted(() => {
   }
 
   bus.on('SIDEBAR::show-rename-input', focusRenameInput)
+})
+
+// Collapsing the parent folder destroys this node, so unregistering keeps a
+// large tree from accumulating dead handlers over a session.
+onBeforeUnmount(() => {
+  bus.off('SIDEBAR::show-rename-input', focusRenameInput)
 })
 </script>
 

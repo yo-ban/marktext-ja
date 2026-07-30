@@ -239,7 +239,12 @@ const handleResponseForSave = async(
         ipcMain.emit('menu-add-recently-used', filePath)
 
         const newFilename = path.basename(filePath!)
-        win.webContents.send('mt::set-pathname', { id, pathname: filePath, filename: newFilename })
+        win.webContents.send('mt::set-pathname', {
+          id,
+          pathname: filePath,
+          filename: newFilename,
+          contentSaved: true
+        })
       } else {
         ipcMain.emit('window-file-saved', win.id, filePath)
         win.webContents.send('mt::tab-saved', id)
@@ -418,7 +423,8 @@ ipcMain.on(
             win.webContents.send('mt::set-pathname', {
               id,
               pathname: filePath,
-              filename: newFilename
+              filename: newFilename,
+              contentSaved: true
             })
           } else if (pathname !== filePath) {
             // Update window file list and watcher.
@@ -428,7 +434,8 @@ ipcMain.on(
             win.webContents.send('mt::set-pathname', {
               id,
               pathname: filePath,
-              filename: newFilename
+              filename: newFilename,
+              contentSaved: true
             })
           } else {
             ipcMain.emit('window-file-saved', win.id, filePath)
@@ -554,10 +561,13 @@ ipcMain.on('mt::rename', async(e, { id, pathname, newPathname }: RenamePayload) 
       }
 
       ipcMain.emit('window-change-file-path', win.id, newPathname, pathname)
+      // Rename moves the file only — whatever the tab still holds unsaved
+      // stays unsaved, and must keep prompting on close.
       e.sender.send('mt::set-pathname', {
         id,
         pathname: newPathname,
-        filename: path.basename(newPathname)
+        filename: path.basename(newPathname),
+        contentSaved: false
       })
     })
   }
@@ -601,10 +611,12 @@ ipcMain.on(
         }
 
         ipcMain.emit('window-change-file-path', win.id, filePath, pathname)
+        // As with rename: the file moved, the tab's unsaved edits did not.
         e.sender.send('mt::set-pathname', {
           id,
           pathname: filePath,
-          filename: path.basename(filePath)
+          filename: path.basename(filePath),
+          contentSaved: false
         })
       })
     }
