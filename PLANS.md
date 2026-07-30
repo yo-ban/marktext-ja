@@ -257,6 +257,17 @@ issues/ スナップショット全 563 件を再調査した結果。今回対�
 - #5028(Undo で全文消失)は**新エンジンでは再現せず**(0.19.1 レガシー限定)— 契約固定テスト `undoFloor.spec.ts` を追加
 - フォルダ内検索のキーストローク毎 ripgrep 起動(#3556)をデバウンス(300ms、Enter 即時、IME ガード付き)
 
+### 今回の対応(2026-07-30 第 2 ラウンド:起動バンドル分割 + 印刷経路の後始末)
+
+- **起動バンドル分割**(#2300 の続き)— レンダラー主チャンク 5444KB→**4306KB**(-21%)、初期 CSS 311KB→227KB、起動→編集可能表示の中央値 2684ms→**2472ms**(同一マシン 7 回の中央値。環境ノイズ大、最小値は 2336→2313ms)
+  - `sourceCode.vue`(CodeMirror 約 590KB)をソースモード突入時ロードに
+  - file-icons のルール DB + CSS(約 270KB)をツリー初回行の描画時ロードに。**CommonJS のため dynamic import だけでは Rollup が呼び出し元チャンクへ戻す** → `manualChunks` で明示的に分離が必須
+  - about / コマンドパレット / エクスポート設定 / リネーム / インポートの 5 ダイアログを初回オープン時ロードに
+  - 未使用の axios(`$http` グローバル)を削除
+  - 遅延化で静かに壊れる箇所(アイコンクラスと、それをグリフにする CSS の両方が届くこと)を e2e で固定
+- **PDF/印刷の失敗経路で印刷用 DOM コピーが残るリーク修正** — printToPDF の例外・書き込み失敗・`print()` の例外/失敗コールバックで `mt::print-service-clearup` が飛ばず、文書 1 部ぶんの DOM(画像・図込み)がセッション終了まで残っていた。`finally` と try/catch で全経路をカバー、印刷失敗は理由付きでログ
+  - 調査メモ: `article.print-container` は画面上では `display: none`(印刷メディアでのみ反転して唯一の表示要素になる)。**したがってこれは「UI が印刷ビューに覆われてフリーズ」ではなくメモリリーク**。#3880 の本体(フリーズ)は下記のとおり未対応
+
 ### 高優先(バグ)
 
 1. **#4989/#5012/#4943** — テーブル編集で ot-json1 の状態破壊。**2026-07-30 再現試行**: 構造操作(行/列の挿入・削除の全オフセット + 交互操作 + 全消し)を flush 付きで総当たりする `structuralOpsFuzz.spec.ts` を追加したが再現せず。ペースト/undo 絡みか、実トレース(ユーザーの再現 md)待ち。fuzz スイートは回帰網として常設
@@ -275,7 +286,7 @@ issues/ スナップショット全 563 件を再調査した結果。今回対�
 ### パフォーマンス(未対応)
 
 - #3893/#1035 — 1 万ファイル級フォルダでツリー仮想化なし(開けない事例も)。大規模リファクタ
-- #3880 — PDF エクスポートが表示中ウィンドウの webContents で printToPDF(フリーズ)→ 非表示ウィンドウ化
+- #3880 — PDF エクスポートが表示中ウィンドウの webContents で printToPDF(フリーズ)→ 非表示ウィンドウ化。**フリーズ要因は 2 つ**: (a) `printService.renderMarkdown()` が生きているウィンドウの DOM に文書 1 部ぶんを同期でパース・レイアウトする (b) その webContents 自身で印刷レイアウトを走らせる。非表示ウィンドウ化で両方消える。エクスポート HTML は既に自己完結(`exportStyledHTML`)なので `javascript: false` の隠しウィンドウ + 一時ファイル読み込み + `did-finish-load` 待ちで実装可能。**要検証**: `printService.css` の `@media print` 規則(@page マージン、`markdown-body max-width 980px`)はアプリ側 CSS にあり書き出し HTML には含まれないため、そのままではページ送りが変わる。移行時は現行/新方式の PDF をページ数・バイト数・目視で比較すること
 - #3368 — アニメ GIF の CPU 消費、#2300 — 起動 2-3 秒(#4645 が一部)、#3640 — 巨大ファイルでの書式適用ラグ(開くのは #4946 で解決済み)
 - #3685 — フォルダ検索 100 ファイル上限(現状はエラーメッセージ表示あり。上限の設定化が候補)
 
@@ -291,3 +302,6 @@ issues/ スナップショット全 563 件を再調査した結果。今回対�
 - 起動確認は Playwright `_electron` で可能。ワンショットスクリプト例はこのセッションの scratchpad `launch-check.mjs`(要点: `executablePath: packages/desktop/node_modules/.bin/electron`, `args: ['--no-sandbox', <appDir>]`, playwright-core は repo ルート node_modules に hoist 済み)
 - `postinstall` の electron-rebuild は **pkg-config / X11 ヘッダ不足で失敗する**(native-keymap)が、prebuilt バイナリで動作するため実害なし。直すなら `apt-get install pkg-config libx11-dev libxkbfile-dev`
 - ユニットテスト: `pdf.spec.ts` の 2 件がフルスイートでのみ失敗する既存 flake(変更の検証時は単独実行で切り分けること)
+- **e2e は `out/` のビルド済みコードを実行する**。ソース変更後にビルドせず走らせると原因不明の失敗になる(実例: `find-replace` の findPrev が 3/3 で止まる。再ビルド後は 15/15 通過)。e2e 実行中に `build:unpack` を走らせるのも同じ理由で禁止
+- `launchElectron([folder])` の位置引数フォルダは **`openFolderInNewWindow` により別ウィンドウで開く**ため `firstWindow()` には現れない。テスト対象ウィンドウでフォルダを開くには内部チャンネルを直接叩く: `ipcMain.emit('app-open-directory-by-id', win.id, folder, true)`(サイドバーの「フォルダを開く」と同じ経路。ネイティブダイアログのみ迂回)
+- Playwright は `pnpm exec playwright test test/e2e` とパスを明示する(パス無しだと `test/unit` も収集して失敗)
