@@ -1,4 +1,5 @@
 import { resolve, dirname } from 'path'
+import { existsSync, readdirSync } from 'fs'
 import type { PluginOption } from 'vite'
 import { defineConfig } from 'electron-vite'
 import vue from '@vitejs/plugin-vue'
@@ -11,6 +12,20 @@ import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+// Every `element-plus/es/components/<name>/style/css` id that exists on disk,
+// for optimizeDeps.include (see the comment there).
+const elementPlusStyleDeps = (): string[] => {
+  const componentsDir = resolve(__dirname, 'node_modules/element-plus/es/components')
+  try {
+    return readdirSync(componentsDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .filter((entry) => existsSync(resolve(componentsDir, entry.name, 'style/css.mjs')))
+      .map((entry) => `element-plus/es/components/${entry.name}/style/css`)
+  } catch {
+    return []
+  }
+}
 
 export default defineConfig({
   main: {
@@ -117,7 +132,17 @@ export default defineConfig({
       extensions: ['.mjs', '.ts', '.js', '.json', '.vue']
     },
     optimizeDeps: {
-      include: ['pako', 'pathe'],
+      // The Element Plus imports below never appear in source — the Components()
+      // resolver injects them at transform time, so Vite's cold-start scan
+      // cannot see them. Without pre-bundling, the first window to render a
+      // not-yet-used <el-*> (typically the lazily-loaded settings window)
+      // triggers "optimized dependencies changed. reloading" mid-mount, and the
+      // mixed old/new dep chunks load two Vue runtime copies — every component
+      // in the window then crashes with `renderSlot ... reading 'ce'` on null.
+      // The per-component style ids are enumerated from disk because a glob
+      // cannot express them: the specifier is `.../style/css`, the file
+      // `.../style/css.mjs`, and the ids must match the injected specifiers.
+      include: ['pako', 'pathe', 'element-plus', 'element-plus/es', ...elementPlusStyleDeps()],
       esbuildOptions: {
         define: {
           global: 'globalThis'
