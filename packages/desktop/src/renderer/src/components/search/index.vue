@@ -303,6 +303,12 @@ const toggleSearchType = () => {
  * action: prev or next
  */
 const find = (action: 'prev' | 'next') => {
+  // Step through an UP-TO-DATE result set. Typing only schedules the search
+  // (`debouncedSearchFn`), so a step issued inside that window walks the
+  // PREVIOUS query's matches and is then silently undone: the pending search
+  // lands afterwards and resets the highlight to the first match. Typing a term
+  // and immediately pressing Enter is the common way to hit this.
+  debouncedSearchFn.flush()
   bus.emit('find-action', action)
 }
 
