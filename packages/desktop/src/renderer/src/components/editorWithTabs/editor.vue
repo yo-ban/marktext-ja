@@ -123,7 +123,13 @@ import { SpellChecker } from '@/spellchecker'
 import { isOsx, animatedScrollTo } from '@/util'
 import { moveImageToFolder, uploadImage } from '@/util/fileSystem'
 import { guessClipboardFilePath } from '@/util/clipboard'
-import { getCssForOptions, getHtmlToc, type PdfCssOptions, type HtmlTocOptions } from '@/util/pdf'
+import {
+  getCssForOptions,
+  getHtmlToc,
+  hiddenWindowPrintCss,
+  type PdfCssOptions,
+  type HtmlTocOptions
+} from '@/util/pdf'
 import { resolveTocHeadingElement } from '@/util/tocNavigation'
 import { addCommonStyle, setEditorWidth } from '@/util/theme'
 import { usePreferencesStore } from '@/store/preferences'
@@ -1344,10 +1350,13 @@ const handleExport = async (options: unknown) => {
           isLandscape
         }
 
+        // The document is printed by a hidden main-process window (#3880), so
+        // the print-content rules the app stylesheet used to contribute must
+        // ship inside the exported HTML.
         const html = await exportStyledHTML(editor.value, markdown, {
           title: '',
           printOptimization: true,
-          extraCss,
+          extraCss: extraCss + hiddenWindowPrintCss,
           toc: htmlToc,
           header,
           footer,
@@ -1355,8 +1364,7 @@ const handleExport = async (options: unknown) => {
           dir: props.textDirection,
           lang: locale.value
         })
-        printer!.renderMarkdown(html, true, props.textDirection)
-        editorStore.EXPORT({ type, pageOptions })
+        editorStore.EXPORT({ type, content: html, pageOptions })
       } catch (err) {
         log.error('Failed to export document:', err)
         notice.notify({
@@ -1364,7 +1372,6 @@ const handleExport = async (options: unknown) => {
           type: 'error',
           message: t('editor.export.errorExporting', { type: htmlTitle || 'PDF' })
         })
-        handlePrintServiceClearup()
       }
       break
     }

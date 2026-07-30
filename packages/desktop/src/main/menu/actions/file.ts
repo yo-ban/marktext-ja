@@ -1,4 +1,4 @@
-import { rename as fsRename } from 'fs-extra'
+import { rename as fsRename, outputFile, remove } from 'fs-extra'
 import path from 'path'
 import {
   BrowserWindow,
@@ -84,6 +84,43 @@ interface ExportPayload {
   pageOptions?: PageOptions
 }
 
+// Render the exported HTML in a hidden throwaway window and print THAT.
+// Printing the visible window forces a print re-layout of the whole live
+// document and blocks its renderer for the duration — seconds to minutes on
+// large documents (#3880). The exported HTML is self-contained (styles
+// inlined, image src rewritten to file://), so it renders identically in a
+// window with scripting disabled, and has to travel through a temp file
+// because data: URLs cap out well below a large document.
+const printHtmlToPdf = async(
+  html: string,
+  pdfOptions: Electron.PrintToPDFOptions
+): Promise<Buffer> => {
+  const tempPath = path.join(
+    app.getPath('temp'),
+    `marktext-export-${process.pid}-${Date.now()}.html`
+  )
+  await outputFile(tempPath, html, 'utf8')
+  const printWindow = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      javascript: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  })
+  try {
+    // Resolves on did-finish-load, rejects on did-fail-load.
+    await printWindow.loadFile(tempPath)
+    return await printWindow.webContents.printToPDF(pdfOptions)
+  } finally {
+    printWindow.destroy()
+    remove(tempPath).catch(() => {
+      /* best effort */
+    })
+  }
+}
+
 // Handle the export response from renderer process.
 const handleResponseForExport = async(e: IpcMainEvent, payload: ExportPayload): Promise<void> => {
   const { type, content, pathname, title, pageOptions } = payload
@@ -107,6 +144,9 @@ const handleResponseForExport = async(e: IpcMainEvent, payload: ExportPayload): 
   if (filePath && !canceled) {
     try {
       if (type === 'pdf') {
+        if (!content) {
+          throw new Error('No HTML content found.')
+        }
         // Build a clickable bookmark/outline tree from the document's h1-h6
         // headings so exported PDFs have a navigation pane (#2989). The outline
         // is derived from the tagged-PDF structure tree, so generateTaggedPDF is
@@ -117,7 +157,7 @@ const handleResponseForExport = async(e: IpcMainEvent, payload: ExportPayload): 
           generateDocumentOutline: true
         }
         Object.assign(options, getPdfPageOptions(pageOptions))
-        const data = await win.webContents.printToPDF(options)
+        const data = await printHtmlToPdf(content, options)
         await writeFile(filePath, data, extension!, 'binary')
       } else {
         if (!content) {
@@ -135,20 +175,6 @@ const handleResponseForExport = async(e: IpcMainEvent, payload: ExportPayload): 
         type: 'error',
         message: ERROR_MSG
       })
-    } finally {
-      // A PDF export leaves a full second copy of the rendered document in the
-      // window's DOM (services/printService.ts) until main tells the renderer
-      // to drop it. printToPDF throwing, or the write failing, must not strand
-      // that copy — with images and diagrams it is the size of the document
-      // itself and it would outlive the export for the rest of the session.
-      if (type === 'pdf') {
-        removePrintServiceFromWindow(win)
-      }
-    }
-  } else {
-    // User canceled save dialog
-    if (type === 'pdf') {
-      removePrintServiceFromWindow(win)
     }
   }
 }

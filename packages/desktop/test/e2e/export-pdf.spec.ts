@@ -12,10 +12,10 @@ import {
 // The full path is: File › Export › Export PDF →
 //   main `exportFile()` sends `mt::show-export-dialog` →
 //   renderer export-settings dialog → confirm →
-//   renderer renders styled HTML into the hidden print webview and sends
+//   renderer builds the styled export HTML and sends it in
 //   `mt::response-export` (store/editor.ts EXPORT) →
-//   main `handleResponseForExport` → showSaveDialog → webContents.printToPDF →
-//   writeFile → `mt::export-success`.
+//   main `handleResponseForExport` → showSaveDialog → `printHtmlToPdf`
+//   (hidden window, #3880) → writeFile → `mt::export-success`.
 //
 // The native save dialog is the only non-headless seam: we stub
 // `electron.dialog.showSaveDialog` in the MAIN process to return a temp path,
@@ -197,41 +197,78 @@ test.describe('PDF export to a real file (item 231)', () => {
     expect(successes.find((s) => s.filePath === out)).toBeFalsy()
   })
 
-  // The renderer holds a second, hidden copy of the rendered document (the
-  // print container) for the duration of a PDF export. When printToPDF failed,
-  // main reported the error but never sent `mt::print-service-clearup`, so that
-  // copy stayed in the DOM for the rest of the session.
-  test('a failing printToPDF still tears down the hidden print copy', async() => {
+  // PDF export prints a hidden main-process window (#3880). The editor window
+  // must never mount the print container (that was the freeze), and the hidden
+  // window must not outlive the export.
+  test('pdf export never touches the editor DOM and destroys its hidden window', async() => {
+    const out = '/tmp/marktext-e2e-export-' + Date.now() + '-hidden.pdf'
+    if (fs.existsSync(out)) fs.rmSync(out)
+    await clearExportSuccesses(page)
+    await stubSaveDialog(app, out)
+
+    await triggerPdfExportViaDialog(app, page)
+
+    // Sample the editor DOM for the print container while the export runs.
+    const deadline = Date.now() + 20000
+    while (Date.now() < deadline) {
+      expect(await page.locator('.print-container').count()).toBe(0)
+      if (fs.existsSync(out) && fs.statSync(out).size > 0) break
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    const data = await pollForPdfFile(out)
+    expect(data.subarray(0, 5).toString('latin1')).toBe('%PDF-')
+
+    // The hidden print window is destroyed once the PDF is written.
+    await expect
+      .poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length), {
+        timeout: 10000
+      })
+      .toBe(1)
+
+    fs.rmSync(out, { force: true })
+  })
+
+  // A hidden window that fails to load must not strand the window, write a
+  // file, or report success — only the failure notification.
+  test('a failing hidden-window load leaks neither a window nor a file', async() => {
     const out = '/tmp/marktext-e2e-export-' + Date.now() + '-fail.pdf'
     await clearExportSuccesses(page)
     await stubSaveDialog(app, out)
 
     await app.evaluate(({ BrowserWindow }) => {
-      const wc = BrowserWindow.getAllWindows()[0].webContents
-      const g = global as unknown as { __mt_orig_printToPDF__?: unknown }
-      g.__mt_orig_printToPDF__ ??= wc.printToPDF.bind(wc)
-      ;(wc as unknown as { printToPDF: unknown }).printToPDF = async() => {
-        throw new Error('synthetic printToPDF failure')
+      const g = global as unknown as { __mt_orig_loadFile__?: unknown }
+      g.__mt_orig_loadFile__ ??= BrowserWindow.prototype.loadFile
+      BrowserWindow.prototype.loadFile = async() => {
+        throw new Error('synthetic loadFile failure')
       }
     })
 
     try {
       await triggerPdfExportViaDialog(app, page)
 
+      // The failure notification (services/notification, `.mt-notification`)
+      // reaches the renderer with the thrown message; nothing was written.
       await expect
-        .poll(() => page.locator('.print-container').count(), { timeout: 10000 })
-        .toBe(0)
-      await expect(page.locator('.editor-wrapper').first()).toBeVisible()
-
+        .poll(() => page.locator('.mt-notification', { hasText: 'synthetic loadFile failure' }).count(), {
+          timeout: 10000
+        })
+        .toBeGreaterThan(0)
       expect(fs.existsSync(out)).toBe(false)
       const successes = await getExportSuccesses(page)
       expect(successes.find((s) => s.filePath === out)).toBeFalsy()
+
+      // The hidden window from the failed export was destroyed.
+      await expect
+        .poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length), {
+          timeout: 10000
+        })
+        .toBe(1)
     } finally {
       await app.evaluate(({ BrowserWindow }) => {
-        const wc = BrowserWindow.getAllWindows()[0].webContents
-        const g = global as unknown as { __mt_orig_printToPDF__?: unknown }
-        if (g.__mt_orig_printToPDF__) {
-          ;(wc as unknown as { printToPDF: unknown }).printToPDF = g.__mt_orig_printToPDF__
+        const g = global as unknown as { __mt_orig_loadFile__?: unknown }
+        if (g.__mt_orig_loadFile__) {
+          ;(BrowserWindow.prototype as unknown as { loadFile: unknown }).loadFile =
+            g.__mt_orig_loadFile__
         }
       })
     }

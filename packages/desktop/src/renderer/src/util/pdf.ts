@@ -28,6 +28,20 @@ export interface PdfCssOptions {
   [key: string]: unknown
 }
 
+// PDF export prints the exported HTML in a hidden main-process window
+// (#3880), where the app stylesheet does not apply. These are the rules from
+// assets/styles/printService.css that shape the printed CONTENT — as opposed
+// to the ones that hide the app UI around the print container — so the hidden
+// window paginates the way the visible window used to. Keep the two in sync.
+export const hiddenWindowPrintCss = `@media print{
+@page{background:white;}
+article.markdown-body{padding:0;}
+article.markdown-body input[type='checkbox']~p{margin-top:0;display:inline-block;}
+article.markdown-body pre code.fenced-code-block{white-space:pre-wrap;word-break:break-word;}
+article.markdown-body .flowchart,article.markdown-body .sequence,article.markdown-body .plantuml,article.markdown-body .mermaid,article.markdown-body .vega-embed{text-align:center;}
+article.markdown-body .flowchart>svg,article.markdown-body .sequence>svg,article.markdown-body .plantuml>svg,article.markdown-body .plantuml>img,article.markdown-body .mermaid>svg,article.markdown-body .vega-embed>svg{max-width:100%;}
+}`
+
 export const getCssForOptions = async(options: PdfCssOptions): Promise<string> => {
   const {
     type,
