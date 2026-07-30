@@ -70,6 +70,23 @@ export default defineConfig({
     // statements without pulling in Node's path module. `pathe` always uses
     // `/` separators and handles Windows drive letters correctly.
     assetsInclude: ['**/*.md'],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            // @marktext/file-icons is CommonJS, which Rollup cannot split on its
+            // own — it merges the module back into whichever chunk imports it,
+            // undoing the on-demand import in sideBar/fileIconClass.ts. Naming
+            // the chunk explicitly keeps the rule database and its stylesheet
+            // out of the startup bundle.
+            if (id.includes('@marktext/file-icons')) {
+              return 'file-icons'
+            }
+            return null
+          }
+        }
+      }
+    },
     // Some bundled deps (e.g. `custom-event` via `dragula`) reference the
     // Node-only `global` at module load — undefined in a sandboxed renderer.
     // Substitute it with `globalThis` at build time so the imports don't

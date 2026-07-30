@@ -1,7 +1,26 @@
-import fileIcons from '@marktext/file-icons'
+import { shallowRef } from 'vue'
+// Type-only import: it is erased at build time, so it does not pull the icon
+// database back into this chunk.
+import type { FileIcons } from '@marktext/file-icons'
 
-const getClassByName = (name: string): string | null => {
-  const icon = fileIcons.matchName(name)
+// The rule database plus its stylesheet is ~270KB that only matters once a
+// folder is open, so it is fetched on first use. Holding it in a ref means the
+// `computed` in icon.vue re-runs when it lands and swaps the placeholder for
+// the real icon.
+const fileIcons = shallowRef<FileIcons | null>(null)
+let pending: Promise<void> | null = null
+
+export const loadFileIcons = (): Promise<void> => {
+  if (!pending) {
+    pending = import('./fileIcons').then((module) => {
+      fileIcons.value = module.default
+    })
+  }
+  return pending
+}
+
+const getClassByName = (db: FileIcons, name: string): string | null => {
+  const icon = db.matchName(name)
   return icon ? icon.getClass(0, false) : null
 }
 
@@ -14,14 +33,24 @@ const getClassByName = (name: string): string | null => {
  * extensions (see main/filesystem/watcher.ts), so the extension is the
  * reliable signal — match on it first and use the full name only as a
  * fallback for extensionless names.
+ *
+ * Returns no classes until the icon database has loaded; callers render an
+ * empty, correctly-sized slot in the meantime.
  */
 export const getFileIconClasses = (fileName: string): string[] => {
+  const db = fileIcons.value
+  if (!db) {
+    loadFileIcons().catch((err) => {
+      console.error('Failed to load the file icon database:', err)
+    })
+    return []
+  }
   const name = fileName || 'mock.md'
   const dotIndex = name.lastIndexOf('.')
   const classNames =
-    (dotIndex !== -1 ? getClassByName(`mock${name.slice(dotIndex)}`) : null) ??
-    getClassByName(name) ??
+    (dotIndex !== -1 ? getClassByName(db, `mock${name.slice(dotIndex)}`) : null) ??
+    getClassByName(db, name) ??
     // Use fallback icon when the icon is unknown.
-    getClassByName('mock.md')
+    getClassByName(db, 'mock.md')
   return (classNames ?? '').split(/\s/)
 }

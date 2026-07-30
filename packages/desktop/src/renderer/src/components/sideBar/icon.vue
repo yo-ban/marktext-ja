@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import '@marktext/file-icons/build/index.css'
 import { getFileIconClasses } from './fileIconClass'
 
 const props = defineProps<{
@@ -12,7 +11,7 @@ const className = computed<string[]>(() => getFileIconClasses(props.name))
 
 <template>
   <span
-    :class="className"
+    :class="[className, { 'icon-pending': className.length === 0 }]"
     class="file-icon"
   />
 </template>
@@ -21,5 +20,12 @@ const className = computed<string[]>(() => getFileIconClasses(props.name))
 .file-icon {
   flex-shrink: 0;
   margin-right: 5px;
+}
+
+/* Hold the glyph's width while the icon database is still loading so the row
+   labels don't shift sideways once it arrives. */
+.file-icon.icon-pending {
+  display: inline-block;
+  width: 16px;
 }
 </style>

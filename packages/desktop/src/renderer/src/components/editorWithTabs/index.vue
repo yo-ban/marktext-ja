@@ -23,12 +23,17 @@
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
 import { useLayoutStore } from '@/store/layout'
 import { storeToRefs } from 'pinia'
 import Tabs from './tabs.vue'
 import Editor from './editor.vue'
-import SourceCode from './sourceCode.vue'
 import TabNotifications from './notifications.vue'
+
+// CodeMirror and its themes are ~500KB that only source-code mode needs, so the
+// pane is fetched the first time the user switches into it rather than being
+// parsed during every window's startup.
+const SourceCode = defineAsyncComponent(() => import('./sourceCode.vue'))
 
 defineProps<{
   markdown: string

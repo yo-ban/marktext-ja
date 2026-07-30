@@ -36,10 +36,10 @@ declare module 'minimatch' {
 }
 
 declare module '@marktext/file-icons' {
-  interface FileIcon {
+  export interface FileIcon {
     getClass(colourMode?: number, asObject?: boolean): string
   }
-  interface FileIcons {
+  export interface FileIcons {
     matchName(name: string): FileIcon | null
     matchLanguage(lang: string): FileIcon | null
   }

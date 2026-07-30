@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, nextTick, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, watch, nextTick, onMounted, ref } from 'vue'
 import { useMainStore } from '@/store'
 import { storeToRefs } from 'pinia'
 import { addStyles, addThemeStyle, addCustomStyle, type AddStylesOptions } from '@/util/theme'
@@ -46,11 +46,20 @@ import Recent from '@/components/recent/index.vue'
 import EditorWithTabs from '@/components/editorWithTabs/index.vue'
 import TitleBar from '@/components/titleBar/index.vue'
 import SideBar from '@/components/sideBar/index.vue'
-import AboutDialog from '@/components/about/index.vue'
-import CommandPalette from '@/components/commandPalette/index.vue'
-import ExportSettingDialog from '@/components/exportSettings/index.vue'
-import Rename from '@/components/rename/index.vue'
-import ImportModal from '@/components/import/index.vue'
+
+// The modal dialogs — and the Element Plus form controls only they use — are
+// split out of the startup bundle. They still mount right after first paint
+// (that is when they subscribe to their bus events), but the editor paints
+// without waiting for them to be parsed.
+const AboutDialog = defineAsyncComponent(() => import('@/components/about/index.vue'))
+const CommandPalette = defineAsyncComponent(
+  () => import('@/components/commandPalette/index.vue')
+)
+const ExportSettingDialog = defineAsyncComponent(
+  () => import('@/components/exportSettings/index.vue')
+)
+const Rename = defineAsyncComponent(() => import('@/components/rename/index.vue'))
+const ImportModal = defineAsyncComponent(() => import('@/components/import/index.vue'))
 import bus from '@/bus'
 import { DEFAULT_STYLE } from '@/config'
 import { useLayoutStore } from '@/store/layout'

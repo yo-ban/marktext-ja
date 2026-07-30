@@ -1,7 +1,13 @@
-import { describe, expect, it } from 'vitest'
-import { getFileIconClasses } from '@/components/sideBar/fileIconClass'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { getFileIconClasses, loadFileIcons } from '@/components/sideBar/fileIconClass'
 
 describe('getFileIconClasses (#4890)', () => {
+  // The icon database is fetched on demand; without it every name resolves to
+  // the empty placeholder.
+  beforeAll(async() => {
+    await loadFileIcons()
+  })
+
   it('gives markdown files the markdown icon even when the name starts with "Dockerfile"', () => {
     expect(getFileIconClasses('Dockerfile-Notes.md')).toContain('markdown-icon')
   })
