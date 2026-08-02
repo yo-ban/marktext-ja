@@ -264,12 +264,30 @@ export const usePreferencesStore = defineStore('preferences', {
       }
     },
 
+    // Entering source mode mounts CodeMirror seeded from `tab.markdown`. An
+    // engine edit still queued in the rAF batch (e.g. a checkbox toggle in the
+    // same frame as the switch) has not reached the store yet, so the source
+    // view would open on stale content — and the exit handoff would then write
+    // that stale content back over the edit, silently losing it. Flush the
+    // engine synchronously before the flag flips and the components swap.
+    _flushEditorBeforeSourceMode(): void {
+      if (!this.sourceCode) {
+        bus.emit('flush-active-editor')
+      }
+    },
+
     SET_MODE({ type, checked }: ModeTogglePayload): void {
+      if (type === 'sourceCode' && checked) {
+        this._flushEditorBeforeSourceMode()
+      }
       ;(this as unknown as Record<string, unknown>)[type as string] = checked
     },
 
     TOGGLE_VIEW_MODE(entryName: keyof PreferencesState | string): void {
       const target = this as unknown as Record<string, unknown>
+      if (entryName === 'sourceCode' && !target.sourceCode) {
+        this._flushEditorBeforeSourceMode()
+      }
       target[entryName as string] = !target[entryName as string]
     },
 
