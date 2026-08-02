@@ -7,7 +7,7 @@ import type {
 } from './types';
 import escapeCharactersMap from '../config/escapeCharacter';
 import { isLengthEven, union } from '../utils';
-import { beginRules, inlineRules, linkValidateRules, validateRules } from './rules';
+import { beginRules, execInlineDisplayMath, inlineRules, linkValidateRules, validateRules } from './rules';
 import {
     correctUrl,
     getAttributes,
@@ -196,10 +196,17 @@ function tryChunks(state: ILexState): boolean {
     const chunks = ['inline_code', 'del', 'emoji', 'inline_math'] as const;
 
     for (const rule of chunks) {
-        if (rule === 'inline_math' && !state.inlineMath)
-            continue;
-
-        const to = state.inlineRules[rule].exec(state.src);
+        let to: RegExpExecArray | null;
+        if (rule === 'inline_math') {
+            // Same-line `$$...$$` display math is part of the display-math
+            // feature, not the single-dollar syntax, so the `inlineMath`
+            // toggle (#5004) must not suppress it — only `$...$` is gated.
+            to = execInlineDisplayMath(state.src)
+                ?? (state.inlineMath ? state.inlineRules[rule].exec(state.src) : null);
+        }
+        else {
+            to = state.inlineRules[rule].exec(state.src);
+        }
         if (to && isLengthEven(to[3])) {
             if (rule === 'emoji') {
                 // An emoji opener must sit at a word boundary: a ":" glued to a

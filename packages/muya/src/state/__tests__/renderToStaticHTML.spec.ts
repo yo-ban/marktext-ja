@@ -239,6 +239,17 @@ describe('renderToStaticHTML', () => {
             expect(html).toContain('$24B');
             expect(html).toMatch(/katex|<math/i);
         });
+
+        it('keeps same-line $$ display math when inline math is disabled (#4904 x #5004)', () => {
+            const markdown = 'Cost $5 now, but energy is $$E=mc^2$$ regardless.';
+            const html = renderToStaticHTML(markdown, {
+                math: true,
+                inlineMath: false,
+            });
+
+            expect(html).toContain('$5');
+            expect(html).toMatch(/katex|<math/i);
+        });
     });
 
     it('returns a string for empty input', () => {

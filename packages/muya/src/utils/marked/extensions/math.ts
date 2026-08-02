@@ -29,12 +29,10 @@ export default function (options: IOptions = {}) {
     const opts = Object.assign({}, DEFAULT_OPTIONS, options);
 
     return {
-        extensions: opts.inlineMath
-            ? [
-                    inlineKatex(createRenderer(opts, false)),
-                    blockKatex(createRenderer(opts, true)),
-                ]
-            : [blockKatex(createRenderer(opts, true))],
+        extensions: [
+            inlineKatex(createRenderer(opts, false), opts.inlineMath),
+            blockKatex(createRenderer(opts, true)),
+        ],
     };
 }
 
@@ -63,29 +61,46 @@ function createRenderer(options: IOptions, newlineAfter: boolean) {
     };
 }
 
-function inlineKatex(renderer: (token: IMathToken) => string) {
+// `singleDollar: false` (the #5004 `inlineMath` toggle) rejects only `$...$`
+// matches; same-line `$$...$$` belongs to the display-math feature and must
+// keep rendering — the WYSIWYG lexer (`execInlineDisplayMath`) applies the
+// same gating, so live editing and static HTML/export stay consistent.
+function inlineKatex(renderer: (token: IMathToken) => string, singleDollar = true) {
     return {
         name: 'inlineMath',
         level: 'inline' as const,
         start(src: string) {
-            const match = src.match(inlineStartRule);
-            if (!match)
-                return;
+            // Scan forward past candidates the tokenizer would reject (a
+            // single-dollar match while `singleDollar` is off): returning a
+            // rejected index makes marked consume it as plain text without
+            // ever reaching a later `$$` span on the same line.
+            let offset = 0;
+            while (offset < src.length) {
+                const rest = src.substring(offset);
+                const match = rest.match(inlineStartRule);
+                if (!match)
+                    return;
 
-            const index = (match.index || 0) + match[1].length;
-            const possibleKatex = src.substring(index);
+                const index = (match.index || 0) + match[1].length;
+                const candidate = rest.substring(index).match(inlineRule);
+                if (candidate && (singleDollar || candidate[1].length === 2))
+                    return offset + index;
 
-            if (inlineRule.test(possibleKatex))
-                return index;
+                offset += index + 1;
+            }
         },
         tokenizer(src: string) {
             const match = src.match(inlineRule);
             if (match) {
+                const displayMode = match[1].length === 2;
+                if (!singleDollar && !displayMode)
+                    return;
+
                 return {
                     type: 'inlineMath',
                     raw: match[0],
                     text: match[2].trim(),
-                    displayMode: match[1].length === 2,
+                    displayMode,
                 };
             }
         },
