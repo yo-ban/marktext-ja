@@ -517,16 +517,17 @@ test.describe('Find bar — opening dismisses the inline format toolbar', () => 
     })
 
   test('a selection-raised format toolbar hides when Find opens', async() => {
-    // Drag-select with a real mouse: `muya-format-picker` fires on a
-    // non-collapsed selection in a Format leaf, and a dblclick re-collapses
-    // the caret in this engine.
+    // Select with click + Shift+End: `muya-format-picker` fires on a
+    // non-collapsed selection in a Format leaf. A dblclick re-collapses the
+    // caret in this engine, and a synthetic mouse drag produces no selection
+    // at all on darwin, so keyboard extension is the portable way to raise
+    // the toolbar.
     const content = page.locator('span.mu-paragraph-content').first()
     const box = await content.boundingBox()
     if (!box) throw new Error('paragraph content has no bounding box')
-    await page.mouse.move(box.x + 2, box.y + box.height / 2)
-    await page.mouse.down()
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 6 })
-    await page.mouse.up()
+    await page.mouse.click(box.x + 2, box.y + box.height / 2)
+    await page.waitForTimeout(200)
+    await page.keyboard.press('Shift+End')
     await expect.poll(() => toolbarOpacity(page)).toBeGreaterThan(0)
 
     // Opening Find must dismiss the toolbar — it floats above the find bar
