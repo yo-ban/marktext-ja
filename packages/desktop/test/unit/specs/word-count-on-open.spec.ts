@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createDocumentState, getBlankFileState } from '@/store/help'
 
-// The title-bar word counter reads `tab.wordCount`, which was only ever
+// The word-count badge reads `tab.wordCount`, which was only ever
 // written by the engine's content-change event — so a freshly opened document
 // displayed "W 0" until the first edit (or a source-code-mode round trip,
 // which pushes full state). Tab states must now carry the count from the

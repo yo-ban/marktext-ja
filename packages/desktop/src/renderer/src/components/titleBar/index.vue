@@ -46,39 +46,16 @@
           />
         </span>
       </div>
-      <div :class="showCustomTitleBar ? 'left-toolbar title-no-drag' : 'right-toolbar'">
+      <div
+        v-if="showCustomTitleBar"
+        class="left-toolbar title-no-drag"
+      >
         <div
-          v-if="showCustomTitleBar"
           class="frameless-titlebar-menu title-no-drag"
           @click.stop="handleMenuClick"
         >
           <span class="text-center-vertical">&#9776;</span>
         </div>
-        <el-tooltip
-          v-if="wordCount"
-          class="item"
-          :content="`${wordCount[show]} ${HASH[show].full + (wordCount[show] > 1 ? 's' : '')}`"
-          placement="bottom-end"
-        >
-          <template #content>
-            <div class="title-item">
-              <span class="front">{{ t('menu.counter.words') }}:</span><span class="text">{{ wordCount['word'] }}</span>
-            </div>
-            <div class="title-item">
-              <span class="front">{{ t('menu.counter.characters') }}:</span><span class="text">{{ wordCount['character'] }}</span>
-            </div>
-            <div class="title-item">
-              <span class="front">{{ t('menu.counter.paragraphs') }}:</span><span class="text">{{ wordCount['paragraph'] }}</span>
-            </div>
-          </template>
-          <div
-            v-if="wordCount"
-            class="word-count"
-            @click.stop="handleWordClick"
-          >
-            <span class="text-center-vertical">{{ `${HASH[show].short} ${wordCount[show]}` }}</span>
-          </div>
-        </el-tooltip>
       </div>
       <div
         v-if="titleBarStyle === 'custom' && !isFullScreen && !isOsx"
@@ -146,9 +123,7 @@ import { PATH_SEPARATOR } from '../../config'
 import { isOsx as isOsxPlatform } from '@/util'
 import { shouldShowInAppTitleBar } from './visibility'
 import { useEditorStore } from '@/store/editor'
-import { useI18n } from 'vue-i18n'
 import { ArrowRight } from '@element-plus/icons-vue'
-import type { FileWordCount } from '@shared/types/files'
 
 interface ProjectInfo {
   name?: string
@@ -160,7 +135,6 @@ const props = defineProps<{
   filename?: string
   pathname?: string
   active?: boolean
-  wordCount?: FileWordCount | null
   platform?: string
   isSaved?: boolean
 }>()
@@ -168,27 +142,8 @@ const props = defineProps<{
 const preferencesStore = usePreferencesStore()
 const layoutStore = useLayoutStore()
 const editorStore = useEditorStore()
-const { t } = useI18n()
 
 const isOsx = isOsxPlatform
-const HASH = {
-  word: {
-    short: 'W',
-    full: 'word'
-  },
-  character: {
-    short: 'C',
-    full: 'character'
-  },
-  paragraph: {
-    short: 'P',
-    full: 'paragraph'
-  },
-  all: {
-    short: 'A',
-    full: '(with space)character'
-  }
-}
 const windowIconMinimize = minimizePath
 const windowIconRestore = restorePath
 const windowIconMaximize = maximizePath
@@ -196,7 +151,6 @@ const windowIconClose = closePath
 
 const isFullScreen = ref(false)
 const isMaximized = ref(false)
-const show = ref<'word' | 'paragraph' | 'character' | 'all'>('word')
 
 onMounted(async () => {
   try {
@@ -242,15 +196,6 @@ watch(
     document.title = title
   }
 )
-
-const handleWordClick = () => {
-  const ITEMS = ['word', 'paragraph', 'character', 'all'] as const
-  const len = ITEMS.length
-  let index = ITEMS.indexOf(show.value)
-  index += 1
-  if (index >= len) index = 0
-  show.value = ITEMS[index]!
-}
 
 const handleCloseClick = () => {
   window.electron.windowControl.close()
@@ -418,29 +363,6 @@ div.title > span {
   display: flex;
   align-items: center;
   flex-direction: row-reverse;
-  & .item {
-    margin-right: 10px;
-  }
-}
-
-.word-count {
-  -webkit-app-region: no-drag;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--editorColor30);
-  text-align: center;
-  line-height: 24px;
-  padding: 0 5px;
-  box-sizing: border-box;
-  transition: all 0.25s ease-in-out;
-  & > .text-center-vertical {
-    padding: 2px 5px;
-    border-radius: 3px;
-  }
-  &:hover > span {
-    background: var(--sideBarBgColor);
-    color: var(--sideBarTitleColor);
-  }
 }
 
 .title-no-drag {
@@ -481,18 +403,5 @@ div.title > span {
   display: inline-block;
   vertical-align: middle;
   line-height: normal;
-}
-</style>
-
-<style>
-.title-item {
-  height: 28px;
-  line-height: 28px;
-  & .front {
-    opacity: 0.7;
-  }
-  & .text {
-    margin-left: 10px;
-  }
 }
 </style>

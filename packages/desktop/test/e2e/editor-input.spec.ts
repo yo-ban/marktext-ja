@@ -57,22 +57,22 @@ test.describe('Editor input and source-mode roundtrip', () => {
 })
 
 // ---------------------------------------------------------------------------
-// Coverage backfill (checklist item 24). The desktop title-bar word/character/
-// paragraph counter lives in
-// packages/desktop/src/renderer/src/components/titleBar/index.vue: the clickable
-// `.word-count > span.text-center-vertical` renders `${HASH[show].short}
-// ${wordCount[show]}` where `show` cycles word -> paragraph -> character -> all
-// on click (handleWordClick). The counter value flows from
-// editor.vue json-change -> LISTEN_FOR_CONTENT_CHANGE -> store/editor.ts tab
-// wordCount -> app.vue currentFile.wordCount -> the title-bar `word-count` prop.
-// The engine wordCount algorithm itself is unit-covered in
+// Coverage backfill (checklist item 24). The desktop word/character/paragraph
+// counter is the floating badge at the editor's bottom-right corner in
+// packages/desktop/src/renderer/src/components/wordCount/index.vue: the
+// clickable `.word-count > span.text-center-vertical` renders
+// `${HASH[show].short} ${wordCount[show]}` where `show` cycles
+// word -> paragraph -> character -> all on click (handleWordClick). The counter
+// value flows from editor.vue json-change -> LISTEN_FOR_CONTENT_CHANGE ->
+// store/editor.ts tab wordCount -> app.vue currentFile.wordCount -> the badge's
+// `word-count` prop. The engine wordCount algorithm itself is unit-covered in
 // packages/muya/src/utils/__tests__/wordCount.spec.ts; this spec only locks the
-// desktop title-bar wiring (the value tracks edits + follows the active mode).
+// desktop badge wiring (the value tracks edits + follows the active mode).
 // ---------------------------------------------------------------------------
 
 const WORD_COUNT_TEXT = '.word-count .text-center-vertical'
 
-// Read the title-bar counter text, e.g. "W 12". Returns the trimmed string.
+// Read the badge counter text, e.g. "W 12". Returns the trimmed string.
 const counterText = (page: Page): Promise<string> =>
   page.locator(WORD_COUNT_TEXT).innerText()
 
@@ -85,10 +85,10 @@ const counterValue = async(page: Page): Promise<number> => {
 
 // Mirror of the engine's wordCount algorithm
 // (packages/muya/src/utils/index.ts) so the test can derive the EXPECTED
-// title-bar value from the exact markdown that is actually loaded — the engine
+// badge value from the exact markdown that is actually loaded — the engine
 // algorithm itself is already unit-covered in
 // packages/muya/src/utils/__tests__/wordCount.spec.ts; this is only used to
-// pin the desktop title-bar's value/mode wiring to the live document.
+// pin the desktop badge's value/mode wiring to the live document.
 const expectedCount = (markdown: string): { word: number; paragraph: number; character: number; all: number } => {
   const paragraph = markdown.split(/\n{2,}/).filter((line) => line).length
   const removedChinese = markdown.replace(/[一-龥]/g, '')
@@ -100,7 +100,7 @@ const expectedCount = (markdown: string): { word: number; paragraph: number; cha
   return { word, paragraph, character, all }
 }
 
-test.describe('Title-bar word counter (item 24)', () => {
+test.describe('Word-count badge (item 24)', () => {
   let app: ElectronApplication
   let page: Page
 
@@ -136,7 +136,7 @@ test.describe('Title-bar word counter (item 24)', () => {
     await expect.poll(() => counterValue(page), { timeout: 5000 }).toBeGreaterThan(before)
 
     // The displayed value matches the engine's wordCount over the exact markdown
-    // that is now loaded (verifies the title-bar tracks the live document, and
+    // that is now loaded (verifies the badge tracks the live document, and
     // that the CJK chars each counted as a word).
     const markdown = await getMarkdownContent(page, app)
     await expect.poll(() => counterValue(page), { timeout: 5000 }).toBe(expectedCount(markdown).word)

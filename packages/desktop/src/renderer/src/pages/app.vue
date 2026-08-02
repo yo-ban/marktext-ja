@@ -8,7 +8,6 @@
         :pathname="pathname"
         :filename="filename"
         :active="windowActive"
-        :word-count="wordCount"
         :platform="platform"
         :is-saved="isSaved"
       />
@@ -28,6 +27,10 @@
         :text-direction="textDirection"
         :platform="platform"
       />
+      <word-count-badge
+        v-if="hasCurrentFile && init"
+        :word-count="wordCount"
+      />
       <command-palette />
       <about-dialog />
       <export-setting-dialog />
@@ -46,6 +49,7 @@ import Recent from '@/components/recent/index.vue'
 import EditorWithTabs from '@/components/editorWithTabs/index.vue'
 import TitleBar from '@/components/titleBar/index.vue'
 import SideBar from '@/components/sideBar/index.vue'
+import WordCountBadge from '@/components/wordCount/index.vue'
 
 // The modal dialogs — and the Element Plus form controls only they use — are
 // split out of the startup bundle. They still mount right after first paint
