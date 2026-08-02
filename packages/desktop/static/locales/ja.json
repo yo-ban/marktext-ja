@@ -415,6 +415,7 @@
         "frontmatterType": "フロントマターのタイプ",
         "superSubScript": "Pandocのmarkdown拡張上付き文字と下付き文字を有効にする",
         "footnote": "Pandocのmarkdown拡張脚注を有効にする",
+        "inlineMath": "シングルダラー($…$)のインライン数式を描画する",
         "isHtmlEnabled": "HTMLレンダリングを有効にする",
         "isGitlabCompatibilityEnabled": "GitLab互換モードを有効にする",
         "sequenceTheme": "シーケンス図のテーマ",
@@ -635,6 +636,8 @@
         "superSubScript": "上付き/下付き文字",
         "footnote": "脚注",
         "footnoteNotes": "脚注",
+        "inlineMath": "インライン数式",
+        "inlineMathNotes": "ドル金額をそのまま書く文章ではオフに",
         "frontmatterType": {
           "jsonBrace": "JSON括弧",
           "jsonSemicolon": "JSONセミコロン",

@@ -49,7 +49,7 @@ export function lexBlock(
     options: ILexOption = DEFAULT_OPTIONS,
 ): TLexedToken[] {
     options = Object.assign({}, DEFAULT_OPTIONS, options);
-    const { math, frontMatter, footnote } = options;
+    const { math, inlineMath, frontMatter, footnote } = options;
     let tokens: (Token | IFrontmatterToken)[] = [];
 
     // Use a per-call Marked instance so extensions don't bleed across calls.
@@ -62,6 +62,7 @@ export function lexBlock(
             mathExtension({
                 throwOnError: false,
                 useKatexRender: false,
+                inlineMath,
             }),
         );
     }
