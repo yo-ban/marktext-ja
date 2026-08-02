@@ -76,6 +76,22 @@ vi.mock('common/filesystem', () => ({
 // the system Node.js that vitest uses.
 vi.mock('ced', () => ({ default: {} }))
 
+// watch() forces polling on macOS and takes a UNC-polling shortcut on Windows,
+// both of which bypass the fallback detection under test. Pin the platform to
+// Linux so these specs behave identically on every dev machine; individual
+// tests flip the flags to cover the platform-specific paths.
+const platformFlags = vi.hoisted(() => ({ isOsx: false, isWindows: false, isLinux: true }))
+
+vi.mock('../../../src/main/config', async(importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>()
+  return {
+    ...actual,
+    get isOsx() { return platformFlags.isOsx },
+    get isWindows() { return platformFlags.isWindows },
+    get isLinux() { return platformFlags.isLinux }
+  }
+})
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -117,6 +133,9 @@ function createMockBrowserWindow(): Record<string, unknown> {
 
 beforeEach(() => {
   vi.useFakeTimers()
+  platformFlags.isOsx = false
+  platformFlags.isWindows = false
+  platformFlags.isLinux = true
   watchers.length = 0
   chokidarWatchMock.mockClear()
   mockReaddir.mockReset()
@@ -296,6 +315,31 @@ describe('Watcher fallback detection', () => {
     // Should have triggered fallback only once (native = 1, fallback uses _startUncPolling)
     expect(chokidarWatchMock).toHaveBeenCalledTimes(1)
     expect(mockW.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not add fallback detection on macOS, where polling is forced', async() => {
+    platformFlags.isOsx = true
+    platformFlags.isLinux = false
+    const { default: WatcherClass } = await loadWatcher()
+    const prefs = createMockPreferences()
+    const win = createMockBrowserWindow()
+    const watcher = new WatcherClass(prefs as never)
+
+    mockReaddir.mockResolvedValue([
+      { name: 'doc.md', isDirectory: () => false }
+    ])
+
+    watcher.watch(win as never, '/mac/dir', 'dir')
+    const mockW = watchers[0]
+
+    mockW.emitter.emit('ready')
+    await vi.runAllTimersAsync()
+    await Promise.resolve()
+
+    // Polling mode never fails silently, so no fallback probe should run.
+    expect(mockReaddir).not.toHaveBeenCalled()
+    expect(mockW.close).not.toHaveBeenCalled()
+    expect(chokidarWatchMock).toHaveBeenCalledTimes(1)
   })
 
   it('does not trigger fallback when watcher was already closed externally', async() => {
