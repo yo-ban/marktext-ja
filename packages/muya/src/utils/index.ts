@@ -329,8 +329,12 @@ export function getParagraphReference(ele: HTMLElement, id: string) {
     };
 }
 
-function visibleLength(str: string) {
-    return [...new Intl.Segmenter().segment(str)].length;
+function codePointLength(str: string) {
+    let length = 0;
+    for (const _codePoint of str)
+        length++;
+
+    return length;
 }
 
 export type TDiff = (string | number | { d: string });
@@ -341,15 +345,29 @@ export type TDiff = (string | number | { d: string });
  */
 export function diffToTextOp(diffs: Diff[]) {
     const op: TDiff[] = [];
+    let end = diffs.length;
 
-    for (const diff of diffs) {
+    // A text operation is implicitly "retain the rest", so a trailing equal
+    // region is never emitted. Skip it before measuring its code points: on an
+    // edit near the start of a long paragraph, counting that unchanged suffix
+    // was an avoidable whole-paragraph pass on every input event.
+    while (end > 0 && diffs[end - 1][0] === 0)
+        end--;
+
+    for (let i = 0; i < end; i++) {
+        const diff = diffs[i];
         switch (diff[0]) {
             case -1:
                 op.push({ d: diff[1] });
                 break;
 
             case 0:
-                op.push(visibleLength(diff[1]));
+                // ot-text-unicode measures skips in Unicode code points. A
+                // grapheme may contain several of them (skin-tone modifiers,
+                // ZWJ sequences, flags, combining marks), so Intl.Segmenter's
+                // user-visible grapheme count places the edit inside that
+                // grapheme and corrupts the state (#5027).
+                op.push(codePointLength(diff[1]));
                 break;
 
             case 1:
@@ -359,12 +377,6 @@ export function diffToTextOp(diffs: Diff[]) {
             default:
                 break;
         }
-    }
-
-    let peak = op[op.length - 1];
-    while (typeof peak === 'number') {
-        op.pop();
-        peak = op[op.length - 1];
     }
 
     return op;

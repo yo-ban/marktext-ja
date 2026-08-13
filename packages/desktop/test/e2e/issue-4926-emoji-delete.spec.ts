@@ -3,6 +3,7 @@ import type { ElectronApplication, Page } from 'playwright'
 import {
   clearRendererErrors,
   expectNoRendererErrors,
+  getMarkdownContent,
   launchWithMarkdown,
   placeCaretInEditor,
   waitForRendererError
@@ -99,5 +100,52 @@ test.describe('Emoji deletion (#4926)', () => {
     await page.keyboard.type('x')
     await expect(paragraph).toHaveText('abcx')
     await expectRendererToRemainHealthy()
+  })
+
+  test('typing after a compound emoji preserves the JSON state (#5027)', async() => {
+    const compoundText = 'A👩🏽‍💻B'
+    const expected = 'A👩🏽‍💻!B'
+    const paragraph = await pasteText(compoundText)
+
+    const caretPlaced = await page.evaluate(() => {
+      const root = document.querySelector('.editor-component') as HTMLElement | null
+      const target = root?.querySelector('span.mu-paragraph-content') ?? null
+      if (!root || !target) return false
+
+      const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT)
+      let textNode = walker.nextNode()
+      while (textNode instanceof Text && !textNode.data.includes('B')) {
+        textNode = walker.nextNode()
+      }
+      if (!(textNode instanceof Text)) return false
+
+      // Place the DOM caret before B, after the full woman-technologist
+      // grapheme (woman + skin tone + ZWJ + laptop).
+      const offset = textNode.data.indexOf('B')
+      if (offset < 0) return false
+
+      root.focus()
+      const range = document.createRange()
+      range.setStart(textNode, offset)
+      range.collapse(true)
+      const selection = window.getSelection()
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+      document.dispatchEvent(new Event('selectionchange'))
+      root.dispatchEvent(
+        new KeyboardEvent('keyup', { key: 'ArrowRight', bubbles: true, cancelable: true })
+      )
+      return true
+    })
+    expect(caretPlaced).toBe(true)
+
+    await page.keyboard.type('!')
+    await expect(paragraph).toHaveText(expected)
+    await expectRendererToRemainHealthy()
+
+    // Switching modes flushes the deferred OT batch and reads from JSONState.
+    // The old grapheme-count offset inserted `!` inside the emoji there even
+    // though the contenteditable DOM initially looked correct.
+    expect((await getMarkdownContent(page, app)).trim()).toBe(expected)
   })
 })

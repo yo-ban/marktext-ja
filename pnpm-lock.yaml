@@ -471,9 +471,6 @@ importers:
       '@muyajs/core':
         specifier: workspace:*
         version: link:..
-      intl-segmenter-polyfill:
-        specifier: ^0.4.4
-        version: 0.4.4
     devDependencies:
       '@axe-core/playwright':
         specifier: ^4.11.3
@@ -493,9 +490,6 @@ importers:
       '@muyajs/core':
         specifier: workspace:*
         version: link:..
-      intl-segmenter-polyfill:
-        specifier: ^0.4.4
-        version: 0.4.4
 
 packages:
 
@@ -4215,9 +4209,6 @@ packages:
   fast-string-width@3.0.2:
     resolution: {integrity: sha512-gX8LrtNEI5hq8DVUfRQMbr5lpaS4nMIWV+7XEbXk2b8kiQIizgnlr12B4dA3ZEx3308ze0O4Q1R+cHts8kyUJg==}
 
-  fast-text-encoding@1.0.6:
-    resolution: {integrity: sha512-VhXlQgj9ioXCqGstD37E/HBeqEGV/qOD/kmbVG8h5xKBYvM1L3lR1Zn4555cQ8GkYbJa8aJSipLPndE1k6zK2w==}
-
   fast-uri@3.1.2:
     resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
 
@@ -4639,9 +4630,6 @@ packages:
   internmap@2.0.3:
     resolution: {integrity: sha512-5Hh7Y1wQbvY5ooGgPbDaL5iYLAPzMTUrjMulskHLH6wnv/A+1q5rgEaiuqEjB+oxGXIVZs1FF+R/KPN3ZSQYYg==}
     engines: {node: '>=12'}
-
-  intl-segmenter-polyfill@0.4.4:
-    resolution: {integrity: sha512-dIOcmvH+Q1WYGkjMqxPfaCgHEwOegH5UPcd/LLeaeY8aguHadC46MzGb40q8C1LrsuyJxJGKeKqoVtIh9ADRXQ==}
 
   irregular-plurals@1.4.0:
     resolution: {integrity: sha512-kniTIJmaZYiwa17eTtWIfm0K342seyugl6vuC8DiiyiRAJWAVlLkqGCI0Im0neo0TkXw+pRcKaBPRdcKHnQJ6Q==}
@@ -11682,8 +11670,6 @@ snapshots:
     dependencies:
       fast-string-truncated-width: 3.0.3
 
-  fast-text-encoding@1.0.6: {}
-
   fast-uri@3.1.2: {}
 
   fast-wrap-ansi@0.2.2:
@@ -12133,10 +12119,6 @@ snapshots:
   internmap@1.0.1: {}
 
   internmap@2.0.3: {}
-
-  intl-segmenter-polyfill@0.4.4:
-    dependencies:
-      fast-text-encoding: 1.0.6
 
   irregular-plurals@1.4.0: {}
 

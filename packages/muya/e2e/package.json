@@ -17,8 +17,7 @@
         "e2e:install": "playwright install --with-deps chromium firefox webkit"
     },
     "dependencies": {
-        "@muyajs/core": "workspace:*",
-        "intl-segmenter-polyfill": "^0.4.4"
+        "@muyajs/core": "workspace:*"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.11.3",

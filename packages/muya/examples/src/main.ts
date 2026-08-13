@@ -1,4 +1,3 @@
-/* eslint-disable antfu/no-top-level-await */
 import type { IMuyaOptions, TState } from '@muyajs/core';
 import {
     CodeBlockLanguageSelector,
@@ -33,15 +32,6 @@ import {
 import { DEFAULT_MARKDOWN } from './data';
 
 import './style.css';
-
-// ---------- Firefox Intl.Segmenter polyfill ----------
-
-// eslint-disable-next-line no-restricted-syntax -- structural widening over the const Intl namespace; alternative is augmenting global Intl which leaks polyfill semantics into every consumer
-const intlNs = Intl as unknown as { Segmenter?: typeof Intl.Segmenter };
-if (!intlNs.Segmenter) {
-    const polyfill = await import('intl-segmenter-polyfill/dist/bundled');
-    intlNs.Segmenter = await polyfill.createIntlSegmenterPolyfill() as typeof Intl.Segmenter;
-}
 
 // ---------- ImageEditTool callbacks ----------
 

@@ -35,21 +35,4 @@ declare global {
         // the spec asserts it remains `undefined`.
         __pwned?: boolean;
     }
-
-    // `Intl.Segmenter` (Stage 4, ES2022) isn't in the ES2020 lib host/ targets.
-    // Mirrors the minimal shape from examples/src/vite-env.d.ts.
-    namespace Intl {
-        interface ISegmenterOptions {
-            granularity?: 'grapheme' | 'word' | 'sentence';
-        }
-        interface ISegmentData {
-            segment: string;
-            index: number;
-            input: string;
-        }
-        class Segmenter {
-            constructor(locales?: string | string[], options?: ISegmenterOptions);
-            segment(input: string): Iterable<ISegmentData>;
-        }
-    }
 }

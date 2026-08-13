@@ -1,4 +1,3 @@
-/* eslint-disable antfu/no-top-level-await */
 import type { ILocale, IMuyaOptions, TState } from '@muyajs/core';
 import {
     CodeBlockLanguageSelector,
@@ -30,22 +29,6 @@ import {
     zhTW,
 } from '@muyajs/core';
 import './style.css';
-
-// Intl.Segmenter polyfill — required on Firefox; harmless on Chromium.
-// The DOM lib types `Intl` as a const namespace, so a structural cast is
-// unavoidable for the existence check + assignment. Pull the unsafe
-// boundary into one tightly-scoped helper so the rest of host/main.ts
-// stays clean.
-async function ensureIntlSegmenter(): Promise<void> {
-    interface ISegmenterHolder { Segmenter?: typeof Intl.Segmenter }
-    // eslint-disable-next-line no-restricted-syntax -- structural widening over the const Intl namespace; alternative is augmenting global Intl which leaks polyfill semantics into every consumer
-    const holder = Intl as unknown as ISegmenterHolder;
-    if (holder.Segmenter)
-        return;
-    const polyfill = await import('intl-segmenter-polyfill/dist/bundled');
-    holder.Segmenter = await polyfill.createIntlSegmenterPolyfill() as typeof Intl.Segmenter;
-}
-await ensureIntlSegmenter();
 
 // Deterministic mocks: specs assert these exact URLs / delays.
 const PICKED_IMAGE_URL = 'https://example.test/picked-image.png';
