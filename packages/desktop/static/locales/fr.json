@@ -3,7 +3,9 @@
     "counter": {
       "words": "Mots",
       "characters": "Caractères",
-      "paragraphs": "Paragraphes"
+      "paragraphs": "Paragraphes",
+      "document": "Document",
+      "selection": "Sélection"
     },
     "file": {
       "file": "Fichier",
@@ -98,15 +100,15 @@
       "checkUpdates": "Vérifier les mises à jour"
     },
     "marktext": {
-      "title": "MarkText",
-      "about": "À propos de MarkText",
+      "title": "MarkText-ja",
+      "about": "À propos de MarkText-ja",
       "checkUpdates": "Vérifier les mises à jour...",
       "preferences": "Préférences",
       "services": "Services",
-      "hide": "Masquer MarkText",
+      "hide": "Masquer MarkText-ja",
       "hideOthers": "Masquer les autres",
       "showAll": "Tout afficher",
-      "quit": "Quitter MarkText"
+      "quit": "Quitter MarkText-ja"
     },
     "view": {
       "view": "Affichage",
@@ -114,6 +116,7 @@
       "toggleTabbar": "Basculer la barre d'onglets",
       "commandPalette": "Palette de commandes",
       "sourceCodeMode": "Mode code source",
+      "showSourceLineNumbers": "Afficher les numéros de ligne du code source",
       "typewriterMode": "Mode machine à écrire",
       "focusMode": "Mode focus",
       "toggleTableOfContents": "Basculer la table des matières",
@@ -353,7 +356,7 @@
   },
   "import": {
     "title": "Importer ou ouvrir",
-    "description": "Glissez-déposez ici pour importer votre contenu dans MarkText"
+    "description": "Glissez-déposez ici pour importer votre contenu dans MarkText-ja"
   },
   "preferences": {
     "title": "Préférences",
@@ -382,10 +385,10 @@
         "hideScrollbar": "Masquer les barres de défilement",
         "wordWrapInToc": "Activer le retour à la ligne dans la table des matières",
         "fileSortBy": "Trier les fichiers dans le dossier ouvert par heure de création, heure de modification et titre",
-        "startUpAction": "L'action après le démarrage de MarkText, ouvrir le dernier contenu édité, ouvrir le dossier spécifié ou une page vierge",
+        "startUpAction": "L'action après le démarrage de MarkText-ja, ouvrir le dernier contenu édité, ouvrir le dossier spécifié ou une page vierge",
         "restoreLayoutState": "Restaurer l'état précédent de l'éditeur au démarrage",
         "defaultDirectoryToOpen": "Le répertoire par défaut qui devrait être ouvert au démarrage quand startUp=folder",
-        "language": "La langue utilisée par MarkText",
+        "language": "La langue utilisée par MarkText-ja",
         "editorFontFamily": "Famille de police de l'éditeur",
         "fontSize": "Taille de police en pixels",
         "lineHeight": "Hauteur de ligne",
@@ -409,7 +412,7 @@
         "preferLooseListItem": "Le type de liste préféré",
         "bulletListMarker": "Le marqueur utilisé dans la liste à puces",
         "orderListDelimiter": "Le délimiteur utilisé dans la liste ordonnée",
-        "preferHeadingStyle": "Le style de titre préféré dans MarkText",
+        "preferHeadingStyle": "Le style de titre préféré dans MarkText-ja",
         "tabSize": "Remplacer la tabulation par x espaces",
         "listIndentation": "Sélectionner l'indentation de liste",
         "frontmatterType": "Le type de frontmatter",
@@ -420,7 +423,7 @@
         "isGitlabCompatibilityEnabled": "Activer le mode de compatibilité GitLab",
         "sequenceTheme": "Thème du diagramme de séquence",
         "plantumlServer": "URL du serveur PlantUML",
-        "theme": "Sélectionner le thème utilisé dans MarkText",
+        "theme": "Sélectionner le thème utilisé dans MarkText-ja",
         "followSystemTheme": "Suivre le thème du système",
         "lightModeTheme": "Thème à utiliser lorsque le système est en mode clair",
         "darkModeTheme": "Thème à utiliser lorsque le système est en mode sombre",
@@ -627,7 +630,7 @@
         "neverDetected": "Jamais détecté",
         "neverSuccessful": "Jamais réussi"
       },
-      "defaultBehavior": "Comportement par défaut après avoir collé ou glissé une image dans MarkText"
+      "defaultBehavior": "Comportement par défaut après avoir collé ou glissé une image dans MarkText-ja"
     },
     "markdown": {
       "title": "Markdown",
@@ -747,7 +750,7 @@
   },
   "commands": {
     "mt": {
-      "hide": "Masquer MarkText",
+      "hide": "Masquer MarkText-ja",
       "hideOthers": "Masquer les autres"
     },
     "file": {
@@ -917,7 +920,7 @@
     "unsafeFileMessage": "Ce lien ouvre un fichier pouvant exécuter du code",
     "unsafeFileDetail": "« {name} » est un fichier exécutable ou un script. L’ouvrir pourrait exécuter des programmes sur votre ordinateur. Ne continuez que si vous faites confiance à ce document.",
     "openAnyway": "Ouvrir quand même",
-    "updateDownloadedDetail": "Install it now? MarkText will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
+    "updateDownloadedDetail": "Install it now? MarkText-ja will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
     "updateDownloadedMessage": "Update downloaded",
     "updateInstallNow": "Quit and Install",
     "updateLater": "Later",
@@ -929,7 +932,7 @@
     "exportFailureTitle": "Export failure",
     "linkSpacesTitle": "Links cannot contain spaces",
     "linkSpacesMessage": "Either URI encode: <code>My%20Link.md</code> <br> or wrap it in brackets: <br> <code>&lt;./My Link.md&gt;</code>. <br> See CommonMark #488 for details.",
-    "crashMessage": "MarkText has crashed",
+    "crashMessage": "MarkText-ja has crashed",
     "crashReload": "Reload",
     "crashKeepOpen": "Keep It Open",
     "updateAvailableMessage": "Found an update, do you want download and install now?",
@@ -939,7 +942,7 @@
     "configSchemaViolation": "Violation du schéma de configuration",
     "copyError": "Erreur de copie",
     "initializationFailed": "Échec de l'initialisation",
-    "otherInstanceDetected": "Une autre instance de MarkText détectée en cours d'exécution",
+    "otherInstanceDetected": "Une autre instance de MarkText-ja détectée en cours d'exécution",
     "report": "Signaler",
     "startupError": "Erreur de démarrage",
     "terminatedDueToError": "Terminé en raison d'une erreur",

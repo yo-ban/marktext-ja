@@ -46,10 +46,11 @@ import { useMainStore } from '@/store'
 import bus from '../../bus'
 import MarkTextLogo from '../../assets/images/logo.png'
 import { useI18n } from 'vue-i18n'
+import { PRODUCT_NAME } from '@shared/product'
 
 const { t } = useI18n()
 
-const name = 'MarkText'
+const name = PRODUCT_NAME
 const copyright = t('about.copyright', { year: new Date().getFullYear() })
 const copyrightContributors = t('about.copyrightContributors')
 const showAboutDialog = ref(false)

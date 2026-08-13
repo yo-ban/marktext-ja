@@ -48,7 +48,7 @@ If you fix a bug:
 
 ### Where should I start?
 
-A good way to start is to find an [issue](https://github.com/marktext/marktext/issues) labeled as `bug`, `help wanted` or `feature request`. The `good first issue` issues are good for newcomers. Please discuss the solution for larger issues first and after the final solution is approved by the MarkText members, you can submit/work on the PR. For small changes you can directly open a PR.
+A good way to start is to find an [issue](https://github.com/yo-ban/marktext-ja/issues) labeled as `bug`, `help wanted` or `feature request`. The `good first issue` issues are good for newcomers. Please discuss the solution for larger issues first and after the final solution is approved by the MarkText-ja maintainers, you can submit/work on the PR. For small changes you can directly open a PR.
 
 Other ways to help:
 

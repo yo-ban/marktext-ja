@@ -3,7 +3,9 @@
     "counter": {
       "words": "Palabras",
       "characters": "Caracteres",
-      "paragraphs": "Párrafos"
+      "paragraphs": "Párrafos",
+      "document": "Documento",
+      "selection": "Selección"
     },
     "file": {
       "file": "Archivo",
@@ -98,15 +100,15 @@
       "checkUpdates": "Buscar Actualizaciones"
     },
     "marktext": {
-      "title": "MarkText",
-      "about": "Acerca de MarkText",
+      "title": "MarkText-ja",
+      "about": "Acerca de MarkText-ja",
       "checkUpdates": "Buscar Actualizaciones...",
       "preferences": "Preferencias",
       "services": "Servicios",
-      "hide": "Ocultar MarkText",
+      "hide": "Ocultar MarkText-ja",
       "hideOthers": "Ocultar Otros",
       "showAll": "Mostrar",
-      "quit": "Salir de MarkText"
+      "quit": "Salir de MarkText-ja"
     },
     "view": {
       "view": "Ver",
@@ -114,6 +116,7 @@
       "toggleTabbar": "Alternar Barra de Pestañas",
       "commandPalette": "Paleta de Comandos",
       "sourceCodeMode": "Modo Código Fuente",
+      "showSourceLineNumbers": "Mostrar números de línea del código fuente",
       "typewriterMode": "Modo Máquina de Escribir",
       "focusMode": "Modo Enfoque",
       "toggleTableOfContents": "Alternar Tabla de Contenidos",
@@ -353,7 +356,7 @@
   },
   "import": {
     "title": "Importar o Abrir",
-    "description": "Arrastra aquí para obtener tu contenido en MarkText"
+    "description": "Arrastra aquí para obtener tu contenido en MarkText-ja"
   },
   "preferences": {
     "title": "Preferencias",
@@ -382,10 +385,10 @@
         "hideScrollbar": "Si ocultar las barras de desplazamiento",
         "wordWrapInToc": "Si habilitar el ajuste de línea en la tabla de contenidos",
         "fileSortBy": "Ordenar archivos en la carpeta abierta por tiempo de creación, tiempo de modificación y título",
-        "startUpAction": "La acción después del inicio de MarkText, abrir el último contenido editado, abrir la carpeta especificada o página en blanco",
+        "startUpAction": "La acción después del inicio de MarkText-ja, abrir el último contenido editado, abrir la carpeta especificada o página en blanco",
         "restoreLayoutState": "Restaurar el estado anterior del editor al iniciar",
         "defaultDirectoryToOpen": "El directorio predeterminado que debe abrirse al inicio cuando startUp=folder",
-        "language": "El idioma que usa MarkText",
+        "language": "El idioma que usa MarkText-ja",
         "editorFontFamily": "Familia de fuente del editor",
         "fontSize": "Tamaño de fuente en píxeles",
         "lineHeight": "Altura de línea",
@@ -409,7 +412,7 @@
         "preferLooseListItem": "El tipo de lista preferido",
         "bulletListMarker": "El marcador usado en lista de viñetas",
         "orderListDelimiter": "El delimitador usado en lista ordenada",
-        "preferHeadingStyle": "El estilo de encabezado preferido en MarkText",
+        "preferHeadingStyle": "El estilo de encabezado preferido en MarkText-ja",
         "tabSize": "Reemplazar la tabulación con x espacios",
         "listIndentation": "Seleccionar la sangría de lista",
         "frontmatterType": "El tipo de frontmatter",
@@ -420,7 +423,7 @@
         "isGitlabCompatibilityEnabled": "Habilitar modo de compatibilidad GitLab",
         "sequenceTheme": "Tema del diagrama de secuencia",
         "plantumlServer": "URL del servidor PlantUML",
-        "theme": "Seleccionar el tema usado en MarkText",
+        "theme": "Seleccionar el tema usado en MarkText-ja",
         "followSystemTheme": "Seguir tema del sistema",
         "lightModeTheme": "Tema a usar cuando el sistema está en modo claro",
         "darkModeTheme": "Tema a usar cuando el sistema está en modo oscuro",
@@ -627,7 +630,7 @@
         "neverDetected": "Nunca detectado",
         "neverSuccessful": "Nunca exitoso"
       },
-      "defaultBehavior": "El comportamiento predeterminado después de pegar o arrastrar la imagen a MarkText"
+      "defaultBehavior": "El comportamiento predeterminado después de pegar o arrastrar la imagen a MarkText-ja"
     },
     "markdown": {
       "title": "Markdown",
@@ -747,7 +750,7 @@
   },
   "commands": {
     "mt": {
-      "hide": "Ocultar MarkText",
+      "hide": "Ocultar MarkText-ja",
       "hideOthers": "Ocultar Otros"
     },
     "file": {
@@ -917,7 +920,7 @@
     "unsafeFileMessage": "Este enlace abre un archivo que puede ejecutar código",
     "unsafeFileDetail": "«{name}» es un archivo ejecutable o de script. Abrirlo podría ejecutar programas en tu equipo. Continúa solo si confías en este documento.",
     "openAnyway": "Abrir de todos modos",
-    "updateDownloadedDetail": "Install it now? MarkText will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
+    "updateDownloadedDetail": "Install it now? MarkText-ja will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
     "updateDownloadedMessage": "Update downloaded",
     "updateInstallNow": "Quit and Install",
     "updateLater": "Later",
@@ -929,7 +932,7 @@
     "exportFailureTitle": "Export failure",
     "linkSpacesTitle": "Links cannot contain spaces",
     "linkSpacesMessage": "Either URI encode: <code>My%20Link.md</code> <br> or wrap it in brackets: <br> <code>&lt;./My Link.md&gt;</code>. <br> See CommonMark #488 for details.",
-    "crashMessage": "MarkText has crashed",
+    "crashMessage": "MarkText-ja has crashed",
     "crashReload": "Reload",
     "crashKeepOpen": "Keep It Open",
     "updateAvailableMessage": "Found an update, do you want download and install now?",
@@ -939,7 +942,7 @@
     "configSchemaViolation": "Violación del esquema de configuración",
     "copyError": "Error de copia",
     "initializationFailed": "Falló la inicialización {hint}",
-    "otherInstanceDetected": "Otra instancia de MarkText ya está ejecutándose",
+    "otherInstanceDetected": "Otra instancia de MarkText-ja ya está ejecutándose",
     "report": "Reportar",
     "startupError": "Error de inicio",
     "terminatedDueToError": "Terminado debido a error",

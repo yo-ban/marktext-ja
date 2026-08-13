@@ -1,7 +1,7 @@
 # Third Party Notices
 -------------------------------------------------
 
-This file contains all third-party packages that are bundled and shipped with MarkText.
+This file contains all third-party packages that are bundled and shipped with MarkText-ja.
 
 -------------------------------------------------
 # Summary
@@ -388,7 +388,6 @@ undefined
 # webfontloader (Apache-2.0)
 -------------------------------------------------
 undefined
-
 
 
 

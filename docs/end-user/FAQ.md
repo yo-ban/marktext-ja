@@ -10,7 +10,7 @@ MarkText is a desktop application and available for:
 
 ### Is MarkText open-source and free?
 
-Yes, MarkText is licensed under the [MIT](https://github.com/marktext/marktext/blob/develop/LICENSE) license and completely free for everyone. The source-code is available on [GitHub](https://github.com/marktext/marktext).
+Yes, MarkText-ja is licensed under the [MIT](https://github.com/yo-ban/marktext-ja/blob/develop/LICENSE) license and completely free for everyone. The source code is available on [GitHub](https://github.com/yo-ban/marktext-ja). MarkText-ja is derived from the original [MarkText](https://github.com/marktext/marktext) project.
 
 ### Can I use MarkText as note management/taking app?
 
@@ -30,7 +30,7 @@ Yes, please see [here](PORTABLE.md) for further information.
 
 ### How can I report bugs and problems
 
-You can report bugs and problems via our [GitHub issue tracker](https://github.com/marktext/marktext/issues). Please provide a detailed description of the problem to better solve the issue.
+You can report bugs and problems via the [MarkText-ja issue tracker](https://github.com/yo-ban/marktext-ja/issues). Please provide a detailed description of the problem to better solve the issue.
 
 ### I cannot launch MarkText on Linux (SUID sandbox)
 

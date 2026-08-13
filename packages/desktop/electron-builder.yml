@@ -1,5 +1,9 @@
-appId: com.github.marktext.marktext
-productName: marktext
+appId: com.github.yo-ban.marktext-ja
+productName: MarkText-ja
+publish:
+  provider: github
+  owner: yo-ban
+  repo: marktext-ja
 directories:
   buildResources: build
   output: ../../dist
@@ -96,14 +100,14 @@ fileAssociations:
     role: Editor
     icon: icons/md.ico
 win:
-  executableName: marktext
-  artifactName: 'marktext-win-${arch}-${version}.${ext}'
+  executableName: marktext-ja
+  artifactName: 'marktext-ja-win-${arch}-${version}.${ext}'
   target:
     - target: 'nsis'
     - target: 'zip'
   icon: static/icon.ico
 nsis:
-  artifactName: 'marktext-win-${arch}-${version}-setup.${ext}'
+  artifactName: 'marktext-ja-win-${arch}-${version}-setup.${ext}'
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: true
@@ -113,7 +117,7 @@ nsis:
   perMachine: false
   include: windows/installer.nsh
 mac:
-  artifactName: 'marktext-mac-${arch}-${version}.${ext}'
+  artifactName: 'marktext-ja-mac-${arch}-${version}.${ext}'
   entitlementsInherit: build/mac/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -125,7 +129,7 @@ mac:
     - dmg
     - zip
 dmg:
-  artifactName: 'marktext-mac-${arch}-${version}.${ext}'
+  artifactName: 'marktext-ja-mac-${arch}-${version}.${ext}'
   contents:
     - x: 410
       y: 240
@@ -135,18 +139,19 @@ dmg:
       y: 240
       type: 'file'
 linux:
-  artifactName: 'marktext-linux-${version}.${ext}'
-  executableName: 'marktext'
-  description: 'A simple and elegant open-source markdown editor that focused on speed and usability.'
-  maintainer: 'MarkText Contributors'
+  artifactName: 'marktext-ja-linux-${version}.${ext}'
+  executableName: 'marktext-ja'
+  syncDesktopName: true
+  description: 'A Japanese-first distribution of the MarkText Markdown editor.'
+  maintainer: 'MarkText-ja Contributors'
   category: 'Office;TextEditor;Utility'
   mimeTypes:
     - 'text/markdown'
   icon: 'static/icon.png'
   desktop:
     entry:
-      StartupWMClass: 'marktext'
-      Keywords: 'marktext;'
+      StartupWMClass: 'marktext-ja'
+      Keywords: 'marktext-ja;marktext;'
   target:
     - AppImage
     - snap

@@ -5,6 +5,7 @@ import fs from 'fs-extra'
 import { ipcMain } from 'electron'
 import commandExists from 'command-exists'
 import { isImageFile } from 'common/filesystem/paths'
+import { PRODUCT_SLUG } from '../config'
 
 const buildPreferredPathEnv = (): string => {
   const extras =
@@ -131,7 +132,10 @@ const uploadByPicgo = async(localPath: string): Promise<string> => {
   // `x";rm -rf ~;".png` run arbitrary commands. Copy the image to a temp path
   // whose name we generate, so no document-controlled string ever reaches a
   // command line.
-  const safePath = path.join(tmpdir(), `marktext-upload-${Date.now()}${safeExtension(localPath)}`)
+  const safePath = path.join(
+    tmpdir(),
+    `${PRODUCT_SLUG}-upload-${Date.now()}${safeExtension(localPath)}`
+  )
   await fs.copy(localPath, safePath)
   try {
     return await runPicgo(cmd, safePath)

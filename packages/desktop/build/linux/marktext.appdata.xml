@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop">
-  <id>com.github.marktext.marktext</id>
+  <id>com.github.yo-ban.marktext-ja</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
-  <name>MarkText</name>
-  <summary>Next generation markdown editor</summary>
+  <name>MarkText-ja</name>
+  <summary>Japanese-first MarkText markdown editor</summary>
   <description>
     <p>
-      MarkText is a free and open-source realtime preview markdown editor which support both CommonMark Spec and GitHub Flavored Markdown Spec. It is a concise text editor, dedicated to improving your writing efficiency.
+      MarkText-ja is a Japanese-first distribution of the free and open-source MarkText realtime preview markdown editor. It supports both CommonMark and GitHub Flavored Markdown.
     </p>
     <p>Features:</p>
     <ul>
@@ -19,8 +19,8 @@
       <li>Various edit modes and themes: source code mode, typewriter mode, focus mode</li>
     </ul>
   </description>
-  <url type="homepage">https://github.com/marktext/marktext/</url>
-  <url type="bugtracker">https://github.com/marktext/marktext/issues</url>
+  <url type="homepage">https://github.com/yo-ban/marktext-ja/</url>
+  <url type="bugtracker">https://github.com/yo-ban/marktext-ja/issues</url>
   <screenshots>
     <screenshot type="default">
       <caption>Light theme</caption>
@@ -80,20 +80,4 @@
     <content_attribute id="money-purchasing">none</content_attribute>
     <content_attribute id="money-gambling">none</content_attribute>
   </content_rating>
-  <releases>
-    <release date="2022-03-07" version="0.17.1"/>
-    <release date="2022-02-24" version="0.17.0"/>
-    <release date="2020-12-28" version="0.16.3"/>
-    <release date="2020-06-18" version="0.16.2"/>
-    <release date="2020-03-27" version="0.16.1"/>
-    <release date="2020-03-25" version="0.16.0"/>
-    <release date="2019-09-28" version="0.15.1"/>
-    <release date="2019-08-06" version="0.15.0"/>
-    <release date="2019-04-12" version="0.14.0"/>
-    <release date="2018-11-21" version="0.13.65"/>
-    <release date="2018-10-28" version="0.13.53"/>
-    <release date="2018-06-19" version="0.12.25"/>
-    <release date="2018-06-17" version="0.12.20"/>
-    <release date="2018-05-29" version="0.11.42"/>
-  </releases>
 </component>

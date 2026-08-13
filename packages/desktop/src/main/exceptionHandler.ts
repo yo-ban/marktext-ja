@@ -11,6 +11,7 @@ import os from 'os'
 import log from 'electron-log'
 import { createAndOpenGitHubIssueUrl } from './utils/createGitHubIssue'
 import { t } from './i18n'
+import { PRODUCT_NAME, PRODUCT_SLUG } from './config'
 
 type ErrorType = 'main' | 'renderer'
 type Logger = (s: string) => void
@@ -94,7 +95,7 @@ ${title}.
 
 ### Version
 
-MarkText: ${MARKTEXT_VERSION_STRING}
+${PRODUCT_NAME}: ${MARKTEXT_VERSION_STRING}
 Operating system: ${getOSInformation()}`
         )
         break
@@ -127,8 +128,8 @@ const setupExceptionHandler = (): void => {
 
   // start crashReporter to save core dumps to temporary folder
   crashReporter.start({
-    companyName: 'marktext',
-    productName: 'marktext',
+    companyName: PRODUCT_SLUG,
+    productName: PRODUCT_NAME,
     submitURL: 'http://0.0.0.0/',
     uploadToServer: false,
     compress: true

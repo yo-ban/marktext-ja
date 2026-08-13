@@ -3,7 +3,9 @@
     "counter": {
       "words": "単語数",
       "characters": "文字数",
-      "paragraphs": "段落数"
+      "paragraphs": "段落数",
+      "document": "文書",
+      "selection": "選択範囲"
     },
     "file": {
       "file": "ファイル",
@@ -98,15 +100,15 @@
       "checkUpdates": "アップデートを確認"
     },
     "marktext": {
-      "title": "MarkText",
-      "about": "MarkTextについて",
+      "title": "MarkText-ja",
+      "about": "MarkText-jaについて",
       "checkUpdates": "アップデートを確認...",
       "preferences": "環境設定",
       "services": "サービス",
-      "hide": "MarkTextを隠す",
+      "hide": "MarkText-jaを隠す",
       "hideOthers": "他を隠す",
       "showAll": "すべて表示",
-      "quit": "MarkTextを終了"
+      "quit": "MarkText-jaを終了"
     },
     "view": {
       "view": "表示",
@@ -114,6 +116,7 @@
       "toggleTabbar": "タブバーの切り替え",
       "commandPalette": "コマンドパレット",
       "sourceCodeMode": "ソースコードモード",
+      "showSourceLineNumbers": "ソースコードの行番号を表示",
       "typewriterMode": "タイプライターモード",
       "focusMode": "フォーカスモード",
       "toggleTableOfContents": "目次の切り替え",
@@ -353,7 +356,7 @@
   },
   "import": {
     "title": "インポートまたは開く",
-    "description": "ここにドラッグしてMarkTextにコンテンツをインポート"
+    "description": "ここにドラッグしてMarkText-jaにコンテンツをインポート"
   },
   "preferences": {
     "title": "環境設定",
@@ -382,10 +385,10 @@
         "hideScrollbar": "スクロールバーを非表示にするかどうか",
         "wordWrapInToc": "目次で自動改行を有効にするかどうか",
         "fileSortBy": "開いたフォルダ内のファイルを作成時刻、変更時刻、タイトルで並べ替え",
-        "startUpAction": "MarkText起動後のアクション、最後に編集したコンテンツを開く、指定されたフォルダを開く、または空白ページ",
+        "startUpAction": "MarkText-ja起動後のアクション、最後に編集したコンテンツを開く、指定されたフォルダを開く、または空白ページ",
         "restoreLayoutState": "起動時に前回のエディター状態を復元",
         "defaultDirectoryToOpen": "startUp=folderの場合に起動時に開かれるデフォルトディレクトリ",
-        "language": "MarkTextが使用する言語",
+        "language": "MarkText-jaが使用する言語",
         "editorFontFamily": "エディターのフォントファミリー",
         "fontSize": "フォントサイズ（ピクセル）",
         "lineHeight": "行の高さ",
@@ -394,6 +397,7 @@
         "codeFontSize": "コードブロックのフォントサイズ、範囲は12〜18",
         "codeFontFamily": "コードブロックで使用されるフォントファミリー",
         "codeBlockLineNumbers": "行番号を表示するかどうか",
+        "sourceLineNumberFrequency": "ソースコードモードで行番号を表示する間隔",
         "trimUnnecessaryCodeBlockEmptyLines": "コードブロックの最初と最後の空行をトリミング",
         "autoPairBracket": "編集時に自動的に括弧をペアにする",
         "autoPairMarkdownSyntax": "Markdown構文の自動補完",
@@ -409,7 +413,7 @@
         "preferLooseListItem": "優先されるリストタイプ",
         "bulletListMarker": "箇条書きリストで使用されるマーカー",
         "orderListDelimiter": "順序付きリストで使用される区切り文字",
-        "preferHeadingStyle": "MarkTextで優先される見出しスタイル",
+        "preferHeadingStyle": "MarkText-jaで優先される見出しスタイル",
         "tabSize": "タブをx個のスペースに置き換える",
         "listIndentation": "リストのインデントを選択",
         "frontmatterType": "フロントマターのタイプ",
@@ -420,7 +424,7 @@
         "isGitlabCompatibilityEnabled": "GitLab互換モードを有効にする",
         "sequenceTheme": "シーケンス図のテーマ",
         "plantumlServer": "PlantUMLサーバーのURL",
-        "theme": "MarkTextで使用するテーマを選択",
+        "theme": "MarkText-jaで使用するテーマを選択",
         "followSystemTheme": "システムのテーマに従う",
         "lightModeTheme": "システムがライトモードの時に使用するテーマ",
         "darkModeTheme": "システムがダークモードの時に使用するテーマ",
@@ -521,7 +525,13 @@
         "lineHeight": "行の高さ",
         "fontFamily": "フォントファミリー",
         "maxWidth": "最大幅",
-        "maxWidthNotes": "エディターコンテンツの最大幅"
+        "maxWidthNotes": "エディターコンテンツの最大幅",
+        "sourceLineNumbers": {
+          "title": "ソースコードの行番号",
+          "off": "表示しない",
+          "everyLine": "すべての行",
+          "everyNLines": "{frequency}行ごと"
+        }
       },
       "codeBlock": {
         "title": "コードブロック",
@@ -627,7 +637,7 @@
         "neverDetected": "検出されたことがない",
         "neverSuccessful": "成功したことがない"
       },
-      "defaultBehavior": "MarkTextに画像を貼り付けまたはドラッグした後のデフォルト動作"
+      "defaultBehavior": "MarkText-jaに画像を貼り付けまたはドラッグした後のデフォルト動作"
     },
     "markdown": {
       "title": "Markdown",
@@ -747,7 +757,7 @@
   },
   "commands": {
     "mt": {
-      "hide": "MarkTextを隠す",
+      "hide": "MarkText-jaを隠す",
       "hideOthers": "他を隠す"
     },
     "file": {
@@ -917,7 +927,7 @@
     "unsafeFileMessage": "このリンクはコードを実行できるファイルを開きます",
     "unsafeFileDetail": "「{name}」は実行可能ファイルまたはスクリプトファイルです。開くとコンピューター上でプログラムが実行される可能性があります。この文書を信頼できる場合のみ続行してください。",
     "openAnyway": "それでも開く",
-    "updateDownloadedDetail": "今すぐインストールしますか?MarkText は通常の手順で終了し、未保存のドキュメントがあれば先に保存を確認します。「後で」を選ぶと、次回終了時にインストールされます。",
+    "updateDownloadedDetail": "今すぐインストールしますか?MarkText-ja は通常の手順で終了し、未保存のドキュメントがあれば先に保存を確認します。「後で」を選ぶと、次回終了時にインストールされます。",
     "updateDownloadedMessage": "アップデートをダウンロードしました",
     "updateInstallNow": "終了してインストール",
     "updateLater": "後で",
@@ -929,7 +939,7 @@
     "exportFailureTitle": "エクスポートに失敗しました",
     "linkSpacesTitle": "リンクに空白は使えません",
     "linkSpacesMessage": "URI エンコードするか: <code>My%20Link.md</code> <br> 山括弧で囲んでください: <br> <code>&lt;./My Link.md&gt;</code>。<br> 詳細は CommonMark #488 を参照。",
-    "crashMessage": "MarkText がクラッシュしました",
+    "crashMessage": "MarkText-ja がクラッシュしました",
     "crashReload": "再読み込み",
     "crashKeepOpen": "このままにする",
     "updateAvailableMessage": "アップデートが見つかりました。今すぐダウンロードしてインストールしますか?",
@@ -939,7 +949,7 @@
     "configSchemaViolation": "設定スキーマ違反",
     "copyError": "コピーエラー",
     "initializationFailed": "初期化に失敗",
-    "otherInstanceDetected": "MarkTextの別のインスタンスが既に実行中です",
+    "otherInstanceDetected": "MarkText-jaの別のインスタンスが既に実行中です",
     "report": "報告",
     "startupError": "起動エラー",
     "terminatedDueToError": "エラーにより終了",

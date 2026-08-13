@@ -1,0 +1,5 @@
+export const PRODUCT_NAME = 'MarkText-ja'
+export const PRODUCT_SLUG = 'marktext-ja'
+export const APP_ID = 'com.github.yo-ban.marktext-ja'
+export const GITHUB_REPO_URL = 'https://github.com/yo-ban/marktext-ja'
+export const UPSTREAM_REPO_URL = 'https://github.com/marktext/marktext'

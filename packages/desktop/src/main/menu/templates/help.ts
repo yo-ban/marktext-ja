@@ -4,6 +4,7 @@ import { isFile } from 'common/filesystem'
 import * as actions from '../actions/help'
 import { checkUpdates } from '../actions/marktext'
 import { t } from '../../i18n'
+import { GITHUB_REPO_URL } from '../../config'
 
 /// Check whether the package is updatable at runtime.
 const isUpdatable = (): boolean => {
@@ -41,7 +42,7 @@ export default function(): MenuItemConstructorOptions {
     {
       label: t('menu.help.changelog'),
       click() {
-        shell.openExternal('https://github.com/marktext/marktext/releases')
+        shell.openExternal(`${GITHUB_REPO_URL}/releases`)
       }
     },
     {
@@ -65,19 +66,19 @@ export default function(): MenuItemConstructorOptions {
     {
       label: t('menu.help.askQuestion'),
       click() {
-        shell.openExternal('https://github.com/marktext/marktext/discussions')
+        shell.openExternal(`${GITHUB_REPO_URL}/discussions`)
       }
     },
     {
       label: t('menu.help.reportBug'),
       click() {
-        shell.openExternal('https://github.com/marktext/marktext/issues')
+        shell.openExternal(`${GITHUB_REPO_URL}/issues`)
       }
     },
     {
       label: t('menu.help.viewSource'),
       click() {
-        shell.openExternal('https://github.com/marktext/marktext')
+        shell.openExternal(GITHUB_REPO_URL)
       }
     },
     {
@@ -86,7 +87,7 @@ export default function(): MenuItemConstructorOptions {
     {
       label: t('menu.help.license'),
       click() {
-        shell.openExternal('https://github.com/marktext/marktext/blob/develop/LICENSE')
+        shell.openExternal(`${GITHUB_REPO_URL}/blob/develop/LICENSE`)
       }
     }
   ]

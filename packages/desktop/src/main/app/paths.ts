@@ -1,6 +1,8 @@
 import { app } from 'electron'
+import path from 'path'
 import EnvPaths from 'common/envPaths'
 import { ensureDirSync } from 'common/filesystem'
+import { PRODUCT_SLUG } from '../config'
 
 class AppPaths extends EnvPaths {
   /**
@@ -10,8 +12,9 @@ class AppPaths extends EnvPaths {
    */
   constructor(userDataPath: string = '') {
     if (!userDataPath) {
-      // Use default user data path.
-      userDataPath = app.getPath('userData')
+      // Keep MarkText-ja data isolated from the upstream MarkText profile,
+      // independently of Electron's package-name-derived default.
+      userDataPath = path.join(app.getPath('appData'), PRODUCT_SLUG)
     }
 
     // Initialize environment paths

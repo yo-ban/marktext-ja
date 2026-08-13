@@ -4,6 +4,7 @@ import writeFileAtomic from 'write-file-atomic'
 import { BrowserWindow, ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { TypedEmitter } from '@shared/types/typedEmitter'
 import type BaseWindow from '../windows/base'
+import { PRODUCT_SLUG } from '../config'
 
 interface EditorBufferStorePaths {
   editorBufferStorePath: string
@@ -43,7 +44,7 @@ class EditorBufferStore extends TypedEmitter<EditorBufferStoreEvents> {
     // for performance reasons — they are read from disk when needed and
     // written to disk when updated.
     this.bufferStores = null
-    this.serviceName = 'marktext'
+    this.serviceName = PRODUCT_SLUG
     this.encryptKeys = []
 
     this.init()

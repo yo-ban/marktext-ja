@@ -5,7 +5,7 @@
 Clone the repository:
 
 ```
-git clone https://github.com/marktext/marktext.git
+git clone https://github.com/yo-ban/marktext-ja.git
 ```
 
 ## Container Setup

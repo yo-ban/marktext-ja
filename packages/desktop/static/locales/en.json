@@ -3,7 +3,9 @@
     "counter": {
       "words": "Words",
       "characters": "Characters",
-      "paragraphs": "Paragraphs"
+      "paragraphs": "Paragraphs",
+      "document": "Document",
+      "selection": "Selection"
     },
     "file": {
       "file": "File",
@@ -98,15 +100,15 @@
       "checkUpdates": "Check for Updates"
     },
     "marktext": {
-      "title": "MarkText",
-      "about": "About MarkText",
+      "title": "MarkText-ja",
+      "about": "About MarkText-ja",
       "checkUpdates": "Check for Updates...",
       "preferences": "Preferences",
       "services": "Services",
-      "hide": "Hide MarkText",
+      "hide": "Hide MarkText-ja",
       "hideOthers": "Hide Others",
       "showAll": "Show All",
-      "quit": "Quit MarkText"
+      "quit": "Quit MarkText-ja"
     },
     "view": {
       "view": "View",
@@ -114,6 +116,7 @@
       "toggleTabbar": "Toggle Tabbar",
       "commandPalette": "Command Palette",
       "sourceCodeMode": "Source Code Mode",
+      "showSourceLineNumbers": "Show Source Code Line Numbers",
       "typewriterMode": "Typewriter Mode",
       "focusMode": "Focus Mode",
       "toggleTableOfContents": "Toggle Table of Contents",
@@ -353,7 +356,7 @@
   },
   "import": {
     "title": "Import or Open",
-    "description": "Drop here to get your stuff into MarkText"
+    "description": "Drop here to get your stuff into MarkText-ja"
   },
   "preferences": {
     "title": "Preferences",
@@ -381,10 +384,10 @@
         "hideScrollbar": "Whether to hide scrollbars",
         "wordWrapInToc": "Whether to enable word wrap in TOC",
         "fileSortBy": "Sort files in opened folder by created time, modified time and title",
-        "startUpAction": "The action after MarkText startup, open the last edited content, open the specified folder or blank page",
+        "startUpAction": "The action after MarkText-ja startup, open the last edited content, open the specified folder or blank page",
         "restoreLayoutState": "Restore previous editor state on startup",
         "defaultDirectoryToOpen": "The default directory that should be opened on startup when startUp=folder",
-        "language": "The language MarkText uses",
+        "language": "The language MarkText-ja uses",
         "editorFontFamily": "Editor font family",
         "fontSize": "Font size in pixels",
         "lineHeight": "Line Height",
@@ -393,6 +396,7 @@
         "codeFontSize": "Font size in code Block, the range is 12 ~ 18",
         "codeFontFamily": "Font family used in code block",
         "codeBlockLineNumbers": "Whether to show the line numbers",
+        "sourceLineNumberFrequency": "How often to show line numbers in Source Code mode",
         "trimUnnecessaryCodeBlockEmptyLines": "Trim the beginning and ending empty lines in code block",
         "autoPairBracket": "Automatically brackets when editing",
         "autoPairMarkdownSyntax": "Autocomplete markdown syntax",
@@ -408,7 +412,7 @@
         "preferLooseListItem": "The preferred list type",
         "bulletListMarker": "The marker used in bullet list",
         "orderListDelimiter": "The delimiter used in order list",
-        "preferHeadingStyle": "The preferred heading style in MarkText",
+        "preferHeadingStyle": "The preferred heading style in MarkText-ja",
         "tabSize": "Replace the tab with x spaces",
         "listIndentation": "Select the indent of list",
         "frontmatterType": "The frontmatter type",
@@ -419,7 +423,7 @@
         "isGitlabCompatibilityEnabled": "Enable GitLab compatibility mode",
         "sequenceTheme": "Sequence diagram theme",
         "plantumlServer": "PlantUML server URL",
-        "theme": "Select the theme used in MarkText",
+        "theme": "Select the theme used in MarkText-ja",
         "followSystemTheme": "Follow System Theme",
         "lightModeTheme": "Theme to use when system is in light mode",
         "darkModeTheme": "Theme to use when system is in dark mode",
@@ -521,7 +525,13 @@
         "lineHeight": "Line height",
         "fontFamily": "Font family",
         "maxWidth": "Max width",
-        "maxWidthNotes": "Maximum width of editor content"
+        "maxWidthNotes": "Maximum width of editor content",
+        "sourceLineNumbers": {
+          "title": "Source Code line numbers",
+          "off": "Off",
+          "everyLine": "Every line",
+          "everyNLines": "Every {frequency} lines"
+        }
       },
       "codeBlock": {
         "title": "Code Block",
@@ -627,7 +637,7 @@
         "pleaseInstall": "Please install",
         "scriptPath": "Script path"
       },
-      "defaultBehavior": "The default behavior after pasting or dragging the image to MarkText"
+      "defaultBehavior": "The default behavior after pasting or dragging the image to MarkText-ja"
     },
     "markdown": {
       "title": "Markdown",
@@ -747,7 +757,7 @@
   },
   "commands": {
     "mt": {
-      "hide": "Hide MarkText",
+      "hide": "Hide MarkText-ja",
       "hideOthers": "Hide Others"
     },
     "file": {
@@ -917,7 +927,7 @@
     "unsafeFileMessage": "This link opens a file that can run code",
     "unsafeFileDetail": "\"{name}\" is an executable or script file. Opening it may run programs on your computer. Only continue if you trust this document.",
     "openAnyway": "Open Anyway",
-    "updateDownloadedDetail": "Install it now? MarkText will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
+    "updateDownloadedDetail": "Install it now? MarkText-ja will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
     "updateDownloadedMessage": "Update downloaded",
     "updateInstallNow": "Quit and Install",
     "updateLater": "Later",
@@ -929,7 +939,7 @@
     "exportFailureTitle": "Export failure",
     "linkSpacesTitle": "Links cannot contain spaces",
     "linkSpacesMessage": "Either URI encode: <code>My%20Link.md</code> <br> or wrap it in brackets: <br> <code>&lt;./My Link.md&gt;</code>. <br> See CommonMark #488 for details.",
-    "crashMessage": "MarkText has crashed",
+    "crashMessage": "MarkText-ja has crashed",
     "crashReload": "Reload",
     "crashKeepOpen": "Keep It Open",
     "updateAvailableMessage": "Found an update, do you want download and install now?",
@@ -939,7 +949,7 @@
     "configSchemaViolation": "Configuration schema violation",
     "copyError": "Copy error",
     "initializationFailed": "Initialization failed {hint}",
-    "otherInstanceDetected": "Another instance of MarkText is already running",
+    "otherInstanceDetected": "Another instance of MarkText-ja is already running",
     "report": "Report",
     "startupError": "Startup error",
     "terminatedDueToError": "Terminated due to error",

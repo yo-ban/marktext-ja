@@ -16,7 +16,7 @@ import { checkUpdates, userSetting } from './marktext'
 import { showTabBar } from './view'
 import { COMMANDS } from '../../commands'
 import type { CommandManager } from '../../commands'
-import { EXTENSION_HASN, PANDOC_EXTENSIONS, URL_REG } from '../../config'
+import { EXTENSION_HASN, PANDOC_EXTENSIONS, PRODUCT_SLUG, URL_REG } from '../../config'
 import { normalizeAndResolvePath, writeFile } from '../../filesystem'
 import { writeMarkdownFile } from '../../filesystem/markdown'
 import { getPath, getRecommendTitleFromMarkdownString } from '../../utils'
@@ -97,7 +97,7 @@ const printHtmlToPdf = async(
 ): Promise<Buffer> => {
   const tempPath = path.join(
     app.getPath('temp'),
-    `marktext-export-${process.pid}-${Date.now()}.html`
+    `${PRODUCT_SLUG}-export-${process.pid}-${Date.now()}.html`
   )
   await outputFile(tempPath, html, 'utf8')
   const printWindow = new BrowserWindow({

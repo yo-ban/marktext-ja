@@ -24,8 +24,8 @@
 ### 1.4 Clone and Install
 
 ```bash
-git clone https://github.com/marktext/marktext.git
-cd marktext
+git clone https://github.com/yo-ban/marktext-ja.git
+cd marktext-ja
 pnpm install
 ```
 

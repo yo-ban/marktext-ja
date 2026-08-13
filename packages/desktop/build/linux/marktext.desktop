@@ -1,17 +1,17 @@
 [Desktop Entry]
-Name=MarkText
-Comment=Next generation markdown editor
-Exec=marktext %F
+Name=MarkText-ja
+Comment=Japanese-first MarkText markdown editor
+Exec=marktext-ja %F
 Terminal=false
 Type=Application
-Icon=marktext
+Icon=marktext-ja
 Categories=Office;TextEditor;Utility;
 MimeType=text/markdown;
-Keywords=marktext;
-StartupWMClass=marktext
+Keywords=marktext-ja;marktext;
+StartupWMClass=marktext-ja
 Actions=NewWindow;
 
 [Desktop Action NewWindow]
 Name=New Window
-Exec=marktext --new-window %F
-Icon=marktext
+Exec=marktext-ja --new-window %F
+Icon=marktext-ja

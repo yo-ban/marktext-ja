@@ -3,7 +3,9 @@
     "counter": {
       "words": "字數",
       "characters": "字元數",
-      "paragraphs": "段落數"
+      "paragraphs": "段落數",
+      "document": "文件",
+      "selection": "選取範圍"
     },
     "file": {
       "file": "檔案",
@@ -98,15 +100,15 @@
       "checkUpdates": "檢查更新"
     },
     "marktext": {
-      "title": "關於",
-      "about": "關於 MarkText",
+      "title": "MarkText-ja",
+      "about": "關於 MarkText-ja",
       "checkUpdates": "檢查更新…",
       "preferences": "偏好設定",
       "services": "服務",
-      "hide": "隱藏 MarkText",
+      "hide": "隱藏 MarkText-ja",
       "hideOthers": "隱藏其他",
       "showAll": "顯示全部",
-      "quit": "退出 MarkText"
+      "quit": "退出 MarkText-ja"
     },
     "view": {
       "view": "檢視",
@@ -114,6 +116,7 @@
       "toggleTabbar": "切換標籤欄",
       "commandPalette": "命令面板",
       "sourceCodeMode": "原始碼模式",
+      "showSourceLineNumbers": "顯示原始碼行號",
       "typewriterMode": "打字機模式",
       "focusMode": "專注模式",
       "toggleTableOfContents": "切換目錄",
@@ -353,7 +356,7 @@
   },
   "import": {
     "title": "匯入或開啟",
-    "description": "拖放到這裡將您的內容匯入 MarkText"
+    "description": "拖放到這裡將您的內容匯入 MarkText-ja"
   },
   "preferences": {
     "title": "偏好設定",
@@ -382,10 +385,10 @@
         "hideScrollbar": "是否隱藏捲軸",
         "wordWrapInToc": "是否在目錄中啟用自動換行",
         "fileSortBy": "按建立時間、修改時間和標題對開啟資料夾中的檔案進行排序",
-        "startUpAction": "MarkText 啟動後的操作，開啟最後編輯的內容、開啟指定資料夾或空白頁面",
+        "startUpAction": "MarkText-ja 啟動後的操作，開啟最後編輯的內容、開啟指定資料夾或空白頁面",
         "restoreLayoutState": "啟動時還原上次編輯器狀態",
         "defaultDirectoryToOpen": "當 startUp=folder 時啟動時應開啟的預設目錄",
-        "language": "MarkText 使用的語言",
+        "language": "MarkText-ja 使用的語言",
         "editorFontFamily": "編輯器字型系列",
         "fontSize": "字型大小（像素）",
         "lineHeight": "行高",
@@ -409,7 +412,7 @@
         "preferLooseListItem": "首選清單類型",
         "bulletListMarker": "項目符號清單中使用的標記",
         "orderListDelimiter": "有序清單中使用的分隔符",
-        "preferHeadingStyle": "MarkText 中的首選標題樣式",
+        "preferHeadingStyle": "MarkText-ja 中的首選標題樣式",
         "tabSize": "用 x 個空格替換製表符",
         "listIndentation": "選擇清單的縮排",
         "frontmatterType": "前言類型",
@@ -420,7 +423,7 @@
         "isGitlabCompatibilityEnabled": "啟用 GitLab 相容模式",
         "sequenceTheme": "序列圖主題",
         "plantumlServer": "PlantUML 伺服器 URL",
-        "theme": "選擇 MarkText 中使用的主題",
+        "theme": "選擇 MarkText-ja 中使用的主題",
         "followSystemTheme": "跟隨系統主題",
         "lightModeTheme": "系統處於淺色模式時使用的主題",
         "darkModeTheme": "系統處於深色模式時使用的主題",
@@ -627,7 +630,7 @@
         "neverDetected": "從未偵測",
         "neverSuccessful": "從未成功"
       },
-      "defaultBehavior": "貼上或拖曳圖片到 MarkText 後的預設行為"
+      "defaultBehavior": "貼上或拖曳圖片到 MarkText-ja 後的預設行為"
     },
     "markdown": {
       "title": "PicGo 設定",
@@ -747,7 +750,7 @@
   },
   "commands": {
     "mt": {
-      "hide": "隱藏 MarkText",
+      "hide": "隱藏 MarkText-ja",
       "hideOthers": "隱藏其他"
     },
     "file": {
@@ -917,7 +920,7 @@
     "unsafeFileMessage": "此連結將開啟一個可執行程式碼的檔案",
     "unsafeFileDetail": "「{name}」是可執行檔或指令碼檔案。開啟它可能會在你的電腦上執行程式。請僅在信任此文件時繼續。",
     "openAnyway": "仍要開啟",
-    "updateDownloadedDetail": "Install it now? MarkText will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
+    "updateDownloadedDetail": "Install it now? MarkText-ja will close normally — you will be asked to save any unsaved documents first. If you choose Later, the update is installed the next time you quit.",
     "updateDownloadedMessage": "Update downloaded",
     "updateInstallNow": "Quit and Install",
     "updateLater": "Later",
@@ -929,7 +932,7 @@
     "exportFailureTitle": "Export failure",
     "linkSpacesTitle": "Links cannot contain spaces",
     "linkSpacesMessage": "Either URI encode: <code>My%20Link.md</code> <br> or wrap it in brackets: <br> <code>&lt;./My Link.md&gt;</code>. <br> See CommonMark #488 for details.",
-    "crashMessage": "MarkText has crashed",
+    "crashMessage": "MarkText-ja has crashed",
     "crashReload": "Reload",
     "crashKeepOpen": "Keep It Open",
     "updateAvailableMessage": "Found an update, do you want download and install now?",
@@ -939,7 +942,7 @@
     "configSchemaViolation": "設定結構違規",
     "copyError": "複製錯誤",
     "initializationFailed": "初始化失敗",
-    "otherInstanceDetected": "偵測到另一個 MarkText 實例正在執行",
+    "otherInstanceDetected": "偵測到另一個 MarkText-ja 實例正在執行",
     "report": "回報",
     "startupError": "啟動錯誤",
     "terminatedDueToError": "因錯誤而終止",

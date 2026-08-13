@@ -1,7 +1,7 @@
 # Command Line Interface
 
 ```
-Usage: marktext [commands] [path ...]
+Usage: marktext-ja [commands] [path ...]
 
   Available commands:
 
@@ -16,8 +16,8 @@ Usage: marktext [commands] [path ...]
     -h, --help                    Print this help message
 ```
 
-`marktext` should point to your installation of MarkText. The exact location will vary from platform to platform. On macOS, you can create a convenient alias like:
+`marktext-ja` should point to your installation of MarkText-ja. The exact location will vary from platform to platform. On macOS, you can create a convenient alias like:
 
 ```sh
-alias marktext="/Applications/Mark\ Text.app/Contents/MacOS/Mark\ Text"
+alias marktext-ja="/Applications/MarkText-ja.app/Contents/MacOS/MarkText-ja"
 ```

@@ -11,6 +11,7 @@ import {
 } from 'native-keymap'
 import os from 'os'
 import path from 'path'
+import { PRODUCT_SLUG } from '../config'
 
 export interface KeyboardInfo {
   layout: IKeyboardLayoutInfo
@@ -88,7 +89,7 @@ export const registerKeyboardListeners = (): void => {
     return getKeyboardInfo()
   })
   ipcMain.on('mt::keybinding-debug-dump-keyboard-info', async() => {
-    const dumpPath = path.join(os.tmpdir(), 'marktext_keyboard_info.json')
+    const dumpPath = path.join(os.tmpdir(), `${PRODUCT_SLUG}_keyboard_info.json`)
     const content = JSON.stringify(getKeyboardInfo(), null, 2)
     fsPromises
       .writeFile(dumpPath, content, 'utf8')

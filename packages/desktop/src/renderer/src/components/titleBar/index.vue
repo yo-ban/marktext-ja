@@ -19,7 +19,7 @@
         class="title"
         @dblclick.stop="toggleMaxmizeOnMacOS"
       >
-        <span v-if="!filename">MarkText</span>
+        <span v-if="!filename">{{ PRODUCT_NAME }}</span>
         <span v-else>
           <span
             v-for="(path, index) of paths"
@@ -124,6 +124,7 @@ import { isOsx as isOsxPlatform } from '@/util'
 import { shouldShowInAppTitleBar } from './visibility'
 import { useEditorStore } from '@/store/editor'
 import { ArrowRight } from '@element-plus/icons-vue'
+import { PRODUCT_NAME } from '@shared/product'
 
 interface ProjectInfo {
   name?: string

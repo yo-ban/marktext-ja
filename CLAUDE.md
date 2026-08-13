@@ -158,7 +158,7 @@ pnpm install --registry https://registry.npmjs.org/   # fallback; no lockfile ch
 ## Development Workflow
 
 All commands run from the repo root. The root `package.json` proxies every
-desktop-specific script to `packages/desktop` via `pnpm --filter marktext`,
+desktop-specific script to `packages/desktop` via `pnpm --filter marktext-ja`,
 so the names and behavior are unchanged from the pre-monorepo layout.
 
 ```bash
