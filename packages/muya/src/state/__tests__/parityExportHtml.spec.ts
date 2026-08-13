@@ -54,6 +54,22 @@ describe('parity PG7: export inlines base stylesheets (offline-safe)', () => {
     );
 });
 
+describe('issue #5017: GitHub HTML export stays on the light theme', () => {
+    it('embeds the light-only GitHub stylesheet without an OS dark-mode branch', async () => {
+        const out = await generateExport(SAMPLE);
+
+        // v0.19 embedded github-markdown.css, whose prefers-color-scheme media
+        // query silently changed a "GitHub (Default)" export to the dark theme
+        // on a dark desktop. The new exporter must keep using the explicit
+        // light stylesheet, regardless of the OS colour preference.
+        expect(out).toMatch(
+            /\.markdown-body\s*\{[^}]*color-scheme:\s*light;[^}]*color:\s*#1f2328;[^}]*background-color:\s*#ffffff;/,
+        );
+        expect(out).not.toMatch(/prefers-color-scheme:\s*dark/i);
+        expect(out).not.toMatch(/color-scheme:\s*dark/i);
+    });
+});
+
 describe('export ships the table-of-contents stylesheet', () => {
     // The desktop wrapper injects the `[TOC]` list with `toc-container` /
     // `toc-hN` / `dots` markup but no styles of its own — the styling rides

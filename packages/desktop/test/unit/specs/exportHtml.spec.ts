@@ -274,6 +274,14 @@ describe('exportStyledHTML — relative link paths (#1688)', () => {
     expect(out).not.toContain('file://')
   })
 
+  it('preserves an ASCII apostrophe in a remote URL (#5007)', async() => {
+    const href = "https://biblehub.com/q/what's_the_messianic_secret.htm"
+    const out = await exportStyledHTML(NO_MUYA, `[site](${href})`, {})
+
+    expect(out).toContain(`href="${href}"`)
+    expect(out).not.toContain('%E2%80%99')
+  })
+
   it('leaves an in-page fragment anchor untouched', async() => {
     const out = await exportStyledHTML(NO_MUYA, '# Heading\n\n[jump](#heading)', {})
 
