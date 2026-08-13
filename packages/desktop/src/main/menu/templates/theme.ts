@@ -75,12 +75,15 @@ export default function(userPreference: Preference): MenuItemConstructorOptions 
     }
   ]
 
-  if (!isThemeSelectionEnabled) {
-    submenu.push({
-      label: t('menu.theme.followThemDisabled'),
-      enabled: false
-    })
-  }
+  // Keep the item in the template and toggle visibility in place. Adding or
+  // removing it used to force a full application-menu rebuild whenever Follow
+  // System Theme changed.
+  submenu.push({
+    label: t('menu.theme.followThemDisabled'),
+    id: 'follow-system-theme-disabled-hint',
+    enabled: false,
+    visible: !isThemeSelectionEnabled
+  })
 
   // Group themes into nested submenus so the top-level Theme menu stays short
   // instead of expanding to the full window height with 30+ flat items (#4534).

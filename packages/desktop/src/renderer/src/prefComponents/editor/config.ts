@@ -21,6 +21,21 @@ export const tabSizeOptions: PrefSelectOption<number>[] = [
   }
 ]
 
+export const getSourceLineNumberFrequencyOptions = (): PrefSelectOption<number>[] => [
+  {
+    label: t('preferences.editor.textEditor.sourceLineNumbers.off'),
+    value: 0
+  },
+  {
+    label: t('preferences.editor.textEditor.sourceLineNumbers.everyLine'),
+    value: 1
+  },
+  ...[5, 10, 20, 50].map((frequency) => ({
+    label: t('preferences.editor.textEditor.sourceLineNumbers.everyNLines', { frequency }),
+    value: frequency
+  }))
+]
+
 export const getEndOfLineOptions = (): PrefSelectOption<string>[] => [
   {
     label: t('preferences.editor.fileRepresentation.endOfLine.default'),

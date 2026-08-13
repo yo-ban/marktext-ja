@@ -120,6 +120,12 @@
     "type": "boolean",
     "default": true
   },
+  "sourceLineNumberFrequency": {
+    "description": "Editor--How often to show line numbers in Source Code mode",
+    "type": "number",
+    "enum": [0, 1, 5, 10, 20, 50],
+    "default": 10
+  },
   "trimUnnecessaryCodeBlockEmptyLines": {
     "description": "Editor--Trim the beginning and ending empty lines in code block",
     "type": "boolean",

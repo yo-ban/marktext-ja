@@ -2,7 +2,7 @@ import type { Muya } from '../muya';
 import type { IClipboardPayload } from './copyData';
 import Format from '../block/base/format';
 import { isClipboardEvent, isKeyboardEvent } from '../utils';
-import { getClipboardData, writeClipboardData } from './copyData';
+import { getClipboardData, getSelectedText, writeClipboardData } from './copyData';
 import { cutSelection, deleteTableSelection } from './cut';
 import { pastePlainText, pasteSelection } from './paste';
 import { pasteImageSrc } from './pasteImage';
@@ -126,6 +126,10 @@ class Clipboard {
 
     getClipboardData(): IClipboardPayload {
         return getClipboardData(this);
+    }
+
+    getSelectedText(): string {
+        return getSelectedText(this);
     }
 
     copyHandler(event: ClipboardEvent): void {

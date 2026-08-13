@@ -26,6 +26,15 @@ export default function(keybindings: Keybindings): MenuItemConstructorOptions {
       }
     },
     {
+      id: 'sourceLineNumbersMenuItem',
+      label: t('menu.view.showSourceLineNumbers'),
+      type: 'checkbox',
+      checked: true,
+      click(_item, focusedWindow) {
+        actions.toggleSourceLineNumbers(focusedWindow as BrowserWindow | undefined)
+      }
+    },
+    {
       id: 'typewriterModeMenuItem',
       label: t('menu.view.typewriterMode'),
       accelerator: keybindings.getAccelerator('view.typewriter-mode') ?? undefined,

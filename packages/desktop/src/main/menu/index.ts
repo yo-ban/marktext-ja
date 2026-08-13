@@ -33,6 +33,7 @@ interface WindowMenuEntry {
 
 interface AddEditorMenuOptions {
   sourceCodeModeEnabled?: boolean
+  sourceLineNumberFrequency?: number
 }
 
 interface ThemeMenuChange {
@@ -44,6 +45,7 @@ class AppMenu {
   private readonly _preferences: Preference
   private readonly _keybindings: Keybindings
   private readonly _userDataPath: string
+  private _recentDocuments: string[]
   public readonly RECENTS_PATH: string
   public readonly isOsxOrWindows: boolean
   public activeWindowId: number
@@ -62,6 +64,7 @@ class AppMenu {
     this._preferences = preferences
     this._keybindings = keybindings
     this._userDataPath = userDataPath
+    this._recentDocuments = []
 
     this.RECENTS_PATH = path.join(userDataPath, RECENTLY_USED_DOCUMENTS_FILE_NAME)
     this.isOsxOrWindows = isOsx || isWindows
@@ -103,7 +106,12 @@ class AppMenu {
       )
     }
 
-    this.updateAppMenu(recentDocuments)
+    if (needSave || !sameStringList(recentDocuments, this._recentDocuments)) {
+      // Rebuilding every editor window's native menu is comparatively
+      // expensive. Leave it in place only when the effective recent list is
+      // unchanged; the comparison still catches entries removed from disk.
+      this.updateAppMenu(recentDocuments)
+    }
 
     if (needSave) {
       ensureDirSync(this._userDataPath)
@@ -184,6 +192,7 @@ class AppMenu {
    */
   addEditorMenu(window: BrowserWindow, options: AddEditorMenuOptions = {}): void {
     const isSourceMode = !!options.sourceCodeModeEnabled
+    const showSourceLineNumbers = (options.sourceLineNumberFrequency ?? 10) > 0
     const { windowMenus } = this
     windowMenus.set(window.id, this._buildEditorMenu())
 
@@ -194,6 +203,11 @@ class AppMenu {
     const sourceCodeModeMenuItem = menu.getMenuItemById('sourceCodeModeMenuItem')
     if (sourceCodeModeMenuItem) {
       sourceCodeModeMenuItem.checked = isSourceMode
+    }
+
+    const sourceLineNumbersMenuItem = menu.getMenuItemById('sourceLineNumbersMenuItem')
+    if (sourceLineNumbersMenuItem) {
+      sourceLineNumbersMenuItem.checked = showSourceLineNumbers
     }
 
     if (isSourceMode) {
@@ -279,6 +293,7 @@ class AppMenu {
     if (!recentUsedDocuments) {
       recentUsedDocuments = this.getRecentlyUsedDocuments()
     }
+    this._recentDocuments = [...recentUsedDocuments]
 
     // "we don't support changing menu object after calling setMenu, the behavior
     // is undefined if user does that." That mean we have to recreate the editor
@@ -294,6 +309,7 @@ class AppMenu {
 
       // all other menu items are set automatically
       updateMenuItem(oldMenu, newMenu, 'sourceCodeModeMenuItem')
+      updateMenuItem(oldMenu, newMenu, 'sourceLineNumbersMenuItem')
       updateMenuItem(oldMenu, newMenu, 'typewriterModeMenuItem')
       updateMenuItem(oldMenu, newMenu, 'focusModeMenuItem')
       updateMenuItem(oldMenu, newMenu, 'sideBarMenuItem')
@@ -326,6 +342,7 @@ class AppMenu {
         if (!rebuilt) return
 
         updateMenuItem(oldMenu, rebuilt, 'sourceCodeModeMenuItem')
+        updateMenuItem(oldMenu, rebuilt, 'sourceLineNumbersMenuItem')
         updateMenuItem(oldMenu, rebuilt, 'typewriterModeMenuItem')
         updateMenuItem(oldMenu, rebuilt, 'focusModeMenuItem')
         updateMenuItem(oldMenu, rebuilt, 'sideBarMenuItem')
@@ -389,21 +406,32 @@ class AppMenu {
         return
       }
 
-      themeMenus.submenu.items.forEach((item) => {
-        if (item.type === 'radio' && typeof followSystemTheme !== 'undefined') {
-          item.enabled = !followSystemTheme
-        }
+      const updateItems = (items: Electron.MenuItem[]): void => {
+        items.forEach((item) => {
+          if (item.submenu) updateItems(item.submenu.items)
 
-        if (item.id === 'follow-system-theme' && typeof followSystemTheme !== 'undefined') {
-          item.checked = followSystemTheme
-        }
+          if (item.type === 'radio' && typeof followSystemTheme !== 'undefined') {
+            item.enabled = !followSystemTheme
+          }
 
-        if (item.type === 'radio' && typeof theme !== 'undefined') {
-          item.checked = item.id === theme
-        } else if (item.id && item.id === theme) {
-          item.checked = true
-        }
-      })
+          if (item.id === 'follow-system-theme' && typeof followSystemTheme !== 'undefined') {
+            item.checked = followSystemTheme
+          }
+
+          if (
+            item.id === 'follow-system-theme-disabled-hint' &&
+            typeof followSystemTheme !== 'undefined'
+          ) {
+            item.visible = followSystemTheme
+          }
+
+          if (item.type === 'radio' && typeof theme !== 'undefined') {
+            item.checked = item.id === theme
+          }
+        })
+      }
+
+      updateItems(themeMenus.submenu.items)
     })
   }
 
@@ -425,10 +453,21 @@ class AppMenu {
     })
   }
 
+  /** Update the Source Code line-number toggle across editor windows. */
+  updateSourceLineNumbersMenu = (frequency: number): void => {
+    this.windowMenus.forEach((value) => {
+      const { menu, type } = value
+      if (type !== MenuType.EDITOR || !menu) return
+      const item = menu.getMenuItemById('sourceLineNumbersMenuItem')
+      if (item) item.checked = frequency > 0
+    })
+  }
+
   _buildEditorMenu(recentUsedDocuments: string[] | null = null): WindowMenuEntry {
     if (!recentUsedDocuments) {
       recentUsedDocuments = this.getRecentlyUsedDocuments()
     }
+    this._recentDocuments = [...recentUsedDocuments]
 
     const menuTemplate = configureMenu(this._keybindings, this._preferences, recentUsedDocuments)
     const menu = Menu.buildFromTemplate(menuTemplate)
@@ -532,10 +571,16 @@ class AppMenu {
 
     onInternalChannel('broadcast-preferences-changed', async(prefs: Partial<IUserPreferences>) => {
       if (prefs.theme !== undefined || prefs.followSystemTheme !== undefined) {
-        this.updateAppMenu()
+        this.updateThemeMenu({
+          theme: prefs.theme,
+          followSystemTheme: prefs.followSystemTheme
+        })
       }
       if (prefs.autoSave !== undefined) {
         this.updateAutoSaveMenu(prefs.autoSave)
+      }
+      if (prefs.sourceLineNumberFrequency !== undefined) {
+        this.updateSourceLineNumbersMenu(prefs.sourceLineNumberFrequency)
       }
       if (prefs.language) {
         // Update main process language and rebuild menu
@@ -553,6 +598,9 @@ const updateMenuItem = (oldMenus: Menu, newMenus: Menu, id: string): void => {
     newItem.checked = oldItem.checked
   }
 }
+
+const sameStringList = (left: string[], right: string[]): boolean =>
+  left.length === right.length && left.every((value, index) => value === right[index])
 
 // ----------------------------------------------
 

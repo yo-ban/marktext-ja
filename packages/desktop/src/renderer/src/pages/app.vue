@@ -30,6 +30,7 @@
       <word-count-badge
         v-if="hasCurrentFile && init"
         :word-count="wordCount"
+        :selected-word-count="selectedWordCount"
       />
       <command-palette />
       <about-dialog />
@@ -91,7 +92,7 @@ const { windowActive, platform, init } = storeToRefs(mainStore)
 const { showTabBar } = storeToRefs(layoutStore)
 const { sourceCode, theme, customCss, textDirection, zoom } = storeToRefs(preferencesStore)
 const { projectTree } = storeToRefs(projectStore)
-const { currentFile } = storeToRefs(editorStore)
+const { currentFile, selectedWordCount } = storeToRefs(editorStore)
 
 const pathname = computed(() => currentFile.value?.pathname)
 const filename = computed(() => currentFile.value?.filename)

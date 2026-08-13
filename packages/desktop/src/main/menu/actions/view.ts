@@ -51,6 +51,12 @@ export const toggleSourceCodeMode = (win: Win): void => {
   toggleTypeMode(win, 'sourceCode')
 }
 
+export const toggleSourceLineNumbers = (win: Win): void => {
+  if (win && win.webContents) {
+    win.webContents.send('mt::toggle-source-line-numbers')
+  }
+}
+
 export const toggleSidebar = (win: Win): void => {
   toggleLayout(win, 'showSideBar')
 }

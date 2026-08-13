@@ -116,6 +116,7 @@ class EditorWindow extends BaseWindow {
       restoreLayoutState,
       tabBarVisibility,
       sourceCodeModeEnabled,
+      sourceLineNumberFrequency,
       spellcheckerEnabled,
       spellcheckerLanguage
     } = preferences.getAll()
@@ -156,7 +157,10 @@ class EditorWindow extends BaseWindow {
     }
 
     // Create a menu for the current window
-    appMenu.addEditorMenu(win, { sourceCodeModeEnabled: sourceCodeModeEnabled as boolean })
+    appMenu.addEditorMenu(win, {
+      sourceCodeModeEnabled: sourceCodeModeEnabled as boolean,
+      sourceLineNumberFrequency: sourceLineNumberFrequency as number
+    })
 
     win.webContents.on('context-menu', (event, params) => {
       showEditorContextMenu(win!, event, params, preferences.getItem('spellcheckerEnabled'))

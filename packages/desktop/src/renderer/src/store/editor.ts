@@ -23,6 +23,7 @@ import { t } from '../i18n'
 import { debouncedSendBufferedState, sendBufferedState } from './bufferedState'
 import type {
   IFileState,
+  FileWordCount,
   FileNotification,
   LineEnding,
   MarkdownDocument,
@@ -157,6 +158,7 @@ interface ProjectStoreLike {
 
 export interface EditorState {
   currentFile: IFileState | null
+  selectedWordCount: FileWordCount | null
   tabs: IFileState[]
   tabIdToIndex: Record<string, number>
   listToc: TocItem[]
@@ -241,6 +243,7 @@ const applySaveAck = (tab: IFileState): void => {
 export const useEditorStore = defineStore('editor', {
   state: (): EditorState => ({
     currentFile: null,
+    selectedWordCount: null,
     tabs: [],
     tabIdToIndex: {},
     listToc: [], // Used for equal check and for searching for the correct github-slug to jump to
@@ -288,6 +291,7 @@ export const useEditorStore = defineStore('editor', {
       this.$patch((s) => {
         s.tabs = tabs
         s.currentFile = currentFile
+        s.selectedWordCount = null
         s.tabIdToIndex = {}
         s.listToc = []
         s.toc = []
@@ -1623,6 +1627,10 @@ export const useEditorStore = defineStore('editor', {
       )
     },
 
+    SET_SELECTED_WORD_COUNT(wordCount: FileWordCount | null): void {
+      this.selectedWordCount = wordCount
+    },
+
     // Persist the caret for a tab without the heavy content-change pipeline. A
     // pure caret move (click / arrow key) fires `selection-change` but NOT
     // `json-change`, so `tab.cursor` — the position replayed when the tab is
@@ -1636,6 +1644,17 @@ export const useEditorStore = defineStore('editor', {
       if (index == null) return
       const tab = this.tabs[index]
       if (tab) tab.cursor = cursor
+    },
+
+    // Source mode uses a different cursor shape. Persist it independently of
+    // LISTEN_FOR_CONTENT_CHANGE so arrow keys and mouse selection do not run
+    // the full-document save/count/TOC pipeline.
+    PERSIST_SOURCE_CURSOR(id: string, cursor: unknown): void {
+      if (!id || !cursor) return
+      const index = this.tabIdToIndex[id]
+      if (index == null) return
+      const tab = this.tabs[index]
+      if (tab) tab.muyaIndexCursor = cursor
     },
 
     SELECTION_FORMATS(formats: SelectionFormat[]): void {

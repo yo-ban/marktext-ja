@@ -65,6 +65,7 @@ describe('cross-block copy with an atx-heading endpoint', () => {
         const { text } = muya.editor.clipboard.getClipboardData();
         // marker rides in the text; re-parses to a heading on paste
         expect(text).toBe('# Heading\n\npa\n');
+        expect(muya.getSelectedText()).toBe(text);
     });
 
     it('drops the marker when the selection starts after it', () => {

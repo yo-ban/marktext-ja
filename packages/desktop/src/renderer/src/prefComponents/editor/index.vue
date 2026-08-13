@@ -37,6 +37,12 @@
           :regex-validator="/^(?:$|[0-9]+(?:ch|px|%)$)/"
           :on-change="(value) => onSelectChange('editorLineWidth', value)"
         />
+        <cur-select
+          :description="t('preferences.editor.textEditor.sourceLineNumbers.title')"
+          :value="sourceLineNumberFrequency"
+          :options="getSourceLineNumberFrequencyOptions()"
+          :on-change="(value) => onSelectChange('sourceLineNumberFrequency', value)"
+        />
       </template>
     </compound>
 
@@ -198,7 +204,8 @@ import {
   getEndOfLineOptions,
   getTextDirectionOptions,
   getTrimTrailingNewlineOptions,
-  getDefaultEncodingOptions
+  getDefaultEncodingOptions,
+  getSourceLineNumberFrequencyOptions
 } from './config'
 
 const { t } = useI18n()
@@ -219,6 +226,7 @@ const {
   codeFontSize,
   codeFontFamily,
   codeBlockLineNumbers,
+  sourceLineNumberFrequency,
   trimUnnecessaryCodeBlockEmptyLines,
   hideQuickInsertHint,
   hideLinkPopup,

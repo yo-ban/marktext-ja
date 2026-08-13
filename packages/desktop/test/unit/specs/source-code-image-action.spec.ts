@@ -24,7 +24,9 @@ interface CMCursor {
 
 interface SetupBindings {
   editor: { value: unknown }
+  tabId: { value: string | null }
   handleImageAction: (payload: unknown) => void
+  listenChange: () => void
 }
 
 interface SetupModule {
@@ -72,7 +74,11 @@ const makeDeps = (over: Record<string, unknown> = {}) => ({
   onMounted: () => {},
   onBeforeUnmount: () => {},
   nextTick: () => Promise.resolve(),
-  useEditorStore: () => ({ LISTEN_FOR_CONTENT_CHANGE: () => {} }),
+  useEditorStore: () => ({
+    LISTEN_FOR_CONTENT_CHANGE: () => {},
+    PERSIST_SOURCE_CURSOR: () => {},
+    SET_SELECTED_WORD_COUNT: () => {}
+  }),
   usePreferencesStore: () => ({}),
   storeToRefs: () => ({ theme: ref(''), sourceCode: ref(true), currentFile: ref(null) }),
   codeMirror: () => ({}),
@@ -207,5 +213,65 @@ describe('sourceCode handleImageAction', () => {
     expect(cm.getValue()).toBe('![cat](new.png)')
     expect(cm.setSelection).not.toHaveBeenCalled()
     expect((deps.setCursorAtFirstLine as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1)
+  })
+
+  it('runs the full document pipeline on changes, not cursor-only activity', () => {
+    const handlers = new Map<string, (cm: unknown) => void>()
+    const getValue = vi.fn(() => 'alpha beta')
+    const contentChange = vi.fn()
+    const persistCursor = vi.fn()
+    const setSelectedCount = vi.fn()
+    let frameCallback: FrameRequestCallback | null = null
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frameCallback = callback
+      return 1
+    })
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+
+    const cm = {
+      on: (event: string, callback: (instance: unknown) => void) => handlers.set(event, callback),
+      getValue,
+      getCursor: (which: string) =>
+        which === 'anchor' ? { line: 0, ch: 0 } : { line: 0, ch: 5 },
+      getLine: () => 'alpha beta',
+      lineCount: () => 1,
+      getSelection: () => 'alpha'
+    }
+    const deps = makeDeps({
+      useEditorStore: () => ({
+        LISTEN_FOR_CONTENT_CHANGE: contentChange,
+        PERSIST_SOURCE_CURSOR: persistCursor,
+        SET_SELECTED_WORD_COUNT: setSelectedCount
+      }),
+      getWordCount: (markdown: string) => ({
+        word: markdown.split(/\s+/).filter(Boolean).length,
+        character: markdown.replace(/\s/g, '').length,
+        paragraph: markdown ? 1 : 0,
+        all: markdown.length
+      })
+    })
+    const component = loadComponent(deps)
+    const bindings = component.setup(
+      { markdown: '', muyaIndexCursor: null, textDirection: 'ltr' },
+      { expose: () => {} }
+    )
+    bindings.editor.value = cm
+    bindings.tabId.value = 'tab-1'
+    bindings.listenChange()
+
+    handlers.get('cursorActivity')?.(cm)
+    expect(getValue).not.toHaveBeenCalled()
+    ;(frameCallback as FrameRequestCallback | null)?.(0)
+    expect(persistCursor).toHaveBeenCalledTimes(1)
+    expect(setSelectedCount).toHaveBeenCalledWith(expect.objectContaining({ word: 1 }))
+    expect(contentChange).not.toHaveBeenCalled()
+
+    handlers.get('change')?.(cm)
+    expect(getValue).toHaveBeenCalledTimes(1)
+    expect(contentChange).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'tab-1', markdown: 'alpha beta' })
+    )
+
+    vi.unstubAllGlobals()
   })
 })

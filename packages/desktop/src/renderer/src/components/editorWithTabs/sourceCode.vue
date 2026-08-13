@@ -10,6 +10,7 @@ import { ref, markRaw, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useEditorStore } from '@/store/editor'
 import { usePreferencesStore } from '@/store/preferences'
 import { findMarkdownHeadingLine, scrollSourceEditorToLine } from '@/util/sourceModeToc'
+import { makeLineNumberFormatter } from '@/util/sourceLineNumbers'
 import { storeToRefs } from 'pinia'
 import codeMirror, { setCursorAtFirstLine, setTextDirection } from '../../codeMirror'
 import { wordCount as getWordCount } from '@muyajs/core'
@@ -39,11 +40,11 @@ const preferencesStore = usePreferencesStore()
 const sourceCodeContainer = ref<HTMLDivElement | null>(null)
 
 const editor = ref<CMInstance>(null)
-const commitTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 const viewDestroyed = ref(false)
 const tabId = ref<string | null>(null)
+let selectionFrame: number | null = null
 
-const { theme, sourceCode } = storeToRefs(preferencesStore)
+const { theme, sourceCode, sourceLineNumberFrequency } = storeToRefs(preferencesStore)
 const { currentFile: currentTab } = storeToRefs(editorStore)
 
 const isValidMuyaIndexCursor = (cursor: unknown): cursor is MuyaIndexCursorLike => {
@@ -60,11 +61,16 @@ watch(
   }
 )
 
-const getMarkdownAndCursor = (cm: CMInstance) => {
+watch(sourceLineNumberFrequency, (frequency) => {
+  if (!editor.value) return
+  editor.value.setOption('lineNumbers', frequency > 0)
+  editor.value.setOption('lineNumberFormatter', makeLineNumberFormatter(frequency))
+})
+
+const getMuyaIndexCursor = (cm: CMInstance) => {
   let focus = cm.getCursor('head')
   let anchor = cm.getCursor('anchor')
 
-  const markdown: string = cm.getValue()
   const convertToMuyaCursor = (cursor: CMCursor) => {
     const line = cm.getLine(cursor.line)
     const preLine = cm.getLine(cursor.line - 1)
@@ -91,7 +97,28 @@ const getMarkdownAndCursor = (cm: CMInstance) => {
     focus = anchor
     anchor = tmpCursor
   }
-  return { cursor: { focus, anchor }, markdown }
+  return { focus, anchor }
+}
+
+const getMarkdownAndCursor = (cm: CMInstance) => {
+  return {
+    cursor: getMuyaIndexCursor(cm),
+    markdown: cm.getValue() as string
+  }
+}
+
+const scheduleCursorAndSelectionUpdate = (cm: CMInstance) => {
+  if (selectionFrame !== null) cancelAnimationFrame(selectionFrame)
+  selectionFrame = requestAnimationFrame(() => {
+    selectionFrame = null
+    if (viewDestroyed.value || !tabId.value) return
+
+    editorStore.PERSIST_SOURCE_CURSOR(tabId.value, getMuyaIndexCursor(cm))
+    const selectedText = cm.getSelection() as string
+    editorStore.SET_SELECTED_WORD_COUNT(
+      selectedText.length > 0 ? getWordCount(selectedText) : null
+    )
+  })
 }
 
 /**
@@ -99,7 +126,6 @@ const getMarkdownAndCursor = (cm: CMInstance) => {
  * @param id
  */
 const prepareTabSwitch = () => {
-  if (commitTimer.value) clearTimeout(commitTimer.value)
   if (tabId.value) {
     const { cursor, markdown: newMarkdown } = getMarkdownAndCursor(editor.value)
     editorStore.LISTEN_FOR_CONTENT_CHANGE({
@@ -178,6 +204,8 @@ const handleFileChange = (payload: unknown) => {
   } else {
     setCursorAtFirstLine(editor.value)
   }
+
+  scheduleCursorAndSelectionUpdate(editor.value)
 }
 
 const handleInvalidateImageCache = () => {
@@ -302,8 +330,14 @@ const saveContent = (cm: CMInstance) => {
 }
 
 const listenChange = () => {
-  editor.value.on('cursorActivity', (cm: CMInstance) => {
+  // Content changes need the full Markdown/save/count pipeline. A caret move
+  // does not: keeping it on cursorActivity made every arrow key and mouse drag
+  // read, recount, dirty-check, and buffer the whole document.
+  editor.value.on('change', (cm: CMInstance) => {
     saveContent(cm)
+  })
+  editor.value.on('cursorActivity', (cm: CMInstance) => {
+    scheduleCursorAndSelectionUpdate(cm)
   })
 }
 
@@ -333,19 +367,13 @@ onMounted(() => {
   const container = sourceCodeContainer.value
   const codeMirrorConfig: Record<string, unknown> = {
     value: markdown,
-    lineNumbers: true,
+    lineNumbers: sourceLineNumberFrequency.value > 0,
     autofocus: true,
     lineWrapping: true,
     styleActiveLine: true,
     direction: textDirection,
     viewportMargin: Infinity,
-    lineNumberFormatter (line: number) {
-      if (line % 10 === 0 || line === 1) {
-        return line
-      } else {
-        return ''
-      }
-    }
+    lineNumberFormatter: makeLineNumberFormatter(sourceLineNumberFrequency.value)
   }
 
   if (railscastsThemes.includes(theme.value)) {
@@ -387,11 +415,14 @@ onMounted(() => {
   tabId.value = id
 
   listenChange()
+  scheduleCursorAndSelectionUpdate(codeMirrorInstance)
 })
 
 onBeforeUnmount(() => {
   viewDestroyed.value = true
-  if (commitTimer.value) clearTimeout(commitTimer.value)
+  if (selectionFrame !== null) cancelAnimationFrame(selectionFrame)
+  selectionFrame = null
+  editorStore.SET_SELECTED_WORD_COUNT(null)
 
   bus.off('file-loaded', handleFileChange)
   bus.off('invalidate-image-cache', handleInvalidateImageCache)

@@ -293,6 +293,21 @@ let switchLanguageCommand: SpellcheckerLanguageCommand | null = null
 let imageViewer: SimpleImageViewer | null = null
 // The engine has no `scroll` event; we listen on the scroll container directly.
 let scrollHandler: ((e: Event) => void) | null = null
+// Native selectionchange can fire several times in one frame while the user
+// drags. Re-serialising a cross-block selection on every intermediate event is
+// wasted work, so only count the latest selection once per paint.
+let selectedCountFrame: number | null = null
+const scheduleSelectedWordCount = (): void => {
+  if (selectedCountFrame !== null) cancelAnimationFrame(selectedCountFrame)
+  selectedCountFrame = requestAnimationFrame(() => {
+    selectedCountFrame = null
+    if (sourceCode.value || !editor.value) return
+    const selectedText = editor.value.getSelectedText()
+    editorStore.SET_SELECTED_WORD_COUNT(
+      selectedText.length > 0 ? muyaWordCount(selectedText) : null
+    )
+  })
+}
 
 // The engine's undo/redo history (`getHistory()`) has a different shape than
 // the desktop store's `tab.history` (which drives the save/dirty tracking and
@@ -573,10 +588,14 @@ watch(focus, (value) => {
 watch(sourceCode, (isSource) => {
   const windowId = window.marktext?.env?.windowId ?? -1
   if (isSource) {
+    if (selectedCountFrame !== null) cancelAnimationFrame(selectedCountFrame)
+    selectedCountFrame = null
+    editorStore.SET_SELECTED_WORD_COUNT(null)
     window.electron.ipcRenderer.send('mt::set-editor-format-menus-enabled', windowId, false)
     return
   }
   nextTick(() => {
+    scheduleSelectedWordCount()
     if (selectionChange.value) {
       pushSelectionMenuState(selectionChange.value as MuyaChange)
     } else {
@@ -830,6 +849,7 @@ watch(spellcheckerLanguage, (value, oldValue) => {
 
 watch(currentFile, (value, oldValue) => {
   if (value && value !== oldValue) {
+    editorStore.SET_SELECTED_WORD_COUNT(null)
     scrollToCursor(0)
     // Hide float tools if needed.
     if (editor.value) {
@@ -2053,6 +2073,7 @@ onMounted(() => {
     if (currentFile.value?.id && editor.value) {
       editorStore.PERSIST_CURSOR(currentFile.value.id, serializeCursor(editor.value.getSelection()))
     }
+    if (!sourceCode.value) scheduleSelectedWordCount()
     pushSelectionMenuState(changes)
   })
 
@@ -2062,6 +2083,10 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (selectedCountFrame !== null) cancelAnimationFrame(selectedCountFrame)
+  selectedCountFrame = null
+  editorStore.SET_SELECTED_WORD_COUNT(null)
+
   bus.off('file-loaded', setMarkdownToEditor)
   bus.off('invalidate-image-cache', handleInvalidateImageCache)
   bus.off('undo', handleUndo)

@@ -1,6 +1,7 @@
 import type Content from '../../block/base/content';
 import type { Muya } from '../../muya';
 import { describe, expect, it, vi } from 'vitest';
+import { CopyType } from '../types';
 
 // Same prism stub as copyHandler.spec — the import graph touches `window`.
 vi.mock('../../utils/prism/index', () => ({
@@ -73,6 +74,22 @@ describe('clipboard.getClipboardData — single-block selection is not HTML-esca
         const { text } = clipboard.getClipboardData();
 
         expect(text).toBe('');
+    });
+});
+
+describe('clipboard.getSelectedText — side-effect-free selection text (#4457)', () => {
+    it('returns the same verbatim single-block text used by normal copy', () => {
+        const clipboard = makeClipboard('before selected words after', 7, 21);
+
+        expect(clipboard.getSelectedText()).toBe('selected words');
+    });
+
+    it('ignores a temporary code-content copy payload', () => {
+        const clipboard = makeClipboard('actual selection', 0, 6);
+        clipboard.copyType = CopyType.COPY_CODE_CONTENT;
+        clipboard.copyInfo = 'unrelated code payload';
+
+        expect(clipboard.getSelectedText()).toBe('actual');
     });
 });
 

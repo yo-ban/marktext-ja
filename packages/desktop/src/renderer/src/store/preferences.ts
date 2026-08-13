@@ -45,6 +45,7 @@ export interface PreferencesState {
   codeFontSize: number
   codeFontFamily: string
   codeBlockLineNumbers: boolean
+  sourceLineNumberFrequency: number
   trimUnnecessaryCodeBlockEmptyLines: boolean
   wrapCodeBlocks: boolean
   editorLineWidth: string
@@ -115,6 +116,7 @@ export interface PreferencesState {
   typewriter: boolean
   focus: boolean
   sourceCode: boolean
+  lastEnabledSourceLineNumberFrequency: number
 
   // ----- User config -----
   imageFolderPath: string
@@ -164,6 +166,7 @@ export const usePreferencesStore = defineStore('preferences', {
     codeFontSize: 14,
     codeFontFamily: 'DejaVu Sans Mono',
     codeBlockLineNumbers: false,
+    sourceLineNumberFrequency: 10,
     trimUnnecessaryCodeBlockEmptyLines: true,
     wrapCodeBlocks: false,
     editorLineWidth: '',
@@ -232,6 +235,7 @@ export const usePreferencesStore = defineStore('preferences', {
     typewriter: false, // typewriter mode
     focus: false,
     sourceCode: false, // source code mode
+    lastEnabledSourceLineNumberFrequency: 10,
 
     // user configration
     imageFolderPath: '',
@@ -248,6 +252,12 @@ export const usePreferencesStore = defineStore('preferences', {
   actions: {
     SET_USER_PREFERENCE(preference: Partial<PreferencesState> | Record<string, unknown>): void {
       const oldLanguage = this.language
+
+      const incomingFrequency = (preference as { sourceLineNumberFrequency?: unknown })
+        .sourceLineNumberFrequency
+      if (typeof incomingFrequency === 'number' && incomingFrequency > 0) {
+        this.lastEnabledSourceLineNumberFrequency = incomingFrequency
+      }
 
       Object.keys(preference).forEach((key) => {
         const incoming = (preference as Record<string, unknown>)[key]
@@ -303,6 +313,10 @@ export const usePreferencesStore = defineStore('preferences', {
     },
 
     SET_SINGLE_PREFERENCE({ type, value }: SingleSetPreferencePayload): void {
+      if (type === 'sourceLineNumberFrequency' && typeof value === 'number' && value > 0) {
+        this.lastEnabledSourceLineNumberFrequency = value
+      }
+
       // Update local state
       ;(this as unknown as Record<string, unknown>)[type as string] = value
 
@@ -313,6 +327,12 @@ export const usePreferencesStore = defineStore('preferences', {
 
       // save to electron-store
       window.electron.ipcRenderer.send('mt::set-user-preference', { [type as string]: value })
+    },
+
+    TOGGLE_SOURCE_LINE_NUMBERS(): void {
+      const frequency =
+        this.sourceLineNumberFrequency > 0 ? 0 : this.lastEnabledSourceLineNumberFrequency
+      this.SET_SINGLE_PREFERENCE({ type: 'sourceLineNumberFrequency', value: frequency })
     },
 
     SET_USER_DATA({ type, value }: SetUserDataPayload): void {
@@ -335,6 +355,9 @@ export const usePreferencesStore = defineStore('preferences', {
         this.TOGGLE_VIEW_MODE(entryName)
         const target = this as unknown as Record<string, unknown>
         this.DISPATCH_EDITOR_VIEW_STATE({ [entryName]: target[entryName] })
+      })
+      window.electron.ipcRenderer.on('mt::toggle-source-line-numbers', () => {
+        this.TOGGLE_SOURCE_LINE_NUMBERS()
       })
     },
 

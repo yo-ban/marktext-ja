@@ -345,18 +345,38 @@ export function getClipboardData(clipboard: Clipboard): IClipboardPayload {
     if (tableData != null)
         return tableData;
 
+    const text = getSelectedText(clipboard);
+    if (text.length === 0)
+        return { html: '', text: '' };
+
+    const html = getClipBoardHtml(text, buildHtmlOptions(clipboard.muya.options));
+
+    return { html, text };
+}
+
+/**
+ * Return the Markdown represented by the current text selection without
+ * touching the system clipboard. This intentionally shares the copy
+ * serializer so hosts see the same result for selections that span lists,
+ * quotes, tables, and other container blocks.
+ */
+export function getSelectedText(clipboard: Clipboard): string {
+    // A frozen cross-cell table selection contributes the same Markdown/plain
+    // text as Copy, but callers only need the text half of the payload.
+    const tableData = getTableSelectionClipboardData(clipboard);
+    if (tableData != null)
+        return tableData.text;
+
     const selection = clipboard.selection.getSelection();
     if (selection == null)
-        return { html: '', text: '' };
+        return '';
 
     const { isSelectionInSameBlock, anchor, focus } = selection;
     const anchorBlock = anchor.block;
     const focusBlock = focus.block;
 
     if (anchorBlock == null || focusBlock == null)
-        return { html: '', text: '' };
-
-    const options = buildHtmlOptions(clipboard.muya.options);
+        return '';
 
     // Handler copy/cut in one block.
     if (isSelectionInSameBlock) {
@@ -365,20 +385,17 @@ export function getClipboardData(clipboard: Clipboard): IClipboardPayload {
 
         const text = anchorBlock.text.substring(begin, end);
 
-        return { html: getClipBoardHtml(text, options), text };
+        return text;
     }
 
     // Handle select multiple blocks.
     const order = resolveSelectionOrder(clipboard, selection);
     if (order == null)
-        return { html: '', text: '' };
+        return '';
 
     const copyState = collectCopyState(order);
 
-    const text = new StateToMarkdown().generate(copyState);
-    const html = getClipBoardHtml(text, options);
-
-    return { html, text };
+    return new StateToMarkdown().generate(copyState);
 }
 
 export function writeClipboardData(

@@ -568,6 +568,14 @@ export class Muya {
     }
 
     /**
+     * Return the Markdown represented by the current text selection. Unlike a
+     * clipboard copy, this has no side effects and ignores temporary copy modes.
+     */
+    getSelectedText(): string {
+        return this.editor.clipboard.getSelectedText();
+    }
+
+    /**
      * Whether the editor (or one of its descendants) currently holds focus.
      */
     hasFocus() {

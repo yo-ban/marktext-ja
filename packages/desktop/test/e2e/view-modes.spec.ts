@@ -107,6 +107,27 @@ test.describe('View modes', () => {
     })
   })
 
+  test('#4908: Source Code line numbers can be toggled live from the View menu', async() => {
+    await enterSourceMode(page, app)
+
+    expect((await waitForChecked(app, 'sourceLineNumbersMenuItem', true)).checked).toBe(true)
+    await expect
+      .poll(() => page.locator('.CodeMirror-linenumber').allInnerTexts())
+      .toContain('1')
+
+    await clickMenuById(app, 'sourceLineNumbersMenuItem')
+    expect((await waitForChecked(app, 'sourceLineNumbersMenuItem', false)).checked).toBe(false)
+    await expect(page.locator('.CodeMirror-gutter.CodeMirror-linenumbers')).toHaveCount(0)
+
+    await clickMenuById(app, 'sourceLineNumbersMenuItem')
+    expect((await waitForChecked(app, 'sourceLineNumbersMenuItem', true)).checked).toBe(true)
+    await expect
+      .poll(() => page.locator('.CodeMirror-linenumber').allInnerTexts())
+      .toContain('1')
+
+    await exitSourceMode(page, app)
+  })
+
   // Item 155 — In source-code mode the Typewriter and Focus menu items are
   // disabled (editing modes don't apply to the CodeMirror surface), and become
   // enabled again on exit. `viewLayoutChanged`'s `sourceCode` branch toggles

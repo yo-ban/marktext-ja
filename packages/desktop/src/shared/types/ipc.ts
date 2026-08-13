@@ -281,6 +281,7 @@ export interface IpcMainEventChannels {
   'mt::tabs-cycle-right': []
   'mt::toggle-view-layout-entry': [entry: string]
   'mt::toggle-view-mode-entry': [entry: string]
+  'mt::toggle-source-line-numbers': []
   'mt::update-file': [payload: { type: 'add' | 'change' | 'unlink'; change: FileChangeDetail }]
   'mt::update-object-tree': [payload: unknown]
   'mt::user-preference': [partial: unknown]

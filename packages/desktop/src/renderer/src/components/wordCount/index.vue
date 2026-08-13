@@ -1,35 +1,68 @@
 <template>
   <el-tooltip
-    v-if="wordCount"
+    v-if="props.wordCount"
     placement="top-end"
   >
     <template #content>
-      <div class="word-count-stat">
-        <span class="front">{{ t('menu.counter.words') }}:</span><span class="text">{{ wordCount['word'] }}</span>
+      <div
+        v-if="hasSelection"
+        class="word-count-stat word-count-heading has-selection"
+      >
+        <span />
+        <span class="text">{{ t('menu.counter.document') }}</span>
+        <span class="text">{{ t('menu.counter.selection') }}</span>
       </div>
-      <div class="word-count-stat">
-        <span class="front">{{ t('menu.counter.characters') }}:</span><span class="text">{{ wordCount['character'] }}</span>
+      <div
+        class="word-count-stat"
+        :class="{ 'has-selection': hasSelection }"
+      >
+        <span class="front">{{ t('menu.counter.words') }}:</span>
+        <span class="text">{{ props.wordCount.word }}</span>
+        <span
+          v-if="hasSelection"
+          class="text"
+        >{{ props.selectedWordCount?.word }}</span>
       </div>
-      <div class="word-count-stat">
-        <span class="front">{{ t('menu.counter.paragraphs') }}:</span><span class="text">{{ wordCount['paragraph'] }}</span>
+      <div
+        class="word-count-stat"
+        :class="{ 'has-selection': hasSelection }"
+      >
+        <span class="front">{{ t('menu.counter.characters') }}:</span>
+        <span class="text">{{ props.wordCount.character }}</span>
+        <span
+          v-if="hasSelection"
+          class="text"
+        >{{ props.selectedWordCount?.character }}</span>
+      </div>
+      <div
+        class="word-count-stat"
+        :class="{ 'has-selection': hasSelection }"
+      >
+        <span class="front">{{ t('menu.counter.paragraphs') }}:</span>
+        <span class="text">{{ props.wordCount.paragraph }}</span>
+        <span
+          v-if="hasSelection"
+          class="text"
+        >{{ props.selectedWordCount?.paragraph }}</span>
       </div>
     </template>
     <div
       class="word-count"
       @click.stop="handleWordClick"
     >
-      <span class="text-center-vertical">{{ `${HASH[show].short} ${wordCount[show]}` }}</span>
+      <span class="text-center-vertical">{{ compactText }}</span>
     </div>
   </el-tooltip>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { FileWordCount } from '@shared/types/files'
 
-defineProps<{
+const props = defineProps<{
   wordCount?: FileWordCount | null
+  selectedWordCount?: FileWordCount | null
 }>()
 
 const { t } = useI18n()
@@ -54,6 +87,14 @@ const HASH = {
 }
 
 const show = ref<'word' | 'paragraph' | 'character' | 'all'>('word')
+const hasSelection = computed(() => props.selectedWordCount != null)
+const compactText = computed(() => {
+  if (!props.wordCount) return ''
+  const documentCount = props.wordCount[show.value]
+  const selectedCount = props.selectedWordCount?.[show.value]
+  const comparison = selectedCount == null ? '' : ` / ${selectedCount}`
+  return `${HASH[show.value].short} ${documentCount}${comparison}`
+})
 
 const handleWordClick = () => {
   const ITEMS = ['word', 'paragraph', 'character', 'all'] as const
@@ -98,11 +139,24 @@ const handleWordClick = () => {
 .word-count-stat {
   height: 28px;
   line-height: 28px;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(44px, auto);
+  column-gap: 10px;
+  &.has-selection {
+    grid-template-columns: minmax(max-content, 1fr) minmax(54px, auto) minmax(54px, auto);
+  }
   & .front {
     opacity: 0.7;
   }
   & .text {
-    margin-left: 10px;
+    text-align: right;
   }
+}
+.word-count-heading {
+  height: 22px;
+  line-height: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 11px;
+  opacity: 0.8;
 }
 </style>
