@@ -352,6 +352,8 @@
   },
   "recent": {
     "noTabsOpen": "Açık sekmeniz yok.",
+    "hint": "Yeni bir dosya oluşturun veya bir dosya ya da klasör açın.",
+    "dropHint": "Dosyaları buraya da bırakabilirsiniz.",
     "newFile": "Yeni Dosya"
   },
   "import": {

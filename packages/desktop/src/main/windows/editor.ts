@@ -91,8 +91,6 @@ class EditorWindow extends BaseWindow {
     bufferStoreInfo: BufferStoreInfo | null = null
   ): BrowserWindow {
     const { menu: appMenu, env, preferences, editorBufferStore } = this._accessor
-    const addBlankTab =
-      !bufferStoreInfo && !rootDirectory && fileList.length === 0 && markdownList.length === 0
 
     const mainWindowState = windowStateKeeper({
       defaultWidth: 1200,
@@ -177,7 +175,10 @@ class EditorWindow extends BaseWindow {
       appMenu.updateLineEndingMenu(this.id!, lineEnding)
 
       win!.webContents.send('mt::bootstrap-editor', {
-        addBlankTab,
+        // Empty windows used to seed an untitled tab, which hid the welcome
+        // screen and left first-run users with no Open File / Open Folder
+        // affordance. markdownList still seeds tabs when the caller has content.
+        addBlankTab: false,
         markdownList: this.bufferStoreInfo!.filePath ? [] : this._markdownToOpen,
         lineEnding,
         sideBarVisibility: resolvedSideBarVisibility,

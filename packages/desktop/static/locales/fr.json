@@ -352,6 +352,8 @@
   },
   "recent": {
     "noTabsOpen": "Vous n'avez aucun onglet ouvert.",
+    "hint": "Créez un nouveau fichier, ou ouvrez un fichier ou un dossier.",
+    "dropHint": "Vous pouvez aussi déposer des fichiers ici.",
     "newFile": "Nouveau fichier"
   },
   "import": {

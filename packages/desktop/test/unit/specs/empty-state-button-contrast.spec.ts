@@ -3,14 +3,11 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// #4774: the sidebar "Open Folder" and editor "New File" empty-state buttons
-// styled their label as `color: var(--themeColor)` on
-// `background-color: var(--itemBgColor)`. Neither is a contrast-controlled
-// pairing, so the label was unreadable in several themes (e.g. ayu-light,
-// everforest-light). Every theme already defines a contrast-tuned primary
-// pairing (--buttonPrimaryFontColor / --buttonPrimaryBgColor) that drives the
-// app-wide `.button-primary`. These buttons must be at least as readable as
-// that standard primary button in EVERY built-in theme.
+// #4774: empty-state actions used to paint `color: var(--themeColor)` on
+// `background-color: var(--itemBgColor)`, which was unreadable in several
+// themes. They now reuse the surface's body text token (editor / sidebar)
+// so they stay as readable as the surrounding copy, without a foreign
+// primary-green CTA.
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const RENDERER = resolve(__dirname, '../../../src/renderer/src')
@@ -118,57 +115,61 @@ const pairContrast = (
   return contrast(fg, bg)
 }
 
-// Pull the foreground (color) and background-color custom-property names the
-// empty-state button rule assigns, straight from the component's scoped CSS.
-const extractButtonVars = (
-  componentPath: string
-): { fgVar: string; bgVar: string } => {
-  const css = readFileSync(componentPath, 'utf8')
+// Label colour of a rule whose last selector subject is `.empty-action`.
+const extractFgVar = (css: string, requireSidebar: boolean): string => {
   const ruleRe = /([^{}]+)\{([^{}]*)\}/g
   let m: RegExpExecArray | null
   while ((m = ruleRe.exec(css))) {
     const selector = m[1]
     const body = m[2]
-    if (!selector.includes('.is-text.is-has-bg')) continue
     if (/:hover|:focus/.test(selector)) continue
-    const bg = body.match(/(?<![-\w])background-color:\s*var\(\s*(--[\w-]+)/)
+    const subject = selector.trim().split(/[\s>]+/).pop()
+    if (subject !== '.empty-action') continue
+    const isSidebar = selector.includes('.sidebar')
+    if (isSidebar !== requireSidebar) continue
     const fg = body.match(/(?<![-\w])color:\s*var\(\s*(--[\w-]+)/)
-    if (bg && fg) return { fgVar: fg[1], bgVar: bg[1] }
+    if (fg) return fg[1]
   }
-  throw new Error(`no .is-text.is-has-bg colour rule found in ${componentPath}`)
+  throw new Error(`no .empty-action color var (sidebar=${requireSidebar})`)
 }
 
 const baseVars = parseVars(readFileSync(BASE_CSS, 'utf8'))
 const themeFiles = readdirSync(THEME_DIR).filter((f) => f.endsWith('.theme.css'))
+const EMPTY_ACTION_CSS = readFileSync(
+  resolve(RENDERER, 'components/common/emptyActionList.vue'),
+  'utf8'
+)
 
-const COMPONENTS = [
+const TONES = [
   {
-    name: 'Open Folder (sidebar/tree.vue)',
-    path: resolve(RENDERER, 'components/sideBar/tree.vue'),
-    surfaceVar: '--sideBarBgColor'
+    name: 'editor welcome actions',
+    fgVar: extractFgVar(EMPTY_ACTION_CSS, false),
+    expectedFg: '--editorColor',
+    surfaceVar: '--editorBgColor',
+    bodyFg: '--editorColor'
   },
   {
-    name: 'New File (recent/index.vue)',
-    path: resolve(RENDERER, 'components/recent/index.vue'),
-    surfaceVar: '--editorBgColor'
-  },
-  {
-    name: 'Open Folder (sideBar/search.vue no-data)',
-    path: resolve(RENDERER, 'components/sideBar/search.vue'),
-    surfaceVar: '--sideBarBgColor'
+    name: 'sidebar empty actions',
+    fgVar: extractFgVar(EMPTY_ACTION_CSS, true),
+    expectedFg: '--sideBarColor',
+    surfaceVar: '--sideBarBgColor',
+    bodyFg: '--sideBarColor'
   }
 ]
 
-describe('empty-state button readability (#4774)', () => {
-  it('found theme files and base variables to test against', () => {
+describe('empty-state action readability (#4774)', () => {
+  it('found theme files and the shared empty-action list', () => {
     expect(themeFiles.length).toBeGreaterThan(20)
-    expect(baseVars['--buttonPrimaryFontColor']).toBeTruthy()
-    expect(baseVars['--buttonPrimaryBgColor']).toBeTruthy()
+    expect(EMPTY_ACTION_CSS).toContain('.empty-action')
   })
 
-  for (const component of COMPONENTS) {
-    it(`${component.name} label is at least as readable as the standard primary button, in every theme`, () => {
-      const { fgVar, bgVar } = extractButtonVars(component.path)
+  for (const tone of TONES) {
+    it(`${tone.name} use the surface's body text colour, not the theme accent`, () => {
+      expect(tone.fgVar).toBe(tone.expectedFg)
+      expect(tone.fgVar).not.toBe('--themeColor')
+    })
+
+    it(`${tone.name} stay at least as readable as body text, in every theme`, () => {
       const failures: string[] = []
 
       for (const file of themeFiles) {
@@ -176,18 +177,11 @@ describe('empty-state button readability (#4774)', () => {
           ...baseVars,
           ...parseVars(readFileSync(resolve(THEME_DIR, file), 'utf8'))
         }
-        const buttonContrast = pairContrast(fgVar, bgVar, component.surfaceVar, vars)
-        const primaryContrast = pairContrast(
-          '--buttonPrimaryFontColor',
-          '--buttonPrimaryBgColor',
-          component.surfaceVar,
-          vars
-        )
-        // Equal is fine (the button reuses the primary pairing); only a
-        // strictly-worse contrast than the standard primary button fails.
-        if (buttonContrast < primaryContrast - 0.01) {
+        const actionContrast = pairContrast(tone.fgVar, tone.surfaceVar, tone.surfaceVar, vars)
+        const bodyContrast = pairContrast(tone.bodyFg, tone.surfaceVar, tone.surfaceVar, vars)
+        if (actionContrast < bodyContrast - 0.01) {
           failures.push(
-            `${file.replace('.theme.css', '')}: button ${buttonContrast.toFixed(2)} < primary ${primaryContrast.toFixed(2)}`
+            `${file.replace('.theme.css', '')}: action ${actionContrast.toFixed(2)} < body ${bodyContrast.toFixed(2)}`
           )
         }
       }

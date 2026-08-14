@@ -352,6 +352,8 @@
   },
   "recent": {
     "noTabsOpen": "No tienes pestañas abiertas.",
+    "hint": "Cree un archivo nuevo, o abra un archivo o carpeta.",
+    "dropHint": "También puede soltar archivos aquí.",
     "newFile": "Nuevo Archivo"
   },
   "import": {

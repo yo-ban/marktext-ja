@@ -352,6 +352,8 @@
   },
   "recent": {
     "noTabsOpen": "You have no tabs open.",
+    "hint": "Create a new file, or open a file or folder to get started.",
+    "dropHint": "You can also drop files here.",
     "newFile": "New File"
   },
   "import": {

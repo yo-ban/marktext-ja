@@ -2204,7 +2204,11 @@ onBeforeUnmount(() => {
 
 .editor-component .mu-container {
   padding-top: 20px;
-  padding-bottom: 100vh;
+  /* 100vh overflowed an empty document by roughly the title-bar height:
+     border-box min-height 100% cannot contain a padding larger than the
+     parent. 30vh still lets the last block scroll into the upper half of
+     a filled document without a phantom scrollbar on a blank one. */
+  padding-bottom: 30vh;
 }
 
 .typewriter .editor-component {

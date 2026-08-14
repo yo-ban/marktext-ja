@@ -89,15 +89,12 @@
       class="empty"
     >
       <div class="no-data">
-        <el-button
+        <empty-action-list
           v-if="showNoFolderOpenedMessage"
-          text
-          bg
-          type="primary"
-          @click="openFolder"
-        >
-          {{ t('sideBar.search.openFolder') }}
-        </el-button>
+          tone="sidebar"
+          :show-shortcuts="false"
+          :actions="openFolderActions"
+        />
       </div>
     </div>
   </div>
@@ -114,11 +111,12 @@ import { storeToRefs } from 'pinia'
 import bus from '../../bus'
 import log from 'electron-log'
 import SearchResultItem from './searchResultItem.vue'
+import EmptyActionList, { type EmptyAction } from '@/components/common/emptyActionList.vue'
 import RipgrepDirectorySearcher from '../../node/ripgrepSearcher'
 import FindCaseIcon from '@/assets/icons/searchIcons/iconCase.svg'
 import FindWordIcon from '@/assets/icons/searchIcons/iconWord.svg'
 import FindRegexIcon from '@/assets/icons/searchIcons/iconRegex.svg'
-import { VideoPause } from '@element-plus/icons-vue'
+import { FolderOpened, VideoPause } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import type { SearchResult } from './types'
 
@@ -306,9 +304,13 @@ const handleFindInFolder = (executeSearch: boolean | unknown = true): void => {
   })
 }
 
-const openFolder = (): void => {
-  projectStore.ASK_FOR_OPEN_PROJECT()
-}
+const openFolderActions = computed<EmptyAction[]>(() => [
+  {
+    label: t('sideBar.search.openFolder'),
+    icon: FolderOpened,
+    run: () => projectStore.ASK_FOR_OPEN_PROJECT()
+  }
+])
 
 const caseSensitiveClicked = (): void => {
   isCaseSensitive.value = !isCaseSensitive.value
@@ -479,21 +481,9 @@ onBeforeUnmount(() => {
   padding-bottom: 100px;
   & .no-data {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     flex-direction: column;
-  }
-  & .no-data .el-button {
-    margin-top: 20px;
-  }
-  & .no-data .el-button.is-text.is-has-bg {
-    background-color: var(--buttonPrimaryBgColor);
-    color: var(--buttonPrimaryFontColor);
-    border-color: transparent;
-  }
-  & .no-data .el-button.is-text.is-has-bg:hover,
-  & .no-data .el-button.is-text.is-has-bg:focus {
-    background-color: var(--buttonPrimaryBgColorHover);
-    color: var(--buttonPrimaryFontColorHover);
+    padding: 24px 12px;
   }
 }
 </style>

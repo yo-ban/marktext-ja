@@ -352,6 +352,8 @@
   },
   "recent": {
     "noTabsOpen": "Você não tem abas abertas.",
+    "hint": "Crie um novo arquivo, ou abra um arquivo ou pasta.",
+    "dropHint": "Você também pode soltar arquivos aqui.",
     "newFile": "Novo Arquivo"
   },
   "import": {
