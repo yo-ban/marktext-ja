@@ -150,6 +150,7 @@ interface SelectionFormat {
 
 interface ProjectStoreLike {
   projectTree: { pathname?: string } | null
+  findTreeForPath?: (pathname: string | null | undefined) => { pathname?: string } | null
 }
 
 // ----------------------------------------------------------------------------
@@ -478,7 +479,7 @@ export const useEditorStore = defineStore('editor', {
       }
 
       // Reload the editor if the tab is currently opened.
-      if (currentFile && pathname === currentFile.pathname) {
+      if (currentFile && window.fileUtils.isSamePathSync(pathname, currentFile.pathname)) {
         // save current state first
         this.currentFile = tab
         const { id, cursor, history, scrollTop, muyaIndexCursor } = tab // Not tab.markdown: the reloaded content comes from disk
@@ -616,7 +617,7 @@ export const useEditorStore = defineStore('editor', {
       const projectStore = useProjectStore()
       const { id, filename, pathname, markdown } = this.currentFile
       const options = getOptionsFromState(this.currentFile)
-      const defaultPath = getRootFolderFromState(projectStore)
+      const defaultPath = getRootFolderFromState(projectStore, pathname)
       if (id) {
         recordPendingSave(this.currentFile)
         window.electron.ipcRenderer.send(
@@ -647,7 +648,7 @@ export const useEditorStore = defineStore('editor', {
       const projectStore = useProjectStore()
       const { id, filename, pathname, markdown } = this.currentFile
       const options = getOptionsFromState(this.currentFile)
-      const defaultPath = getRootFolderFromState(projectStore)
+      const defaultPath = getRootFolderFromState(projectStore, pathname)
 
       if (id) {
         // No marker: "save as" always opens the dialog, and a dismissed dialog
@@ -760,7 +761,7 @@ export const useEditorStore = defineStore('editor', {
                   pathname,
                   markdown,
                   options,
-                  defaultPath: getRootFolderFromState(projectStore)
+                  defaultPath: getRootFolderFromState(projectStore, pathname)
                 }
               })
 
@@ -783,9 +784,13 @@ export const useEditorStore = defineStore('editor', {
     },
 
     ASK_FOR_SAVE_ALL(closeTabs: boolean): void {
-      const { tabs } = this
+      if (closeTabs) {
+        this.closeTabsWithSavePrompt(this.tabs.slice())
+        return
+      }
+
       const projectStore = useProjectStore()
-      const unsavedFiles = tabs
+      const unsavedFiles = this.tabs
         .filter((file) => !(file.isSaved && /[^\n]/.test(file.markdown)))
         .map((file) => {
           const { id, filename, pathname, markdown } = file
@@ -796,28 +801,47 @@ export const useEditorStore = defineStore('editor', {
             pathname,
             markdown,
             options,
-            defaultPath: getRootFolderFromState(projectStore)
+            defaultPath: getRootFolderFromState(projectStore, pathname)
+          }
+        })
+      window.electron.ipcRenderer.send('mt::save-tabs', deepClone(unsavedFiles))
+    },
+
+    // One save/close dialog for the given tabs. Per-tab CLOSE_TAB used to
+    // fire a dialog each, so Close All / Close Others stacked and raced.
+    // Saved tabs stay open until the user answers: closing them up front
+    // made Cancel destructive.
+    closeTabsWithSavePrompt(tabsToClose: IFileState[]): void {
+      if (tabsToClose.length === 0) return
+
+      const projectStore = useProjectStore()
+      const unsavedFiles = tabsToClose
+        .filter((file) => !(file.isSaved && /[^\n]/.test(file.markdown)))
+        .map((file) => {
+          const { id, filename, pathname, markdown } = file
+          const options = getOptionsFromState(file)
+          return {
+            id,
+            filename,
+            pathname,
+            markdown,
+            options,
+            defaultPath: getRootFolderFromState(projectStore, pathname)
           }
         })
 
-      if (closeTabs) {
-        if (unsavedFiles.length) {
-          // Keep the saved tabs open until the user answers the save dialog —
-          // main closes them together with the saved-now tabs, and Cancel
-          // leaves the whole window untouched. Closing them up front made
-          // Cancel destructive.
-          const unsavedIds = new Set(unsavedFiles.map((f) => f.id))
-          const savedTabIds = tabs.filter((f) => f.isSaved && !unsavedIds.has(f.id)).map((f) => f.id)
-          window.electron.ipcRenderer.send(
-            'mt::save-and-close-tabs',
-            deepClone(unsavedFiles),
-            savedTabIds
-          )
-        } else {
-          this.CLOSE_TABS(tabs.map((f) => f.id))
-        }
+      if (unsavedFiles.length) {
+        const unsavedIds = new Set(unsavedFiles.map((f) => f.id))
+        const savedTabIds = tabsToClose
+          .filter((f) => f.isSaved && !unsavedIds.has(f.id))
+          .map((f) => f.id)
+        window.electron.ipcRenderer.send(
+          'mt::save-and-close-tabs',
+          deepClone(unsavedFiles),
+          savedTabIds
+        )
       } else {
-        window.electron.ipcRenderer.send('mt::save-tabs', deepClone(unsavedFiles))
+        this.CLOSE_TABS(tabsToClose.map((f) => f.id))
       }
     },
 
@@ -827,7 +851,7 @@ export const useEditorStore = defineStore('editor', {
       const projectStore = useProjectStore()
       const { id, filename, pathname, markdown } = this.currentFile
       const options = getOptionsFromState(this.currentFile)
-      const defaultPath = getRootFolderFromState(projectStore)
+      const defaultPath = getRootFolderFromState(projectStore, pathname)
       if (!id) return
       if (!pathname) {
         // A newly created file has no path yet, so this opens the save dialog
@@ -871,7 +895,7 @@ export const useEditorStore = defineStore('editor', {
       const projectStore = useProjectStore()
       const { id, filename, pathname, markdown } = this.currentFile
       const options = getOptionsFromState(this.currentFile)
-      const defaultPath = getRootFolderFromState(projectStore)
+      const defaultPath = getRootFolderFromState(projectStore, pathname)
       if (!id) return
       if (!pathname) {
         // A newly created file has no path yet, so this opens the save dialog
@@ -910,7 +934,7 @@ export const useEditorStore = defineStore('editor', {
      */
     RENAME_IF_NEEDED({ src, dest }: { src: string; dest: string }): void {
       this.tabs.forEach((tab) => {
-        if (tab.pathname === src) {
+        if (window.fileUtils.isSamePathSync(tab.pathname, src)) {
           tab.pathname = dest
           tab.filename = window.path.basename(dest)
         }
@@ -918,7 +942,7 @@ export const useEditorStore = defineStore('editor', {
       // Keep DIRNAME in sync when the active tab is the one being renamed,
       // so link resolution / dirname-based lookups don't keep using the old
       // folder until the user switches tabs.
-      if (this.currentFile != null && this.currentFile.pathname === dest) {
+      if (this.currentFile != null && window.fileUtils.isSamePathSync(this.currentFile.pathname, dest)) {
         window.DIRNAME = window.path.dirname(dest)
       }
       debouncedSendBufferedState()
@@ -1168,11 +1192,7 @@ export const useEditorStore = defineStore('editor', {
     },
 
     CLOSE_OTHER_TABS(file: IFileState): void {
-      this.tabs
-        .filter((f) => f.id !== file.id)
-        .forEach((tab) => {
-          this.CLOSE_TAB(tab)
-        })
+      this.closeTabsWithSavePrompt(this.tabs.filter((f) => f.id !== file.id))
     },
 
     CLOSE_SAVED_TABS(): void {
@@ -1184,15 +1204,13 @@ export const useEditorStore = defineStore('editor', {
     },
 
     CLOSE_ALL_TABS(): void {
-      this.tabs.slice().forEach((tab) => {
-        this.CLOSE_TAB(tab)
-      })
+      this.ASK_FOR_SAVE_ALL(true)
     },
 
     CLOSE_TABS(tabIdList: string[]): void {
       if (!tabIdList || tabIdList.length === 0) return
 
-      let tabIndex = 0
+      let neighborIndex: number | null = null
       tabIdList.forEach((id) => {
         const index = this.tabs.findIndex((f) => f.id === id)
         if (index === -1) return
@@ -1209,17 +1227,18 @@ export const useEditorStore = defineStore('editor', {
         if (this.currentFile?.id === id) {
           this.currentFile = null
           window.DIRNAME = ''
-          if (tabIdList.length === 1) {
-            tabIndex = index
-          }
+          // After splice this index is the tab that shifted into the closed
+          // slot (the next neighbor), matching FORCE_CLOSE_TAB.
+          neighborIndex = index
         }
       })
 
       this.updateTabIdToIndex() // Update before sending it out to prevent stale mappings.
 
       if (this.currentFile == null && this.tabs.length > 0) {
+        const i = neighborIndex ?? 0
         this.currentFile =
-          this.tabs[tabIndex] ?? this.tabs[tabIndex - 1] ?? this.tabs[0] ?? null
+          this.tabs[i] ?? this.tabs[i - 1] ?? this.tabs[0] ?? null
         if (this.currentFile && typeof this.currentFile.markdown === 'string') {
           const { id, markdown, cursor, history, pathname, scrollTop, muyaIndexCursor } =
             this.currentFile
@@ -1315,7 +1334,7 @@ export const useEditorStore = defineStore('editor', {
         return
       }
 
-      const nextTabIndex = tabs.findIndex((t) => t.pathname === filePath)
+      const nextTabIndex = tabs.findIndex((t) => window.fileUtils.isSamePathSync(t.pathname, filePath))
       if (nextTabIndex === -1) {
         console.error('Cannot find tab with pathname:', filePath)
         return
@@ -1468,7 +1487,7 @@ export const useEditorStore = defineStore('editor', {
     SET_SAVE_STATUS_WHEN_REMOVE({ pathname }: { pathname: string }): void {
       let didUpdateSaveStatus = false
       this.tabs.forEach((f) => {
-        if (f.pathname === pathname) {
+        if (window.fileUtils.isSamePathSync(f.pathname, pathname)) {
           f.isSaved = false
           didUpdateSaveStatus = true
         }
@@ -1592,7 +1611,7 @@ export const useEditorStore = defineStore('editor', {
           // updates the tab but leaves the timer running) would otherwise
           // recreate the old file and leave the renamed one stale.
           if (!tab.pathname) return
-          const defaultPath = getRootFolderFromState(projectStore)
+          const defaultPath = getRootFolderFromState(projectStore, tab.pathname)
           recordPendingSave(tab)
           window.electron.ipcRenderer.send(
             'mt::response-file-save',
@@ -1907,11 +1926,16 @@ export const useEditorStore = defineStore('editor', {
 // ----------------------------------------------------------------------------
 
 /**
- * Return the opened root folder or an empty string.
+ * Return the opened root that contains `pathname`, the first root, or empty.
  *
- * @param {object} projectStore The project store instance.
+ * @param projectStore The project store instance.
+ * @param pathname Optional file path used to pick among multiple roots.
  */
-const getRootFolderFromState = (projectStore: ProjectStoreLike): string => {
+const getRootFolderFromState = (projectStore: ProjectStoreLike, pathname?: string): string => {
+  if (pathname && projectStore.findTreeForPath) {
+    const tree = projectStore.findTreeForPath(pathname)
+    if (tree?.pathname) return tree.pathname
+  }
   const openedFolder = projectStore.projectTree
   if (openedFolder) {
     return openedFolder.pathname ?? ''

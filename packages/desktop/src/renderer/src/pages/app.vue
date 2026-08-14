@@ -4,7 +4,7 @@
 
     <div class="editor-middle">
       <title-bar
-        :project="projectTree"
+        :project="titleProject"
         :pathname="pathname"
         :filename="filename"
         :active="windowActive"
@@ -97,6 +97,14 @@ const { currentFile, selectedWordCount } = storeToRefs(editorStore)
 const pathname = computed(() => currentFile.value?.pathname)
 const filename = computed(() => currentFile.value?.filename)
 const isSaved = computed(() => currentFile.value?.isSaved)
+const titleProject = computed(() => {
+  const filePath = currentFile.value?.pathname
+  if (filePath) {
+    const tree = projectStore.findTreeForPath(filePath)
+    if (tree) return tree
+  }
+  return projectTree.value
+})
 // `markdown` is read by `<editor-with-tabs>` whose prop is `required: true`.
 // In template space we render that subtree only when `hasCurrentFile` is set,
 // but vue-tsc can't see through the v-if guard — coalesce to '' so the prop

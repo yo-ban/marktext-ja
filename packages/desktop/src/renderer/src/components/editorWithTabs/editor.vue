@@ -263,9 +263,6 @@ const {
 // Editor store refs
 const { currentFile, tabs } = storeToRefs(editorStore)
 
-// Project store refs
-const { projectTree } = storeToRefs(projectStore)
-
 // Component state
 const defaultFontFamily = DEFAULT_EDITOR_FONT_FAMILY
 const resolveEditorFont = (family: string): string =>
@@ -923,11 +920,10 @@ const imageAction = async (
   let relativeBasePath: string | null = isTabSavedOnDisk
     ? window.path.dirname(currentPathname)
     : null
-  if (isTabSavedOnDisk && imageRelativeDirectoryBase.value !== 'file' && projectTree.value) {
-    const { pathname: rootPath } = projectTree.value as { pathname?: string }
-    if (rootPath && window.fileUtils.isChildOfDirectory(rootPath, currentPathname)) {
-      // Save assets relative to root directory.
-      relativeBasePath = rootPath
+  if (isTabSavedOnDisk && imageRelativeDirectoryBase.value !== 'file') {
+    const matchingTree = projectStore.findTreeForPath(currentPathname)
+    if (matchingTree?.pathname) {
+      relativeBasePath = matchingTree.pathname
     }
   }
 

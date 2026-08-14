@@ -108,8 +108,8 @@ export const useProjectStore = defineStore('project', () => {
   const projectTrees = ref<ProjectTree[]>([])
   const pendingTreeEvents = ref<PendingEvent[]>([])
 
-  // First root, kept for call sites that still speak of a single project
-  // (title bar, save-dialog default path, relative image paths).
+  // First root, kept as a fallback when no file path is available to resolve
+  // a specific tree (empty window, untitled tab).
   const projectTree = computed<ProjectTree | null>(() => projectTrees.value[0] ?? null)
 
   const preferencesStore = usePreferencesStore()
