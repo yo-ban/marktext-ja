@@ -110,28 +110,24 @@ const handleSwitchChange = (value: boolean | string | number) => {
   }
 }
 
-span.el-switch__core::after {
-  top: 3px;
-  left: 7px;
-  width: 10px;
-  height: 10px;
-}
-
-.el-switch .el-switch__core {
+/* Element Plus paints the knob `.el-switch__action` white. The OFF track is
+   transparent, so that white knob vanished on light editor surfaces. Colour
+   it with the same token as the outline; ON keeps EP's white on --themeColor. */
+.pref-switch-item .el-switch .el-switch__core {
   border: 2px solid var(--iconColor);
   background: transparent;
   box-sizing: border-box;
 }
 
-span.el-switch__label {
+.pref-switch-item .el-switch:not(.is-checked) .el-switch__action {
+  background-color: var(--iconColor);
+}
+
+.pref-switch-item span.el-switch__label {
   color: var(--editorColor50);
 }
 
-.el-switch:not(.is-checked) .el-switch__core::after {
-  background: var(--iconColor);
-}
-
-.el-switch.is-checked .el-switch__core {
+.pref-switch-item .el-switch.is-checked .el-switch__core {
   border-color: var(--themeColor);
   background-color: var(--themeColor);
 }
