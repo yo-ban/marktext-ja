@@ -512,10 +512,12 @@ class App {
     // Filter out directories that are already opened.
     for (const window of _windowManager.windows.values()) {
       if (window.type === WindowType.EDITOR) {
-        const { openedRootDirectory } = window as EditorWindow
-        if (openedRootDirectory && directorySet.has(openedRootDirectory)) {
-          window.bringToFront()
-          directorySet.delete(openedRootDirectory)
+        const { openedRootDirectories } = window as EditorWindow
+        for (const root of openedRootDirectories) {
+          if (root && directorySet.has(root)) {
+            window.bringToFront()
+            directorySet.delete(root)
+          }
         }
       }
     }

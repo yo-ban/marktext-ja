@@ -210,7 +210,8 @@
       "paste": "貼上",
       "rename": "重新命名",
       "moveToTrash": "移到垃圾桶",
-      "showInFolder": "在資料夾中顯示"
+      "showInFolder": "在資料夾中顯示",
+      "closeFolder": "關閉資料夾"
     },
     "tabs": {
       "close": "關閉",
@@ -246,8 +247,10 @@
     },
     "tree": {
       "openedFiles": "已開啟的檔案",
+      "folders": "資料夾",
       "saveAll": "全部儲存",
       "closeAll": "全部關閉",
+      "closeFolder": "關閉資料夾",
       "emptyProject": "空專案",
       "createFile": "建立檔案",
       "openFolder": "開啟資料夾"

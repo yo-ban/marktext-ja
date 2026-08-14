@@ -32,7 +32,6 @@
     >
       <tree
         v-if="rightColumn === 'files'"
-        :project-tree="projectTree"
         :opened-files="openedFiles"
         :tabs="tabs"
       />
@@ -72,7 +71,6 @@ const sideBarViewWidth = ref(280)
 
 const { rightColumn, showSideBar, sideBarWidth } = storeToRefs(layoutStore)
 
-const { projectTree } = storeToRefs(projectStore)
 const { tabs } = storeToRefs(editorStore)
 
 const finalSideBarWidth = computed<number>(() => {

@@ -7,13 +7,15 @@ import {
   getPASTE,
   getRENAME,
   getDELETE,
-  getShowInFolder
+  getShowInFolder,
+  getCloseFolder
 } from './menuItems'
 import { popupContextMenu, type ContextMenuItem } from '../popupMenu'
 
 export const showContextMenu = (
   event: { clientX: number; clientY: number },
-  hasPathCache: boolean
+  hasPathCache: boolean,
+  { isProjectRoot = false }: { isProjectRoot?: boolean } = {}
 ): void => {
   const contextItems: ContextMenuItem[] = [
     getNewFile(),
@@ -28,6 +30,10 @@ export const showContextMenu = (
     SEPARATOR,
     getShowInFolder()
   ]
+
+  if (isProjectRoot) {
+    contextItems.push(SEPARATOR, getCloseFolder())
+  }
 
   // PASTE entry (index 5) toggles based on the cached source path.
   contextItems[5].enabled = hasPathCache

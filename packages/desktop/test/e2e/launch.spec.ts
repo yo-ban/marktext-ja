@@ -33,5 +33,9 @@ test.describe('Check Launch MarkText', () => {
       welcome.getByRole('button', { name: localeString(lang, 'commands.file.openFolder') })
     ).toBeVisible()
     await expect(page.locator('.side-bar')).toBeVisible()
+    await expect(page.locator('.folders-section')).toBeVisible()
+    await expect(
+      page.locator('.folders-section').getByTitle(localeString(lang, 'sideBar.tree.openFolder'))
+    ).toBeVisible()
   })
 })

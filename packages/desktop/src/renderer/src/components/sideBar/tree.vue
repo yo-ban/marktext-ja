@@ -60,15 +60,10 @@
       </div>
     </div>
 
-    <!-- Project tree view -->
-    <div
-      v-if="projectTree"
-      class="project-tree"
-    >
-      <div
-        class="title"
-        @contextmenu.prevent="handleRootContextMenu"
-      >
+    <!-- Folders: heading stays visible so the open-folder control is always
+         reachable. Opened roots stack below it. -->
+    <div class="folders-section">
+      <div class="title">
         <el-icon
           class="icon-arrow"
           :class="{ fold: !showDirectories }"
@@ -81,101 +76,53 @@
           class="default-cursor text-overflow"
           @click.stop="toggleDirectories()"
         >{{
-          projectTree.name
+          t('sideBar.tree.folders')
         }}</span>
+        <a
+          href="javascript:;"
+          class="open-folder"
+          :title="t('sideBar.tree.openFolder')"
+          @click.stop="openFolder()"
+        >
+          <el-icon :size="14">
+            <FolderOpened />
+          </el-icon>
+        </a>
       </div>
       <div
         v-show="showDirectories"
-        class="tree-wrapper"
+        class="folders-list"
       >
-        <folder
-          v-for="folder of projectTree.folders"
-          :key="folder.id"
-          :folder="folder"
-          :depth="depth"
+        <tree-project
+          v-for="tree of projectTrees"
+          :key="tree.pathname"
+          :tree="tree"
+          @close="closeFolder(tree.pathname)"
         />
-        <input
-          v-show="createCacheDirname === projectTree.pathname"
-          ref="input"
-          v-model="createName"
-          placeholder="Enter .md file name"
-          type="text"
-          class="new-input"
-          :style="{ 'margin-left': `${depth * 5 + 15}px` }"
-          @keydown.enter="handleInputEnter"
-        >
-        <file
-          v-for="file of projectTree.files"
-          :key="file.id"
-          :file="file"
-          :depth="depth"
-        />
-        <div
-          v-if="
-            projectTree.files.length === 0 &&
-              projectTree.folders.length === 0 &&
-              createCacheDirname !== projectTree.pathname
-          "
-          class="empty-project"
-        >
-          <span>{{ t('sideBar.tree.emptyProject') }}</span>
-          <div class="centered-group">
-            <button
-              class="button-primary"
-              @click.stop="createFile"
-            >
-              {{ t('sideBar.tree.createFile') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div
-      v-else
-      class="open-project"
-    >
-      <div class="centered-group">
-        <el-button
-          text
-          bg
-          type="primary"
-          @click="openFolder"
-        >
-          {{ t('sideBar.tree.openFolder') }}
-        </el-button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
 import { usePreferencesStore } from '@/store/preferences'
-import Folder from './treeFolder.vue'
-import File from './treeFile.vue'
 import OpenedFile from './treeOpenedTab.vue'
-import bus from '../../bus'
-import { showContextMenu } from '../../contextMenu/sideBar'
+import TreeProject from './treeProject.vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight } from '@element-plus/icons-vue'
-import type { TreeNode, TabDescriptor } from './types'
+import { ArrowRight, FolderOpened } from '@element-plus/icons-vue'
+import type { TabDescriptor } from './types'
 
 const { t } = useI18n()
 
-const props = defineProps<{
-  // The project store seeds `projectTree` as `null` until a folder is
-  // opened; the template renders the "open project" empty-state behind
-  // `v-if="projectTree"`. Type the prop nullable to match runtime + the
-  // template guard.
-  projectTree: TreeNode | null
+defineProps<{
   openedFiles?: TabDescriptor[]
   tabs?: TabDescriptor[]
 }>()
 
-const depth = 0
 // Persist the section collapse state (#2421). The tree is rendered under a
 // v-if and is destroyed when the sidebar collapses to its icon strip, so local
 // refs reset to expanded on re-open. Back them with localStorage (like the
@@ -185,43 +132,24 @@ const SHOW_OPENED_FILES_KEY = 'side-bar-show-opened-files'
 const readSectionExpanded = (key: string): boolean => localStorage.getItem(key) !== 'false'
 const showDirectories = ref(readSectionExpanded(SHOW_DIRECTORIES_KEY))
 const showOpenedFiles = ref(readSectionExpanded(SHOW_OPENED_FILES_KEY))
-const createName = ref('')
-const input = ref<HTMLInputElement | null>(null)
 
 const projectStore = useProjectStore()
 const editorStore = useEditorStore()
 const preferencesStore = usePreferencesStore()
 
-// Computed properties
-const { createCache } = storeToRefs(projectStore)
-const { clipboard } = storeToRefs(projectStore)
+const { projectTrees } = storeToRefs(projectStore)
 const { openedFilesInSidebar } = storeToRefs(preferencesStore)
-
-// The createCache state is `{ dirname, type }` while an input is shown, and
-// `{}` otherwise. Expose a typed accessor for the template so we don't have
-// to thread `as any` through every comparison.
-const createCacheDirname = computed<string | undefined>(() => {
-  const cache = createCache.value as { dirname?: string }
-  return cache.dirname
-})
-
-// Methods
-const openFolder = (): void => {
-  projectStore.ASK_FOR_OPEN_PROJECT()
-}
 
 const saveAll = (isClose: boolean): void => {
   editorStore.ASK_FOR_SAVE_ALL(isClose)
 }
 
-const createFile = (): void => {
-  projectStore.CHANGE_ACTIVE_ITEM(props.projectTree)
-  bus.emit('SIDEBAR::new', 'file')
+const openFolder = (): void => {
+  projectStore.ASK_FOR_OPEN_PROJECT()
 }
 
-const handleRootContextMenu = (event: MouseEvent): void => {
-  projectStore.CHANGE_ACTIVE_ITEM(props.projectTree)
-  showContextMenu(event, !!clipboard.value)
+const closeFolder = (pathname: string): void => {
+  projectStore.CLOSE_PROJECT(pathname)
 }
 
 const toggleOpenedFiles = (): void => {
@@ -232,24 +160,6 @@ const toggleOpenedFiles = (): void => {
 const toggleDirectories = (): void => {
   showDirectories.value = !showDirectories.value
   localStorage.setItem(SHOW_DIRECTORIES_KEY, String(showDirectories.value))
-}
-
-// From createFileOrDirectoryMixins
-const handleInputFocus = (): void => {
-  nextTick(() => {
-    if (input.value) {
-      input.value.focus()
-      createName.value = ''
-    }
-  })
-}
-
-const handleInputEnter = (event: KeyboardEvent): void => {
-  // Enter that commits an IME composition must not create the file.
-  if (event.isComposing) {
-    return
-  }
-  projectStore.CREATE_FILE_DIRECTORY(createName.value)
 }
 
 // Hide rename / create inputs on outside clicks. Buttons that open these
@@ -279,7 +189,6 @@ const handleDocumentKeydown = (event: KeyboardEvent): void => {
 }
 
 onMounted(() => {
-  bus.on('SIDEBAR::show-new-input', handleInputFocus)
   document.addEventListener('click', handleDocumentClick)
   document.addEventListener('contextmenu', handleDocumentContextMenu)
   document.addEventListener('keydown', handleDocumentKeydown)
@@ -289,7 +198,6 @@ onMounted(() => {
 // without teardown each visit leaves another set of document listeners writing
 // into the project store on every click in the app.
 onBeforeUnmount(() => {
-  bus.off('SIDEBAR::show-new-input', handleInputFocus)
   document.removeEventListener('click', handleDocumentClick)
   document.removeEventListener('contextmenu', handleDocumentContextMenu)
   document.removeEventListener('keydown', handleDocumentKeydown)
@@ -340,20 +248,23 @@ onBeforeUnmount(() => {
 }
 
 .opened-files > .title,
-.project-tree > .title {
+.folders-section > .title {
   height: 30px;
   line-height: 30px;
   font-size: 14px;
 }
 
-.opened-files .title {
+.opened-files .title,
+.folders-section > .title {
   padding-right: 15px;
   display: flex;
   align-items: center;
 }
 
-.opened-files .title > span {
+.opened-files .title > span,
+.folders-section > .title > span {
   flex: 1;
+  user-select: none;
 }
 
 .opened-files .title > a {
@@ -388,115 +299,32 @@ onBeforeUnmount(() => {
   width: 8px;
 }
 
-.project-tree {
+.folders-section {
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow: hidden;
   flex: 1;
 }
 
-.project-tree > .title {
-  padding-right: 15px;
+.folders-section > .title > a.open-folder {
   display: flex;
   align-items: center;
-}
-
-.project-tree > .title > span {
-  flex: 1;
-  user-select: none;
-}
-
-.project-tree > .title > a {
-  pointer-events: auto;
-  cursor: pointer;
-  margin-left: 8px;
-  color: var(--sideBarIconColor);
-  opacity: 0;
-}
-
-.project-tree > .title > a:hover {
-  color: var(--highlightThemeColor);
-}
-
-.project-tree > .title > a.active {
-  color: var(--highlightThemeColor);
-}
-
-.project-tree > .tree-wrapper {
-  overflow: auto;
-  flex: 1;
-}
-
-.project-tree > .tree-wrapper::-webkit-scrollbar:vertical {
-  width: 8px;
-}
-.project-tree div.title:hover > a {
-  opacity: 1;
-}
-.open-project {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  align-items: center;
-  padding-bottom: 100px;
-}
-
-.open-project .centered-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.open-project .el-button {
-  margin-top: 20px;
-}
-.open-project .el-button.is-text.is-has-bg,
-.empty-project .el-button.is-text.is-has-bg {
-  background-color: var(--buttonPrimaryBgColor);
-  color: var(--buttonPrimaryFontColor);
-  border-color: transparent;
-}
-.open-project .el-button.is-text.is-has-bg:hover,
-.open-project .el-button.is-text.is-has-bg:focus,
-.empty-project .el-button.is-text.is-has-bg:hover,
-.empty-project .el-button.is-text.is-has-bg:focus {
-  background-color: var(--buttonPrimaryBgColorHover);
-  color: var(--buttonPrimaryFontColorHover);
-}
-.new-input {
-  outline: none;
-  height: 22px;
-  margin: 5px 0;
-  padding: 0 6px;
-  color: var(--sideBarColor);
-  border: 1px solid var(--floatBorderColor);
-  background: var(--inputBgColor);
-  width: calc(100% - 45px);
-  border-radius: 3px;
-}
-.tree-wrapper {
-  position: relative;
-}
-.empty-project {
-  font-size: 14px;
-  display: flex;
-  flex-direction: column;
-  padding-top: 40px;
-  align-items: center;
-  color: var(--sideBarTextColor);
-  & button {
-    margin-top: 10px;
-  }
-}
-
-.empty-project > a {
-  color: var(--highlightThemeColor);
-  text-align: center;
-  margin-top: 15px;
   text-decoration: none;
+  color: var(--sideBarColor);
+  margin-left: 8px;
+  line-height: 0;
 }
-.bold {
-  font-weight: 600;
+
+.folders-section > .title > a.open-folder:hover {
+  color: var(--highlightThemeColor);
+}
+
+.folders-list {
+  overflow: auto;
+  flex: 1;
+}
+
+.folders-list::-webkit-scrollbar:vertical {
+  width: 8px;
 }
 </style>

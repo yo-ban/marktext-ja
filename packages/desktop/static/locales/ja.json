@@ -210,7 +210,8 @@
       "paste": "貼り付け",
       "rename": "名前を変更",
       "moveToTrash": "ゴミ箱に移動",
-      "showInFolder": "フォルダで表示"
+      "showInFolder": "フォルダで表示",
+      "closeFolder": "フォルダーを閉じる"
     },
     "tabs": {
       "close": "閉じる",
@@ -246,8 +247,10 @@
     },
     "tree": {
       "openedFiles": "開いているファイル",
+      "folders": "フォルダー",
       "saveAll": "すべて保存",
       "closeAll": "すべて閉じる",
+      "closeFolder": "フォルダーを閉じる",
       "emptyProject": "空のプロジェクト",
       "createFile": "ファイルを作成",
       "openFolder": "フォルダを開く"

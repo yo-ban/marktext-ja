@@ -210,7 +210,8 @@
       "paste": "Einfügen",
       "rename": "Umbenennen",
       "moveToTrash": "In Papierkorb verschieben",
-      "showInFolder": "Im Ordner anzeigen"
+      "showInFolder": "Im Ordner anzeigen",
+      "closeFolder": "Ordner schließen"
     },
     "tabs": {
       "close": "Schließen",
@@ -246,8 +247,10 @@
     },
     "tree": {
       "openedFiles": "Geöffnete Dateien",
+      "folders": "Ordner",
       "saveAll": "Alle speichern",
       "closeAll": "Alle schließen",
+      "closeFolder": "Ordner schließen",
       "emptyProject": "Leeres Projekt",
       "createFile": "Datei erstellen",
       "openFolder": "Ordner öffnen"

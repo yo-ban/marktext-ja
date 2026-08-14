@@ -210,7 +210,8 @@
       "paste": "Yapıştır",
       "rename": "Yeniden Adlandır",
       "moveToTrash": "Çöp Kutusuna Taşı",
-      "showInFolder": "Klasörde Göster"
+      "showInFolder": "Klasörde Göster",
+      "closeFolder": "Klasörü Kapat"
     },
     "tabs": {
       "close": "Kapat",
@@ -246,8 +247,10 @@
     },
     "tree": {
       "openedFiles": "Açık dosyalar",
+      "folders": "Klasörler",
       "saveAll": "Tümünü Kaydet",
       "closeAll": "Tümünü Kapat",
+      "closeFolder": "Klasörü Kapat",
       "emptyProject": "Boş proje",
       "createFile": "Dosya Oluştur",
       "openFolder": "Klasör Aç"

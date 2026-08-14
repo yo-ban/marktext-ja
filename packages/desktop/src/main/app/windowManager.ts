@@ -408,6 +408,15 @@ class WindowManager extends TypedEmitter<WindowManagerEvents> {
       }
     })
 
+    ipcMain.on('mt::close-directory', (e, pathname: string) => {
+      const win = BrowserWindow.fromWebContents(e.sender)
+      if (!win) return
+      const editor = this.get(win.id) as EditorWindow | undefined
+      if (editor) {
+        editor.closeFolder(pathname, false)
+      }
+    })
+
     ipcMain.on('mt::window-toggle-always-on-top', (e) => {
       const win = BrowserWindow.fromWebContents(e.sender)
       if (!win) return

@@ -210,7 +210,8 @@
       "paste": "粘贴",
       "rename": "重命名",
       "moveToTrash": "移动到废纸篓",
-      "showInFolder": "在文件夹中显示"
+      "showInFolder": "在文件夹中显示",
+      "closeFolder": "关闭文件夹"
     },
     "tabs": {
       "close": "关闭",
@@ -246,8 +247,10 @@
     },
     "tree": {
       "openedFiles": "已打开的文件",
+      "folders": "文件夹",
       "saveAll": "保存全部",
       "closeAll": "关闭全部",
+      "closeFolder": "关闭文件夹",
       "emptyProject": "空项目",
       "createFile": "创建文件",
       "openFolder": "打开文件夹"

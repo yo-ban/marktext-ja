@@ -210,7 +210,8 @@
       "paste": "Colar",
       "rename": "Renomear",
       "moveToTrash": "Mover para Lixeira",
-      "showInFolder": "Mostrar na Pasta"
+      "showInFolder": "Mostrar na Pasta",
+      "closeFolder": "Fechar pasta"
     },
     "tabs": {
       "close": "Fechar",
@@ -246,8 +247,10 @@
     },
     "tree": {
       "openedFiles": "Arquivos abertos",
+      "folders": "Pastas",
       "saveAll": "Salvar Todos",
       "closeAll": "Fechar Todos",
+      "closeFolder": "Fechar pasta",
       "emptyProject": "Projeto vazio",
       "createFile": "Criar Arquivo",
       "openFolder": "Abrir Pasta"

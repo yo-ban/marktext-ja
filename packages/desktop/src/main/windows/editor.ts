@@ -44,18 +44,19 @@ interface RestoredTab {
 interface RestoredBufferState {
   tabs: RestoredTab[]
   restoreWarnings?: unknown[]
-  project?: { rootDirectory?: string }
+  project?: { rootDirectory?: string; rootDirectories?: string[] }
   [key: string]: unknown
 }
 
 class EditorWindow extends BaseWindow {
-  // Root directory and file list to open when the window is ready.
-  private _directoryToOpen: string | null
+  // Root directories and file list to open when the window is ready.
+  private _directoriesToOpen: string[]
   private _filesToOpen: PendingFile[] | null
   private _markdownToOpen: string[] | null
-  // Root directory and file list that are currently opened. These lists are
-  // used to find the best window to open new files in.
-  private _openedRootDirectory: string | null
+  // Root directories and file list that are currently opened. These lists are
+  // used to find the best window to open new files in. Opening another folder
+  // appends rather than replacing, matching the sidebar Folders list.
+  private _openedRootDirectories: string[]
   private _openedFiles: string[] | null
 
   public bufferStoreInfo: BufferStoreInfo | null
@@ -67,14 +68,14 @@ class EditorWindow extends BaseWindow {
     super(accessor)
     this.type = WindowType.EDITOR
 
-    // Root directory and file list to open when the window is ready.
-    this._directoryToOpen = null
+    // Root directories and file list to open when the window is ready.
+    this._directoriesToOpen = []
     this._filesToOpen = [] // {doc: IMarkdownDocumentRaw, options: any, selected: boolean}
     this._markdownToOpen = [] // List of markdown strings or an empty string will open a new untitled tab
 
-    // Root directory and file list that are currently opened. These lists are
+    // Root directories and file list that are currently opened. These lists are
     // used to find the best window to open new files in.
-    this._openedRootDirectory = ''
+    this._openedRootDirectories = []
     this._openedFiles = []
 
     this.bufferStoreInfo = null
@@ -382,33 +383,66 @@ class EditorWindow extends BaseWindow {
   }
 
   /**
-   * Open a (new) directory and replaces the old one.
+   * Add a directory to this window's sidebar Folders list.
+   * Already-open roots are ignored; a path nested under an existing root is
+   * ignored because it is already visible in that tree. Opening a parent of
+   * existing roots closes those nested roots first so they are not listed twice.
    */
   openFolder(pathname: string): void {
     // TODO: Don't allow new files if quitting.
-    if (
-      !pathname ||
-      this.lifecycle === WindowLifecycle.QUITTED ||
-      isSamePathSync(pathname, this._openedRootDirectory ?? '')
-    ) {
+    if (!pathname || this.lifecycle === WindowLifecycle.QUITTED) {
       return
     }
 
-    if (this.lifecycle === WindowLifecycle.READY) {
-      const { browserWindow } = this
-      const { menu: appMenu, preferences } = this._accessor
-
-      if (this._openedRootDirectory) {
-        ipcMain.emit('watcher-unwatch-directory', browserWindow, this._openedRootDirectory)
+    if (this.lifecycle !== WindowLifecycle.READY) {
+      if (!this._directoriesToOpen.some((p) => isSamePathSync(p, pathname))) {
+        this._directoriesToOpen.push(pathname)
       }
+      return
+    }
 
-      preferences.setItems({ lastOpenedFolder: pathname })
-      appMenu.addRecentlyUsedDocument(pathname)
-      this._openedRootDirectory = pathname
-      ipcMain.emit('watcher-watch-directory', browserWindow, pathname)
-      browserWindow!.webContents.send('mt::open-directory', pathname)
-    } else {
-      this._directoryToOpen = pathname
+    if (this._openedRootDirectories.some((p) => isSamePathSync(p, pathname))) {
+      return
+    }
+
+    if (this._openedRootDirectories.some((root) => isChildOfDirectory(root, pathname))) {
+      return
+    }
+
+    const { browserWindow } = this
+    const { menu: appMenu, preferences } = this._accessor
+
+    const nested = this._openedRootDirectories.filter((root) => isChildOfDirectory(pathname, root))
+    for (const child of nested) {
+      this.closeFolder(child)
+    }
+
+    preferences.setItems({ lastOpenedFolder: pathname })
+    appMenu.addRecentlyUsedDocument(pathname)
+    this._openedRootDirectories.push(pathname)
+    ipcMain.emit('watcher-watch-directory', browserWindow, pathname)
+    browserWindow!.webContents.send('mt::open-directory', pathname)
+  }
+
+  /**
+   * Remove a directory from the sidebar Folders list and stop watching it.
+   * Open tabs from that folder stay open.
+   */
+  closeFolder(pathname: string, notifyRenderer: boolean = true): void {
+    if (!pathname || this.lifecycle === WindowLifecycle.QUITTED) {
+      return
+    }
+
+    const index = this._openedRootDirectories.findIndex((p) => isSamePathSync(p, pathname))
+    if (index === -1) {
+      return
+    }
+
+    const { browserWindow } = this
+    this._openedRootDirectories.splice(index, 1)
+    ipcMain.emit('watcher-unwatch-directory', browserWindow, pathname)
+    if (notifyRenderer && this.lifecycle === WindowLifecycle.READY && browserWindow) {
+      browserWindow.webContents.send('mt::directory-closed', pathname)
     }
   }
 
@@ -453,14 +487,14 @@ class EditorWindow extends BaseWindow {
    * Returns a score list for a given file list.
    */
   getCandidateScores(fileList: string[]): CandidateScore[] {
-    const { _openedFiles, _openedRootDirectory, id } = this
+    const { _openedFiles, _openedRootDirectories, id } = this
     const buf: CandidateScore[] = []
     for (const pathname of fileList) {
       let score = 0
       if (_openedFiles!.some((p) => p === pathname)) {
         score = -1
       } else {
-        if (isChildOfDirectory(_openedRootDirectory ?? '', pathname)) {
+        if (_openedRootDirectories.some((root) => isChildOfDirectory(root, pathname))) {
           score += 5
         }
         for (const item of _openedFiles!) {
@@ -481,10 +515,10 @@ class EditorWindow extends BaseWindow {
     ipcMain.emit('watcher-unwatch-all-by-id', id)
 
     // Reset saved state
-    this._directoryToOpen = ''
+    this._directoriesToOpen = []
     this._filesToOpen = []
     this._markdownToOpen = []
-    this._openedRootDirectory = ''
+    this._openedRootDirectories = []
     this._openedFiles = []
 
     browserWindow!.webContents.once('did-finish-load', () => {
@@ -513,15 +547,19 @@ class EditorWindow extends BaseWindow {
 
     // Watchers are freed from WindowManager.
 
-    this._directoryToOpen = null
+    this._directoriesToOpen = []
     this._filesToOpen = null
     this._markdownToOpen = null
-    this._openedRootDirectory = null
+    this._openedRootDirectories = []
     this._openedFiles = null
   }
 
   get openedRootDirectory(): string | null {
-    return this._openedRootDirectory
+    return this._openedRootDirectories[0] ?? null
+  }
+
+  get openedRootDirectories(): readonly string[] {
+    return this._openedRootDirectories
   }
 
   // --- private ---------------------------------
@@ -551,10 +589,10 @@ class EditorWindow extends BaseWindow {
       throw new Error('Invalid state.')
     }
 
-    if (this._directoryToOpen) {
-      this.openFolder(this._directoryToOpen)
+    for (const dir of this._directoriesToOpen) {
+      this.openFolder(dir)
     }
-    this._directoryToOpen = null
+    this._directoriesToOpen = []
 
     for (const { doc, options, selected } of this._filesToOpen!) {
       this._doOpenTab(doc, options, selected)
@@ -579,9 +617,17 @@ class EditorWindow extends BaseWindow {
       if (!Array.isArray(bufferState.restoreWarnings)) {
         bufferState.restoreWarnings = []
       }
-      const rootDirectory = bufferState.project?.rootDirectory
-      if (rootDirectory) {
-        this.openFolder(rootDirectory)
+      const project = bufferState.project
+      const rootDirectories =
+        Array.isArray(project?.rootDirectories) && project.rootDirectories.length
+          ? project.rootDirectories
+          : project?.rootDirectory
+            ? [project.rootDirectory]
+            : []
+      for (const rootDirectory of rootDirectories) {
+        if (rootDirectory) {
+          this.openFolder(rootDirectory)
+        }
       }
 
       // We still need to load the files of all opened tabs and check for errors/changed files

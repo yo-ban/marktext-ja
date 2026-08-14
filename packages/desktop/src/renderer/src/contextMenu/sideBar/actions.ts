@@ -34,3 +34,7 @@ export const remove = (_menuItem?: MenuItemArg, _browserWindow?: BrowserWindowAr
 export const showInFolder = (_menuItem?: MenuItemArg, _browserWindow?: BrowserWindowArg): void => {
   bus.emit('SIDEBAR::show-in-folder')
 }
+
+export const closeFolder = (_menuItem?: MenuItemArg, _browserWindow?: BrowserWindowArg): void => {
+  bus.emit('SIDEBAR::close-folder')
+}

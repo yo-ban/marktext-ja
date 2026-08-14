@@ -72,6 +72,14 @@ export const getShowInFolder = () => ({
   }
 })
 
+export const getCloseFolder = () => ({
+  label: t('contextMenu.sideBar.closeFolder'),
+  id: 'closeFolderMenuItem',
+  click(_menuItem: unknown, _browserWindow: unknown) {
+    contextMenu.closeFolder()
+  }
+})
+
 // Retained for backward compatibility
 export const NEW_FILE = getNewFile()
 export const NEW_DIRECTORY = getNewDirectory()

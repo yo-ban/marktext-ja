@@ -210,7 +210,8 @@
       "paste": "Paste",
       "rename": "Rename",
       "moveToTrash": "Move To Trash",
-      "showInFolder": "Show In Folder"
+      "showInFolder": "Show In Folder",
+      "closeFolder": "Close Folder"
     },
     "tabs": {
       "close": "Close",
@@ -246,8 +247,10 @@
     },
     "tree": {
       "openedFiles": "Opened files",
+      "folders": "Folders",
       "saveAll": "Save All",
       "closeAll": "Close All",
+      "closeFolder": "Close Folder",
       "emptyProject": "Empty project",
       "createFile": "Create File",
       "openFolder": "Open Folder"

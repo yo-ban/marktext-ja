@@ -128,7 +128,6 @@ import { PRODUCT_NAME } from '@shared/product'
 
 interface ProjectInfo {
   name?: string
-  [key: string]: unknown
 }
 
 const props = defineProps<{

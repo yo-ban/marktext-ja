@@ -210,7 +210,8 @@
       "paste": "Pegar",
       "rename": "Renombrar",
       "moveToTrash": "Mover a la Papelera",
-      "showInFolder": "Mostrar en Carpeta"
+      "showInFolder": "Mostrar en Carpeta",
+      "closeFolder": "Cerrar carpeta"
     },
     "tabs": {
       "close": "Cerrar",
@@ -246,8 +247,10 @@
     },
     "tree": {
       "openedFiles": "Archivos abiertos",
+      "folders": "Carpetas",
       "saveAll": "Guardar",
       "closeAll": "Cerrar",
+      "closeFolder": "Cerrar carpeta",
       "emptyProject": "Proyecto vacío",
       "createFile": "Crear Archivo",
       "openFolder": "Abrir Carpeta"
