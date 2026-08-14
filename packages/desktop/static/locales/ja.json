@@ -241,6 +241,7 @@
       "searchInFolder": "フォルダ内を検索...",
       "noFolderOpen": "フォルダが開かれていません",
       "noResultsFound": "結果が見つかりませんでした。",
+      "searchFailed": "検索に失敗しました。",
       "cancel": "キャンセル",
       "openFolder": "フォルダを開く",
       "showMoreMatches": "さらに一致するものを表示"
@@ -253,7 +254,8 @@
       "closeFolder": "フォルダーを閉じる",
       "emptyProject": "空のプロジェクト",
       "createFile": "ファイルを作成",
-      "openFolder": "フォルダを開く"
+      "openFolder": "フォルダを開く",
+      "fileNamePlaceholder": "ファイル名を入力 (.md)"
     },
     "toc": {
       "title": "目次"
@@ -964,7 +966,9 @@
     "preferencesResetTitle": "設定をリセットしました",
     "preferencesResetMessage": "設定ファイルが壊れていたため、初期設定に戻しました。元のファイルは次の場所に保存されています: {path}",
     "recoveryBufferCorruptTitle": "セッションを復元できませんでした",
-    "recoveryBufferCorruptMessage": "クラッシュ復旧データが読み取れなかったため、前回のタブを再度開けませんでした。読み取れなかったファイルは次の場所に保存されています: {path}"
+    "recoveryBufferCorruptMessage": "クラッシュ復旧データが読み取れなかったため、前回のタブを再度開けませんでした。読み取れなかったファイルは次の場所に保存されています: {path}",
+    "watcherIoTitle": "ファイル監視エラー",
+    "renameFailureTitle": "ファイル名を変更できません"
   },
   "notifications": {
     "defaultMessage": "デフォルトメッセージ",
@@ -984,7 +988,8 @@
       "exportSuccessTitle": "エクスポートに成功",
       "exportSuccessMessage": "「{name}」を正常にエクスポートしました！",
       "fileRemovedOnDisk": "「{name}」はディスク上で削除されました。",
-      "fileChangedOnDisk": "「{name}」はディスク上で変更されました。再読み込みしますか？"
+      "fileChangedOnDisk": "「{name}」はディスク上で変更されました。再読み込みしますか？",
+      "uploadImageTitle": "画像のアップロード"
     },
     "project": {
       "deleteErrorTitle": "削除中にエラーが発生しました",
@@ -992,7 +997,8 @@
       "pasteForbiddenMessage": "移動元と移動先が同じです。",
       "pasteErrorTitle": "貼り付け中にエラーが発生しました",
       "sideBarErrorTitle": "サイドバーのエラー",
-      "alreadyExists": "「{name}」という名前の{type}は既にこのフォルダに存在します。"
+      "alreadyExists": "「{name}」という名前の{type}は既にこのフォルダに存在します。",
+      "renameErrorTitle": "名前の変更中にエラーが発生しました"
     },
     "autoUpdates": {
       "updateTitle": "アップデート",

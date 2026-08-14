@@ -181,20 +181,22 @@ const showTitleBar = computed(() => {
 })
 
 watch(
-  () => props.filename,
-  (value) => {
-    // Set filename when hover on dock
+  () => [props.filename, props.project?.name] as const,
+  () => {
+    // Dock / taskbar title. Immediate so restored tabs aren't stuck on the
+    // previous window title; project is watched so folder-only windows update.
     const hasOpenFolder = !!(props.project && props.project.name)
     const projectName = props.project?.name ?? ''
     let title = ''
-    if (value) {
-      title = hasOpenFolder ? `${value} - ${projectName}` : `${value}`
+    if (props.filename) {
+      title = hasOpenFolder ? `${props.filename} - ${projectName}` : `${props.filename}`
     } else {
       title = hasOpenFolder ? projectName : ''
     }
 
     document.title = title
-  }
+  },
+  { immediate: true }
 )
 
 const handleCloseClick = () => {

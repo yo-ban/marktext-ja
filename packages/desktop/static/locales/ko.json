@@ -241,6 +241,7 @@
       "searchInFolder": "폴더에서 검색...",
       "noFolderOpen": "열린 폴더 없음",
       "noResultsFound": "결과를 찾을 수 없습니다.",
+      "searchFailed": "검색에 실패했습니다.",
       "cancel": "취소",
       "openFolder": "폴더 열기",
       "showMoreMatches": "더 많은 일치 항목 보기"
@@ -253,7 +254,8 @@
       "closeFolder": "폴더 닫기",
       "emptyProject": "빈 프로젝트",
       "createFile": "파일 만들기",
-      "openFolder": "폴더 열기"
+      "openFolder": "폴더 열기",
+      "fileNamePlaceholder": ".md 파일 이름 입력"
     },
     "toc": {
       "title": "목차"
@@ -957,7 +959,9 @@
     "preferencesResetTitle": "Preferences were reset",
     "preferencesResetMessage": "The settings file was corrupt and has been reset to defaults. The old file was saved to: {path}",
     "recoveryBufferCorruptTitle": "Session could not be restored",
-    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}"
+    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}",
+    "watcherIoTitle": "파일 감시 오류",
+    "renameFailureTitle": "파일 이름을 바꿀 수 없습니다"
   },
   "notifications": {
     "defaultMessage": "기본 메시지",
@@ -977,7 +981,8 @@
       "exportSuccessTitle": "내보내기 성공",
       "exportSuccessMessage": "“{name}”을(를) 성공적으로 내보냈습니다!",
       "fileRemovedOnDisk": "“{name}”이(가) 디스크에서 삭제되었습니다.",
-      "fileChangedOnDisk": "“{name}”이(가) 디스크에서 변경되었습니다. 다시 로드하시겠습니까?"
+      "fileChangedOnDisk": "“{name}”이(가) 디스크에서 변경되었습니다. 다시 로드하시겠습니까?",
+      "uploadImageTitle": "이미지 업로드"
     },
     "project": {
       "deleteErrorTitle": "Error while deleting",
@@ -985,7 +990,8 @@
       "pasteForbiddenMessage": "Source and destination must not be the same.",
       "pasteErrorTitle": "Error while pasting",
       "sideBarErrorTitle": "Error in Side Bar",
-      "alreadyExists": "A {type} named \"{name}\" already exists in this folder."
+      "alreadyExists": "A {type} named \"{name}\" already exists in this folder.",
+      "renameErrorTitle": "이름 변경 중 오류"
     },
     "autoUpdates": {
       "updateTitle": "Update",

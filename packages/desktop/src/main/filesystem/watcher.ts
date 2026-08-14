@@ -11,6 +11,7 @@ import { isLinux, isOsx, isWindows } from '../config'
 import type { BrowserWindow } from 'electron'
 import type { LineEnding } from '@shared/types/files'
 import type Preference from '../preferences'
+import { t } from '../i18n'
 
 // TODO(refactor): Please see GH#1035.
 
@@ -101,7 +102,7 @@ const add = async(
       // Only notify user about opened files.
       if (type === 'file') {
         win.webContents.send('mt::show-notification', {
-          title: 'Watcher I/O error',
+          title: t('error.watcherIoTitle'),
           type: 'error',
           message: err instanceof Error ? err.message : String(err)
         })
@@ -161,7 +162,7 @@ const change = async(
     } catch (err) {
       if (type === 'file') {
         win.webContents.send('mt::show-notification', {
-          title: 'Watcher I/O error',
+          title: t('error.watcherIoTitle'),
           type: 'error',
           message: err instanceof Error ? err.message : String(err)
         })

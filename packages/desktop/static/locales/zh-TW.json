@@ -241,6 +241,7 @@
       "searchInFolder": "在資料夾中搜尋…",
       "noFolderOpen": "沒有開啟的資料夾",
       "noResultsFound": "找不到結果。",
+      "searchFailed": "搜尋失敗。",
       "cancel": "取消",
       "openFolder": "開啟資料夾",
       "showMoreMatches": "顯示更多符合項目"
@@ -253,7 +254,8 @@
       "closeFolder": "關閉資料夾",
       "emptyProject": "空專案",
       "createFile": "建立檔案",
-      "openFolder": "開啟資料夾"
+      "openFolder": "開啟資料夾",
+      "fileNamePlaceholder": "輸入 .md 檔案名"
     },
     "toc": {
       "title": "目錄"
@@ -957,7 +959,9 @@
     "preferencesResetTitle": "Preferences were reset",
     "preferencesResetMessage": "The settings file was corrupt and has been reset to defaults. The old file was saved to: {path}",
     "recoveryBufferCorruptTitle": "Session could not be restored",
-    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}"
+    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}",
+    "watcherIoTitle": "檔案監視錯誤",
+    "renameFailureTitle": "無法重新命名檔案"
   },
   "notifications": {
     "defaultMessage": "預設訊息",
@@ -977,7 +981,8 @@
       "exportSuccessTitle": "匯出成功",
       "exportSuccessMessage": "已成功匯出「{name}」！",
       "fileRemovedOnDisk": "「{name}」已在磁碟上被刪除。",
-      "fileChangedOnDisk": "「{name}」已在磁碟上發生變更。是否重新載入？"
+      "fileChangedOnDisk": "「{name}」已在磁碟上發生變更。是否重新載入？",
+      "uploadImageTitle": "上傳圖片"
     },
     "project": {
       "deleteErrorTitle": "Error while deleting",
@@ -985,7 +990,8 @@
       "pasteForbiddenMessage": "Source and destination must not be the same.",
       "pasteErrorTitle": "Error while pasting",
       "sideBarErrorTitle": "Error in Side Bar",
-      "alreadyExists": "A {type} named \"{name}\" already exists in this folder."
+      "alreadyExists": "A {type} named \"{name}\" already exists in this folder.",
+      "renameErrorTitle": "重新命名時發生錯誤"
     },
     "autoUpdates": {
       "updateTitle": "Update",

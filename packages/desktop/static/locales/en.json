@@ -241,6 +241,7 @@
       "searchInFolder": "Search in folder...",
       "noFolderOpen": "No folder open",
       "noResultsFound": "No results found.",
+      "searchFailed": "Search failed.",
       "cancel": "Cancel",
       "openFolder": "Open Folder",
       "showMoreMatches": "Show more matches"
@@ -253,7 +254,8 @@
       "closeFolder": "Close Folder",
       "emptyProject": "Empty project",
       "createFile": "Create File",
-      "openFolder": "Open Folder"
+      "openFolder": "Open Folder",
+      "fileNamePlaceholder": "Enter .md file name"
     },
     "toc": {
       "title": "Table Of Contents"
@@ -964,7 +966,9 @@
     "preferencesResetTitle": "Preferences were reset",
     "preferencesResetMessage": "The settings file was corrupt and has been reset to defaults. The old file was saved to: {path}",
     "recoveryBufferCorruptTitle": "Session could not be restored",
-    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}"
+    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}",
+    "watcherIoTitle": "Watcher I/O error",
+    "renameFailureTitle": "Cannot rename file"
   },
   "notifications": {
     "defaultMessage": "Default message",
@@ -984,7 +988,8 @@
       "exportSuccessTitle": "Exported successfully",
       "exportSuccessMessage": "Exported \"{name}\" successfully!",
       "fileRemovedOnDisk": "\"{name}\" has been removed on disk.",
-      "fileChangedOnDisk": "\"{name}\" has been changed on disk. Do you want to reload it?"
+      "fileChangedOnDisk": "\"{name}\" has been changed on disk. Do you want to reload it?",
+      "uploadImageTitle": "Upload Image"
     },
     "project": {
       "deleteErrorTitle": "Error while deleting",
@@ -992,7 +997,8 @@
       "pasteForbiddenMessage": "Source and destination must not be the same.",
       "pasteErrorTitle": "Error while pasting",
       "sideBarErrorTitle": "Error in Side Bar",
-      "alreadyExists": "A {type} named \"{name}\" already exists in this folder."
+      "alreadyExists": "A {type} named \"{name}\" already exists in this folder.",
+      "renameErrorTitle": "Error while renaming"
     },
     "autoUpdates": {
       "updateTitle": "Update",

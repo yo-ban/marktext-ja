@@ -241,6 +241,7 @@
       "searchInFolder": "Klasörde ara...",
       "noFolderOpen": "Açık klasör yok",
       "noResultsFound": "Sonuç bulunamadı.",
+      "searchFailed": "Arama başarısız.",
       "cancel": "İptal",
       "openFolder": "Klasör Aç",
       "showMoreMatches": "Daha fazla eşleşme göster"
@@ -253,7 +254,8 @@
       "closeFolder": "Klasörü Kapat",
       "emptyProject": "Boş proje",
       "createFile": "Dosya Oluştur",
-      "openFolder": "Klasör Aç"
+      "openFolder": "Klasör Aç",
+      "fileNamePlaceholder": ".md dosya adı girin"
     },
     "toc": {
       "title": "İçindekiler"
@@ -957,7 +959,9 @@
     "preferencesResetTitle": "Preferences were reset",
     "preferencesResetMessage": "The settings file was corrupt and has been reset to defaults. The old file was saved to: {path}",
     "recoveryBufferCorruptTitle": "Session could not be restored",
-    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}"
+    "recoveryBufferCorruptMessage": "The crash-recovery data was unreadable, so the previous tabs could not be reopened. The unreadable file was kept at: {path}",
+    "watcherIoTitle": "İzleyici G/Ç hatası",
+    "renameFailureTitle": "Dosya yeniden adlandırılamadı"
   },
   "notifications": {
     "defaultMessage": "Varsayılan mesaj",
@@ -977,7 +981,8 @@
       "exportSuccessTitle": "Başarıyla dışa aktarıldı",
       "exportSuccessMessage": "\"{name}\" başarıyla dışa aktarıldı!",
       "fileRemovedOnDisk": "\"{name}\" diskten kaldırıldı.",
-      "fileChangedOnDisk": "\"{name}\" dosyasında değişiklikler var, yeniden yüklensin mi?"
+      "fileChangedOnDisk": "\"{name}\" dosyasında değişiklikler var, yeniden yüklensin mi?",
+      "uploadImageTitle": "Görüntü yükle"
     },
     "project": {
       "deleteErrorTitle": "Error while deleting",
@@ -985,7 +990,8 @@
       "pasteForbiddenMessage": "Source and destination must not be the same.",
       "pasteErrorTitle": "Error while pasting",
       "sideBarErrorTitle": "Error in Side Bar",
-      "alreadyExists": "A {type} named \"{name}\" already exists in this folder."
+      "alreadyExists": "A {type} named \"{name}\" already exists in this folder.",
+      "renameErrorTitle": "Yeniden adlandırırken hata"
     },
     "autoUpdates": {
       "updateTitle": "Update",
