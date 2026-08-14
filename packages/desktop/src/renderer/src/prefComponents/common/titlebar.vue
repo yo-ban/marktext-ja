@@ -64,7 +64,7 @@ const handleCloseClick = () => {
 }
 
 .frameless-titlebar-button svg {
-  fill: #000000;
+  fill: var(--iconColor);
 }
 
 .frameless-titlebar-close:hover svg {

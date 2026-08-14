@@ -2171,6 +2171,9 @@ onBeforeUnmount(() => {
     width: 100px;
     min-width: 0;
   }
+  & .el-form-item__label {
+    color: var(--editorColor);
+  }
   & .el-button {
     font-size: 13px;
     width: 70px;

@@ -317,14 +317,14 @@ li.mu-task-list-item > input[type='checkbox']::before {
 }
 li.mu-task-list-item > input.mu-checkbox-checked::before {
   border: transparent;
-  background-color: var(--editorColor);
+  background-color: var(--themeColor);
 }
 li.mu-task-list-item > input::after {
   content: '';
   transform: rotate(-45deg) scale(0);
   width: 9px;
   height: 5px;
-  border: 2px solid #fff;
+  border: 2px solid var(--editorBgColor);
   border-top: none;
   border-right: none;
   position: absolute;

@@ -137,11 +137,15 @@ onMounted(async () => {
   & .font-autocomplete {
     width: 100%;
   }
+  & .el-input__wrapper {
+    background: var(--inputBgColor);
+    box-shadow: 0 0 0 1px var(--editorColor10) inset;
+  }
   & input.el-input__inner {
     height: 30px;
     background: transparent;
     color: var(--editorColor);
-    border-color: var(--editorColor10);
+    border: none;
   }
   & .el-input.is-active .el-input__inner,
   & .el-input__inner:focus {
@@ -173,7 +177,7 @@ onMounted(async () => {
     }
     .link {
       font-size: 12px;
-      color: #b4b4b4;
+      color: var(--editorColor50);
     }
   }
 }

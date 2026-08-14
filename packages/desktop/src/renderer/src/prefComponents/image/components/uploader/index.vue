@@ -882,7 +882,7 @@ const testPicgo = async (): Promise<void> => {
   cursor: pointer;
   padding: 6px 8px;
   border-radius: 4px;
-  color: var(--editorColor70, #666);
+  color: var(--editorColor50);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -905,7 +905,7 @@ const testPicgo = async (): Promise<void> => {
 
 .pref-image-uploader .standalone-refresh-button:disabled:hover {
   background: none;
-  color: var(--editorColor70, #666);
+  color: var(--editorColor50);
   border-color: var(--editorColor30, #ddd);
 }
 
@@ -940,7 +940,7 @@ const testPicgo = async (): Promise<void> => {
   cursor: pointer;
   padding: 4px;
   border-radius: 3px;
-  color: var(--editorColor70, #666);
+  color: var(--editorColor50);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -959,7 +959,7 @@ const testPicgo = async (): Promise<void> => {
 
 .pref-image-uploader .refresh-button:disabled:hover {
   background: none;
-  color: var(--editorColor70, #666);
+  color: var(--editorColor50);
 }
 
 .pref-image-uploader .initial-button {
@@ -968,7 +968,7 @@ const testPicgo = async (): Promise<void> => {
   cursor: default;
   padding: 4px;
   border-radius: 3px;
-  color: var(--editorColor70, #666);
+  color: var(--editorColor50);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -1002,7 +1002,7 @@ const testPicgo = async (): Promise<void> => {
 }
 
 .pref-image-uploader .status-indicator.status-not-found {
-  color: var(--editorColor70, #666);
+  color: var(--editorColor50);
 }
 
 .pref-image-uploader .status-indicator:hover {
@@ -1027,7 +1027,7 @@ const testPicgo = async (): Promise<void> => {
 }
 
 .pref-image-uploader .auto-detection-info {
-  color: var(--editorColor70);
+  color: var(--editorColor50);
 }
 
 @keyframes pulse {
@@ -1069,7 +1069,7 @@ const testPicgo = async (): Promise<void> => {
 .pref-image-uploader .install-option strong {
   min-width: 50px;
   font-size: 12px;
-  color: var(--editorColor70);
+  color: var(--editorColor50);
 }
 
 .pref-image-uploader .install-command {
@@ -1079,7 +1079,7 @@ const testPicgo = async (): Promise<void> => {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 11px;
   color: var(--editorColor);
-  border: 1px solid var(--editorColor20);
+  border: 1px solid var(--editorColor10);
   user-select: all;
 }
 
@@ -1121,7 +1121,7 @@ const testPicgo = async (): Promise<void> => {
 
 .pref-image-uploader .usage-description {
   font-size: 12px;
-  color: var(--editorColor70);
+  color: var(--editorColor50);
   margin-bottom: 6px;
   line-height: 1.4;
 }
@@ -1133,7 +1133,7 @@ const testPicgo = async (): Promise<void> => {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 11px;
   color: var(--editorColor);
-  border: 1px solid var(--editorColor20);
+  border: 1px solid var(--editorColor10);
   user-select: all;
   display: inline-block;
 }
@@ -1150,13 +1150,13 @@ const testPicgo = async (): Promise<void> => {
 .pref-image-uploader .debug-info summary {
   cursor: pointer;
   font-size: 13px;
-  color: var(--editorColor70);
+  color: var(--editorColor50);
   margin-bottom: 8px;
 }
 
 .pref-image-uploader .debug-info pre {
   background: var(--codeBgColor, #f8f9fa);
-  border: 1px solid var(--editorColor20);
+  border: 1px solid var(--editorColor10);
   border-radius: 4px;
   padding: 10px;
   font-size: 12px;

@@ -144,6 +144,27 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
+
+  /* EP 2 puts its light-theme tokens on :root and re-emits them with each
+     component stylesheet. Mapping here (on body) wins regardless of load
+     order, so dark themes don't keep white fills and grey labels. */
+  --el-color-primary: var(--themeColor);
+  --el-text-color-regular: var(--editorColor);
+  --el-text-color-primary: var(--editorColor80);
+  --el-text-color-placeholder: var(--editorColor50);
+  --el-text-color-secondary: var(--editorColor60);
+  --el-fill-color-blank: var(--editorBgColor);
+  --el-fill-color-light: var(--floatHoverColor);
+  --el-bg-color: var(--editorBgColor);
+  --el-bg-color-overlay: var(--floatBgColor);
+  --el-bg-color-page: var(--editorBgColor);
+  --el-border-color: var(--editorColor10);
+  --el-border-color-light: var(--editorColor10);
+  --el-border-color-hover: var(--editorColor30);
+  --el-input-bg-color: var(--inputBgColor);
+  --el-disabled-bg-color: var(--editorColor04);
+  --el-disabled-text-color: var(--editorColor50);
+  --el-mask-color: var(--maskColor);
 }
 
 .icon {
@@ -202,6 +223,11 @@ body {
   background-color: var(--themeColor);
 }
 
+.el-radio,
+.el-radio__label {
+  color: var(--editorColor);
+}
+
 .el-radio__input.is-checked .el-radio__inner {
   border-color: var(--themeColor);
   background-color: var(--themeColor);
@@ -224,9 +250,15 @@ body {
   padding: 8px 6px;
 }
 
+.el-input__wrapper,
+.el-select__wrapper {
+  background-color: var(--inputBgColor);
+  box-shadow: 0 0 0 1px var(--editorColor10) inset;
+}
+
 input.el-input__inner {
-  background: var(--inputBgColor);
-  border: 1px solid var(--editorColor10);
+  background: transparent;
+  border: none;
   color: var(--editorColor80);
 }
 

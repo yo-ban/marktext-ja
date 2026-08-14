@@ -392,10 +392,10 @@ div.title > span {
 }
 .frameless-titlebar-minimize:hover,
 .frameless-titlebar-toggle:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--floatHoverColor);
 }
 .frameless-titlebar-button svg {
-  fill: #000000;
+  fill: var(--iconColor);
 }
 .frameless-titlebar-close:hover svg {
   fill: #ffffff;
