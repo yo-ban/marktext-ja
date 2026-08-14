@@ -583,6 +583,11 @@ ipcMain.on('mt::rename', async(e, { id, pathname, newPathname }: RenamePayload) 
     fsRename(pathname, newPathname, (err: NodeJS.ErrnoException | null) => {
       if (err) {
         log.error(`mt::rename: Cannot rename "${pathname}" to "${newPathname}".\n${err.stack}`)
+        win.webContents.send('mt::show-notification', {
+          title: t('error.renameFailureTitle'),
+          type: 'error',
+          message: err.message
+        })
         return
       }
 

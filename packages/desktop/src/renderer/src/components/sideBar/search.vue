@@ -168,7 +168,10 @@ const showNoFolderOpenedMessage = computed(() => {
 
 const showNoResultFoundMessage = computed(() => {
   return (
-    searchResult.value.length === 0 && searcherRunning.value === false && keyword.value.length > 0
+    searchResult.value.length === 0 &&
+    searcherRunning.value === false &&
+    keyword.value.length > 0 &&
+    !searchErrorString.value
   )
 })
 
@@ -259,6 +262,7 @@ const search = (): void => {
       log.error('Error while searching in directory:', err)
       if (runId !== searchRunId) return
       searchResult.value = []
+      searchErrorString.value = t('sideBar.search.searchFailed')
       searcherRunning.value = false
       searcherCancelCallback = null
       stopShowSearchCancelAreaTimer()
