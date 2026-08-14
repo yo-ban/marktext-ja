@@ -348,6 +348,37 @@ Muya → .eventCenter → .events[] → 登録オブジェクト → .target <i 
 - **#4322 残り — 初回起動の UI 言語検出を強化**。`app.getPreferredSystemLanguages()` → `getLocale()` → POSIX ロケール環境変数(LC_ALL/LC_MESSAGES/LANG、app-ready 前でも有効)の順で候補を舐める共通マッチャに、二重実装だった検出 2 経路(Preference コンストラクタ / App init)を統一。**App 側の私製マップが出荷していない 'ru' を返し得た**(ロシア語環境で UI が生キー表示になる実バグ)、zh-HK 以外の繁体字タグが zh-CN に落ちる問題も同時に解消。実機検証: `LC_ALL=fr_FR.UTF-8` + 新規プロファイルで仏語 UI 起動
 - 検証: desktop 813 / muya 1,586 / 新規スペック 3 本、typecheck・lint・build:unpack すべて通過
 
+### 新規調査で発見した課題(2026-08-14)
+
+コードベース全体の監査(テーマ/コントラスト系 + レンダラー/メインのロジック系)で確認した実バグ。**根本原因パターン: アプリ側の CSS 変数は整っているが、Element Plus の `--el-*` トークンを一度もグローバルに再マップしていなかった**ため、EP2 の白/グレー既定がダークテーマ各所に残っていた(スイッチつまみ修正 `f0494419` と同族)。
+
+#### テーマ/コントラスト — 対応済み(`20a5a4fc`)
+
+`--el-*` を `body` 上で MarkText 変数へ一括マップ(EP コンポーネント CSS が `:root` を上書きしても勝つ)。加えて:
+
+1. ~~設定画面のラジオボタン~~ 未選択ラベルも `--editorColor`
+2. ~~入力欄の白ラッパー~~ `.el-input__wrapper` / `.el-select__wrapper` をテーマ化
+3. ~~フォント選択ボックス~~ ラッパー + 二次テキストをトークン化(EP1 popper セレクタは dead のまま、オーバーレイはグローバルマップでカバー)
+4. ~~画像アップローダー~~ 存在しない `--editorColor70`/`--editorColor20` を `--editorColor50`/`--editorColor10` へ
+5. ~~one-dark のタスクチェックマーク~~ 塗り `--themeColor`、チェック `--editorBgColor`(muya 既定に合わせる)
+6. ~~セレクトのキーボードハイライト~~ `.is-hovering` を追加
+7. ~~テーブル挿入ダイアログ~~ ラベルを `--editorColor`
+8. ~~タイトルバー制御アイコン~~ `fill: var(--iconColor)`
+
+回帰: `test/unit/specs/el-theme-tokens.spec.ts`
+
+#### ロジック
+
+1. ~~閉じたフォルダの watcher イベントが `pendingTreeEvents` に溜まり続ける~~ **対応済み**(`b841373c`)— unlink はキューしない + CLOSE 時に purge
+2. ~~保存/画像挿入/タイトルが先頭ルート固定~~ **対応済み**(`939762cd`)— `findTreeForPath` で所有ルートを解決
+3. ~~Close All / Close Others が保存ダイアログを多重表示~~ **対応済み**(`939762cd`)— `closeTabsWithSavePrompt` でバッチ化。CLOSE_TABS の隣タブ選択も修正
+4. ~~サイドバーのリネーム失敗がサイレント~~ **対応済み**(レンダラー `b841373c`、main `6e998c95`)
+5. ~~`document.title` watcher の取りこぼし~~ **対応済み**(`10c14ba2`)— `immediate` + project 監視
+6. ~~パス比較が `===`~~ **対応済み**(`b841373c` / `939762cd`)— `isSamePathSync`
+7. ~~フォルダ内検索のエラーが「結果なし」に見える~~ **対応済み**(`6e998c95`)
+8. **コマンドパレットの Find Next/Previous がコメントアウトのまま** — `commands/index.ts:211-226`。メニュー(F3)経路は同じ bus イベントで動作しているため再有効化できる可能性が高い(要動作確認)。**未対応**
+9. ~~i18n 抜け~~ **対応済み**(`10c14ba2`)
+
 ### 高優先(バグ)
 
 1. **#4989/#5012/#4943** — テーブル編集で ot-json1 の状態破壊。**2026-07-30 再現試行**: 構造操作(行/列の挿入・削除の全オフセット + 交互操作 + 全消し)を flush 付きで総当たりする `structuralOpsFuzz.spec.ts` を追加したが再現せず。ペースト/undo 絡みか、実トレース(ユーザーの再現 md)待ち。fuzz スイートは回帰網として常設
