@@ -123,6 +123,7 @@ export const useProjectStore = defineStore('project', () => {
     }
   )
 
+  // Prefer the deepest matching root when one opened folder contains another.
   const findTreeForPath = (pathname: string | null | undefined): ProjectTree | null => {
     if (!pathname) return null
     let best: ProjectTree | null = null
@@ -140,7 +141,18 @@ export const useProjectStore = defineStore('project', () => {
     const index = projectTrees.value.findIndex((tree) => isSamePath(tree.pathname, normalized))
     if (index === -1) return false
     projectTrees.value.splice(index, 1)
+    _purgePendingEventsForRoot(normalized)
     return true
+  }
+
+  // Drop queued watcher events that belonged to this root so a later reopen
+  // does not replay them (in particular unlinkDir → CLOSE_PROJECT).
+  const _purgePendingEventsForRoot = (pathname: string): void => {
+    pendingTreeEvents.value = pendingTreeEvents.value.filter((event) => {
+      const eventPath = event.change?.pathname
+      if (!eventPath) return false
+      return !(isSamePath(eventPath, pathname) || window.fileUtils.isChildOfDirectory(pathname, eventPath))
+    })
   }
 
   const _drainPendingEvents = (): void => {
@@ -234,6 +246,10 @@ export const useProjectStore = defineStore('project', () => {
     window.electron.ipcRenderer.on('mt::update-object-tree', (_e, payload) => {
       const { type, change } = (payload as { type: string; change: TreeChange }) ?? {}
       if (!findTreeForPath(change?.pathname)) {
+        // Unlinks for a tree we don't have are the close we just did (or a
+        // race against an already-gone root). Queueing them would replay
+        // CLOSE_PROJECT the next time that folder is opened.
+        if (type === 'unlink' || type === 'unlinkDir') return
         pendingTreeEvents.value.push({ type, change })
         return
       }
@@ -250,7 +266,7 @@ export const useProjectStore = defineStore('project', () => {
       case 'add': {
         const { pathname, data, isMarkdown } = change
         addFile(tree, change as Parameters<typeof addFile>[1], String(preferencesStore.fileSortBy), String(preferencesStore.fileSortOrder))
-        if (isMarkdown && newFileNameCache.value && pathname === newFileNameCache.value) {
+        if (isMarkdown && newFileNameCache.value && isSamePath(pathname, newFileNameCache.value)) {
           const fileState = getFileStateFromData(data as Record<string, unknown>)
           editorStore.UPDATE_CURRENT_FILE(fileState)
           newFileNameCache.value = ''
@@ -408,9 +424,17 @@ export const useProjectStore = defineStore('project', () => {
     if (!src) return
     const dirname = window.path.dirname(src)
     const dest = dirname + PATH_SEPARATOR + name
-    rename(src, dest).then(() => {
-      editorStore.RENAME_IF_NEEDED({ src, dest })
-    })
+    rename(src, dest)
+      .then(() => {
+        editorStore.RENAME_IF_NEEDED({ src, dest })
+      })
+      .catch((err) => {
+        notice.notify({
+          title: t('store.project.renameErrorTitle'),
+          type: 'error',
+          message: err instanceof Error ? err.message : String(err)
+        })
+      })
   }
 
   function OPEN_SETTING_WINDOW(): void {
@@ -426,6 +450,7 @@ export const useProjectStore = defineStore('project', () => {
     projectTree,
     projectTrees,
     pendingTreeEvents,
+    findTreeForPath,
     OPEN_PROJECT,
     CLOSE_PROJECT,
     CREATE_BUFFERED_STATE,
